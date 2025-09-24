@@ -1,0 +1,14 @@
+[user]
+	name = Dennis Bernardy
+	email = user@example.com
+[pull]
+	rebase = true
+[stash]
+	showPatch = true
+	showStat = false
+[credential]
+	helper = store
+[rerere]
+	enabled = true
+[branch]
+	autosetuprebase = always
