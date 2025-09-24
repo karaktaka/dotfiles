@@ -1,2 +1,4 @@
+{{ if eq .chezmoi.os "darwin" -}}
 # brew
 eval "$(/opt/homebrew/bin/brew shellenv)"
+{{ end -}}
