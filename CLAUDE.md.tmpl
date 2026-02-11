@@ -34,6 +34,46 @@
 - **NEVER amend on `main`/`master`** — create new commits (exception: unpushed commits)
 - **Always check branch first**: `git branch --show-current`
 
+### Detecting Repository Type
+**Automatically check the git remote** before committing to determine if this is a GitHub or GitLab repo:
+
+```bash
+git remote -v
+```
+
+- **Do NOT ask the user** — just check the remote URL and apply the correct conventions
+- Look for `github.com` vs `gitlab` (including self-hosted like `gitlab.example.com`) in the URL
+- This affects commit conventions (Co-Authored-By format, flair, etc.)
+
+**Precedence:** Local project `CLAUDE.md` files always override these global defaults. Check for project-specific instructions first.
+
+### Safe Amend Workflow
+Before amending, **always verify HEAD is the commit you intend to modify**:
+
+```bash
+# 1. Check current commit title matches your intent
+git log --oneline -1
+
+# 2. Only then stage and amend
+git add <files>
+git commit --amend
+```
+
+**If the target commit is not HEAD**, search history for the matching commit title and use fixup:
+
+```bash
+# Find the commit you want to amend
+git log --oneline | grep "commit title keywords"
+
+# Create a fixup commit targeting that SHA
+git commit --fixup=<sha>
+
+# Rebase to squash the fixup into the target commit
+git rebase -i --autosquash <sha>~1
+```
+
+**Why?** If another commit was made in between (by user, hook, or CI), `--amend` modifies *that* commit instead. This can accidentally squash unrelated changes or lose work.
+
 ### Pre-Commit Checks
 **Always lint and format before committing.** See `~/.claude/formatter-reference.md` for commands by file type.
 
@@ -96,7 +136,16 @@ The `glab` CLI tool is available locally for GitLab operations.
 - Keep messages concise but descriptive
 
 ### Co-Authored-By
-{{ if .isWork }}
+
+**Detect repo type first** (see "Detecting Repository Type" above), then apply the correct format:
+
+**GitHub repos:**
+- Use standard format for all commits:
+  ```
+  Co-Authored-By: Claude <noreply@anthropic.com>
+  ```
+- No character flair or quotes
+
 **GitLab repos:**
 - **Initial commits** — no co-author line (no flavour)
 - **Subsequent commits** — use fun character names:
@@ -104,16 +153,11 @@ The `glab` CLI tool is available locally for GitLab operations.
   Co-Authored-By: <Character> <email@domain.com>
   ```
 
-**Character guidelines** (subsequent commits only):
+**Character guidelines** (GitLab subsequent commits only):
 - Match character to commit vibe (bug fix → John Wick, delete code → Thanos)
 - **Vary each commit** — no repetition!
 - Full list: `~/.claude/commit-flair.md`
-{{ else }}
-**GitHub repos** (all commits):
-```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-{{ end }}
+
 ### Quotes (Optional)
 - **Subsequent commits only** — never on initial commits
 - Keep under 50 characters
@@ -141,4 +185,17 @@ Secrets (GitLab tokens, Jira tokens, SSO credentials) are stored in Bitwarden:
 - Jira CLI (`jira`) is available for ticket operations
 - Token is retrieved from Bitwarden via `set_jira_token`
 - Use `jira issue view <TICKET-ID>` to view ticket details
+
+### Chezmoi (Dotfile Management)
+**When modifying files in `~` (home directory)**, always add them to chezmoi:
+
+```bash
+# After editing a dotfile
+chezmoi add ~/.claude/settings.json
+
+# Or re-add if already tracked
+chezmoi re-add ~/.claude/settings.json
+```
+
+**Why?** Dotfiles are managed by chezmoi for version control and sync across machines. Changes not added to chezmoi will be lost on the next `chezmoi apply` or when setting up a new machine.
 {{ end }}
