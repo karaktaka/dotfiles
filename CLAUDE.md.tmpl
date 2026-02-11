@@ -1,0 +1,144 @@
+# Global Claude Code Instructions
+
+> **Rule Precedence**: These are user-specific defaults. Project-specific rules (in project's `CLAUDE.md`, `.editorconfig`, linter configs, etc.) **always take precedence** over these global settings. More specific beats more general.
+
+## ⚠️ Golden Rule
+
+**When in doubt, ASK!** If you're uncertain what to do or notice you're missing crucial information to proceed — **always ask the user**. No exceptions.
+
+## Communication Style
+
+- **Tone**: Casual but professional — relaxed and approachable, not overly familiar
+- **Emojis** 🎨: Welcome in status lines, task updates, headers. Skip in code/commits/docs.
+- **Humor** 😄: Jokes and puns appreciated! Keep it light without derailing tasks.
+
+## Container Tooling
+
+**Local dev**: Prefer `podman` (the `docker` binary is a symlink to podman)
+
+**Compatibility**: Maintain Docker compatibility for CI and teammates:
+- Dockerfiles: Standard Docker syntax (no podman-specific features)
+- docker-compose.yml: Standard format for CI compatibility
+- CI: Use `docker buildx` for builds
+
+| Context | Command |
+|---------|---------|
+| Local | `podman build`, `podman run`, `podman-compose` |
+| CI/Shared | `docker buildx build`, standard Dockerfile syntax |
+
+## Git Workflow
+
+### Core Rules
+- **NEVER push** — user controls all pushes to remote
+- **Prefer `--amend`** on feature branches
+- **NEVER amend on `main`/`master`** — create new commits (exception: unpushed commits)
+- **Always check branch first**: `git branch --show-current`
+
+### Pre-Commit Checks
+**Always lint and format before committing.** See `~/.claude/formatter-reference.md` for commands by file type.
+
+Quick reference:
+| Type | Check | Format |
+|------|-------|--------|
+| Python | `ruff check` | `ruff format` |
+| Terraform | `terraform validate` | `terraform fmt` |
+| YAML/JSON | `prettier --check` | `prettier --write` |
+
+**Workflow**: Change → Lint → Fix issues → Format → Commit
+
+### Grouping Changes
+
+**Split commits when:**
+- Changes affect different features/concerns
+- Mixing unrelated fixes
+- Changes span different layers (frontend/backend, infra/app)
+
+**Single commit when:**
+- Changes are tightly related to one feature
+- Changes are interdependent
+
+**Tools:**
+- `git add <specific-files>` for file-level staging
+- `git add -p <file>` for line-level (hunk) staging
+- Separate `style:` commits for pure formatting changes
+{{ if .isWork }}
+## GitLab CLI (glab)
+
+The `glab` CLI tool is available locally for GitLab operations.
+
+**Capabilities:**
+- **Merge Requests**: Create, update, view, and close MRs
+- **Project Info**: Fetch project and repository information
+- **Issues**: Create and manage issues
+- **Pipelines**: View CI/CD pipeline status
+
+**Common Commands:**
+| Action | Command |
+|--------|---------|
+| Create MR | `glab mr create` |
+| View MR | `glab mr view <id>` |
+| List MRs | `glab mr list` |
+| Close MR | `glab mr close <id>` |
+| Project info | `glab repo view` |
+| Pipeline status | `glab ci status` |
+
+**Usage**: Use `glab` to support GitLab workflows — creating MRs, checking pipeline status, fetching repo metadata, etc.
+{{ end }}
+## File Formatting
+
+**Defaults:** Files end with newline, no trailing whitespace.
+
+**Commands:** See `~/.claude/formatter-reference.md`
+
+## Commit Messages
+
+- Use conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
+- Keep messages concise but descriptive
+
+### Co-Authored-By
+{{ if .isWork }}
+**GitLab repos:**
+- **Initial commits** — no co-author line (no flavour)
+- **Subsequent commits** — use fun character names:
+  ```
+  Co-Authored-By: <Character> <email@domain.com>
+  ```
+
+**Character guidelines** (subsequent commits only):
+- Match character to commit vibe (bug fix → John Wick, delete code → Thanos)
+- **Vary each commit** — no repetition!
+- Full list: `~/.claude/commit-flair.md`
+{{ else }}
+**GitHub repos** (all commits):
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+{{ end }}
+### Quotes (Optional)
+- **Subsequent commits only** — never on initial commits
+- Keep under 50 characters
+- Use sparingly when mood fits
+- Full list: `~/.claude/commit-flair.md`
+
+### What Counts as "Initial"?
+The first commit made on a branch is considered the initial commit for that branch, even if commits from the default branch or another branch already exist.
+{{ if .isWork }}
+## Work Environment Context
+
+### AWS & Kubernetes
+- AWS access is configured via SSO (`aws sso login --sso-session KN-Operations`)
+- Multiple AWS profiles available: `dev`, `prod`
+- K8s clusters are accessed via `kubectl` with contexts configured for each environment
+- Use `update_kubectl` to sync kubectl client version with cluster
+
+### Bitwarden for Secrets
+Secrets (GitLab tokens, Jira tokens, SSO credentials) are stored in Bitwarden:
+- Use `bw_get_secret "Item Name"` to retrieve secrets
+- Bitwarden unlock is handled automatically via `ensure_bw_session`
+- Available helper functions in `~/.oh-my-zsh/custom/bitwarden.zsh`
+
+### Jira Integration
+- Jira CLI (`jira`) is available for ticket operations
+- Token is retrieved from Bitwarden via `set_jira_token`
+- Use `jira issue view <TICKET-ID>` to view ticket details
+{{ end }}

@@ -1,5 +1,7 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
 {{- $name := promptStringOnce . "name" "Name" -}}
+{{- $workDomain := "example.com" -}}
+{{- $isWork := hasSuffix (printf "@%s" $workDomain) $email -}}
 
 encryption: "age"
 
@@ -9,8 +11,10 @@ age:
 
 git:
   autoCommit: true
-  autoPush: true
+  autoPush: false
 
 data:
   email: {{ $email | quote }}
   name: {{ $name | quote }}
+  isWork: {{ $isWork }}
+  workDomain: {{ $workDomain | quote }}

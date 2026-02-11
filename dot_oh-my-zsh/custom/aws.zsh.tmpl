@@ -1,0 +1,54 @@
+{{ if .isWork -}}
+#!/usr/bin/env zsh
+# AWS helper functions - work-only module
+
+_aws="$(which aws)"
+_podman="$(which podman)"
+
+if [[ -z $_aws ]]; then
+  echo "⚠️  AWS CLI not found, please install it first."
+  return 1
+fi
+if [[ -z $_podman ]]; then
+  echo "⚠️  Podman not found, please install it first."
+  return 1
+fi
+
+# Connect to EC2 instance via SSM
+function connect_to_instance() {
+  if [[ -z "${1}" ]]; then
+    echo "Usage: connect_to_instance <instance-id>"
+    return 1
+  fi
+
+  $_aws ssm start-session --target ${1}
+}
+
+# Port forward through SSM to a remote host
+function forward_port_from_remote_host() {
+  local target_instance=${1}
+  local remote_host=${2}
+  local remote_port=${3}
+  local local_port=${4}
+
+  if [[ -z "$target_instance" || -z "$remote_host" || -z "$remote_port" || -z "$local_port" ]]; then
+    echo "Usage: forward_port_from_remote_host <instance-id> <remote-host> <remote-port> <local-port>"
+    return 1
+  fi
+
+  $_aws ssm start-session \
+    --target ${target_instance} \
+    --document-name AWS-StartPortForwardingSessionToRemoteHost \
+    --parameters "{\"host\":[\"${remote_host}\"],\"portNumber\":[\"${remote_port}\"], \"localPortNumber\":[\"${local_port}\"]}"
+}
+
+# Login to AWS via SSO
+function login_aws() {
+  $_aws sso login --sso-session KN-Operations
+}
+
+# Login to ECR (Elastic Container Registry)
+function login_ecr() {
+  $_aws ecr get-login-password --region eu-central-1 --profile=prod | $_podman login --username AWS --password-stdin REDACTED_PROD_ACCOUNT.dkr.ecr.eu-central-1.amazonaws.com
+}
+{{ end -}}
