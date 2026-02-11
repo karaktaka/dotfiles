@@ -145,39 +145,75 @@ setup_age_key() {
 
     if [[ -f "$KEY_PATH" ]]; then
         echo -e "${GREEN}✓ Age key already present${NC}"
-    else
-        echo ""
-        echo -e "${YELLOW}⚠ Age key not found at $KEY_PATH${NC}"
-        echo ""
-        echo "The repo uses age encryption for sensitive files."
-        echo "You need to copy your private key from another machine or backup."
-        echo ""
-        echo "Options:"
-        echo "  1. Copy from another machine:"
-        echo "     scp other-machine:~/.config/chezmoi/key.txt ~/.config/chezmoi/key.txt"
-        echo ""
-        echo "  2. Restore from backup:"
-        echo "     cp /path/to/backup/key.txt ~/.config/chezmoi/key.txt"
+        return 0
+    fi
+
+    echo ""
+    echo -e "${YELLOW}⚠ Age key not found at $KEY_PATH${NC}"
+    echo ""
+    mkdir -p ~/.config/chezmoi
+
+    # Try Bitwarden first (recommended)
+    if command_exists bw; then
+        echo -e "${BLUE}▶ Attempting to fetch key from Bitwarden...${NC}"
         echo ""
 
-        read -p "Do you have the key available now? (y/n) " -n 1 -r
-        echo ""
+        # Check if logged in
+        BW_STATUS=$(bw status | jq -r '.status')
 
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            mkdir -p ~/.config/chezmoi
-            read -p "Enter path to key file: " key_source
-            if [[ -f "$key_source" ]]; then
-                cp "$key_source" "$KEY_PATH"
-                chmod 600 "$KEY_PATH"
-                echo -e "${GREEN}✓ Key copied successfully${NC}"
-            else
-                echo -e "${RED}✗ File not found: $key_source${NC}"
-                echo "You can set up the key later and run: chezmoi apply"
-            fi
-        else
-            echo -e "${YELLOW}⚠ Skipping key setup. Some encrypted files won't be available.${NC}"
-            echo "Set up the key later and run: chezmoi apply"
+        if [[ "$BW_STATUS" == "unauthenticated" ]]; then
+            echo -e "${YELLOW}Please login to Bitwarden:${NC}"
+            bw login
+            BW_STATUS="locked"
         fi
+
+        if [[ "$BW_STATUS" == "locked" ]]; then
+            echo -e "${YELLOW}Please unlock Bitwarden:${NC}"
+            export BW_SESSION=$(bw unlock --raw)
+            bw sync --quiet
+        fi
+
+        # Fetch the key
+        KEY_CONTENT=$(bw get notes "Chezmoi Age Encryption Key" 2>/dev/null)
+
+        if [[ -n "$KEY_CONTENT" ]]; then
+            echo "$KEY_CONTENT" > "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo -e "${GREEN}✓ Age key fetched from Bitwarden${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠ Key not found in Bitwarden (item: 'Chezmoi Age Encryption Key')${NC}"
+        fi
+    fi
+
+    # Fallback: manual setup
+    echo ""
+    echo "The repo uses age encryption for sensitive files."
+    echo ""
+    echo "Options:"
+    echo "  1. Copy from another machine:"
+    echo "     scp other-machine:~/.config/chezmoi/key.txt ~/.config/chezmoi/key.txt"
+    echo ""
+    echo "  2. Restore from backup:"
+    echo "     cp /path/to/backup/key.txt ~/.config/chezmoi/key.txt"
+    echo ""
+
+    read -p "Do you have the key available now? (y/n) " -n 1 -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        read -p "Enter path to key file: " key_source
+        if [[ -f "$key_source" ]]; then
+            cp "$key_source" "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo -e "${GREEN}✓ Key copied successfully${NC}"
+        else
+            echo -e "${RED}✗ File not found: $key_source${NC}"
+            echo "You can set up the key later and run: chezmoi apply"
+        fi
+    else
+        echo -e "${YELLOW}⚠ Skipping key setup. Some encrypted files won't be available.${NC}"
+        echo "Set up the key later and run: chezmoi apply"
     fi
 }
 

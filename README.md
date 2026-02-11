@@ -60,21 +60,27 @@ You'll be prompted for:
 
 #### 3. Set Up Age Key
 
-The repo uses age encryption for sensitive files. You need the private key:
+The repo uses age encryption for sensitive files. The key is stored in Bitwarden.
 
+**Option A: Fetch from Bitwarden (Recommended)**
 ```bash
-# Create config directory
+# Login and unlock Bitwarden
+bw login
+export BW_SESSION=$(bw unlock --raw)
+
+# Fetch the key
 mkdir -p ~/.config/chezmoi
-
-# Option A: Copy existing key from another machine
-scp other-machine:~/.config/chezmoi/key.txt ~/.config/chezmoi/key.txt
-
-# Option B: If you have the key in a secure location, copy it
-cp /path/to/backup/key.txt ~/.config/chezmoi/key.txt
-
-# Set proper permissions
+bw get notes "Chezmoi Age Encryption Key" > ~/.config/chezmoi/key.txt
 chmod 600 ~/.config/chezmoi/key.txt
 ```
+
+**Option B: Copy from another machine**
+```bash
+scp other-machine:~/.config/chezmoi/key.txt ~/.config/chezmoi/key.txt
+chmod 600 ~/.config/chezmoi/key.txt
+```
+
+> **Note:** The bootstrap script will attempt to fetch from Bitwarden automatically.
 
 #### 4. Preview and Apply
 
@@ -134,9 +140,15 @@ The setup automatically detects work/personal based on your email:
 └── .zlogin                      # Zsh login
 ```
 
-## Bitwarden Items Required (Work Mode)
+## Bitwarden Items Required
 
-For work functions to operate, ensure these items exist in Bitwarden:
+### Universal (All Machines)
+
+| Item Name | Type | Used By |
+|-----------|------|---------|
+| `Chezmoi Age Encryption Key` | Secure Note | Bootstrap script, age decryption |
+
+### Work Mode Only
 
 | Item Name | Fields | Used By |
 |-----------|--------|---------|
