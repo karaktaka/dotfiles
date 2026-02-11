@@ -198,4 +198,10 @@ chezmoi re-add ~/.claude/settings.json
 ```
 
 **Why?** Dotfiles are managed by chezmoi for version control and sync across machines. Changes not added to chezmoi will be lost on the next `chezmoi apply` or when setting up a new machine.
+
+**Template files (`.tmpl`):**
+- Check if a file is a template: `ls ~/.local/share/chezmoi/ | grep <filename>`
+- Templates use Go template syntax (e.g., conditionals, variables)
+- If `chezmoi apply` errors or `re-add` doesn't work, **edit the template directly** at `~/.local/share/chezmoi/<filename>.tmpl`
+- Don't force-add over a template — you'll lose the template logic
 {{ end }}
