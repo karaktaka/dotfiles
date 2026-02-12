@@ -4,24 +4,47 @@
 
 # Ensure Bitwarden CLI is available
 if ! command -v bw &> /dev/null; then
-  echo "⚠️  Bitwarden CLI (bw) not found. Install with: brew install bitwarden-cli"
+  echo "⚠️  Bitwarden CLI (bw) not found. Install with: brew install bitwarden-cli" >&2
   return
 fi
 
 _bw="$(which bw)"
+_bw_session_file="${HOME}/.bw_session"
 
 # Ensure BW_SESSION is set, unlock if needed
 # Returns 0 on success, 1 on failure
+# Session is persisted to ~/.bw_session for sharing across terminals
 function ensure_bw_session() {
-  if [[ -z "$BW_SESSION" ]]; then
-    echo "🔐 Unlocking Bitwarden..."
-    export BW_SESSION=$($_bw unlock --raw)
-    if [[ -z "$BW_SESSION" ]]; then
-      echo "❌ Failed to unlock Bitwarden"
-      return 1
-    fi
-    $_bw sync --quiet
+  # Try to load existing session from file if not in environment
+  if [[ -z "$BW_SESSION" && -f "$_bw_session_file" ]]; then
+    source "$_bw_session_file"
   fi
+
+  # Validate session is still active
+  if [[ -n "$BW_SESSION" ]]; then
+    if $_bw unlock --check &>/dev/null; then
+      return 0
+    else
+      # Session expired, clear it
+      unset BW_SESSION
+      rm -f "$_bw_session_file"
+    fi
+  fi
+
+  # Need to unlock
+  echo "🔐 Unlocking Bitwarden..." >&2
+  export BW_SESSION=$($_bw unlock --raw)
+  if [[ -z "$BW_SESSION" ]]; then
+    echo "❌ Failed to unlock Bitwarden" >&2
+    return 1
+  fi
+
+  # Persist session with secure permissions
+  echo "export BW_SESSION=\"$BW_SESSION\"" > "$_bw_session_file"
+  chmod 600 "$_bw_session_file"
+
+  $_bw sync --quiet
+  echo "✅ Bitwarden session saved (reusable across terminals)" >&2
   return 0
 }
 
@@ -80,4 +103,13 @@ function bw_get_item() {
 function bw_sync() {
   ensure_bw_session || return 1
   $_bw sync
+}
+
+# Lock Bitwarden and clear persisted session
+# Usage: bw_lock
+function bw_lock() {
+  $_bw lock &>/dev/null
+  unset BW_SESSION
+  rm -f "$_bw_session_file"
+  echo "🔒 Bitwarden locked and session cleared" >&2
 }
