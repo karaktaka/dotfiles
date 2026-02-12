@@ -1,207 +1,101 @@
 # Global Claude Code Instructions
 
-> **Rule Precedence**: These are user-specific defaults. Project-specific rules (in project's `CLAUDE.md`, `.editorconfig`, linter configs, etc.) **always take precedence** over these global settings. More specific beats more general.
+> **Rule Precedence**: Project-specific rules (`.editorconfig`, linter configs, project `CLAUDE.md`) **always override** these global defaults.
 
-## ⚠️ Golden Rule
+## ⚠️ Golden Rules
 
-**When in doubt, ASK!** If you're uncertain what to do or notice you're missing crucial information to proceed — **always ask the user**. No exceptions.
+1. **When in doubt, ASK!** — Never proceed without crucial information
+2. **Be context-aware** — Minimize context usage; only include what's needed, remove what's not
 
 ## Communication Style
 
-- **Tone**: Casual but professional — relaxed and approachable, not overly familiar
-- **Emojis** 🎨: Welcome in status lines, task updates, headers. Skip in code/commits/docs.
-- **Humor** 😄: Jokes and puns appreciated! Keep it light without derailing tasks.
+- **Tone**: Casual but professional
+- **Emojis**: OK in status/headers, not in code/commits/docs
+- **Humor**: Welcome, keep it light
+
+## Versioning
+
+**Always use latest versions** unless constrained by version pins, compatibility issues, or project requirements.
 
 ## Container Tooling
 
-**Local dev**: Prefer `podman` (the `docker` binary is a symlink to podman)
-
-**Compatibility**: Maintain Docker compatibility for CI and teammates:
-- Dockerfiles: Standard Docker syntax (no podman-specific features)
-- docker-compose.yml: Standard format for CI compatibility
-- CI: Use `docker buildx` for builds
-
-| Context | Command |
-|---------|---------|
-| Local | `podman build`, `podman run`, `podman-compose` |
-| CI/Shared | `docker buildx build`, standard Dockerfile syntax |
+- **Local**: Use `podman` (docker is symlinked to it)
+- **CI/Shared**: Standard Docker syntax for compatibility
 
 ## Git Workflow
 
 ### Core Rules
-- **NEVER push** — user controls all pushes to remote
-- **Prefer `--amend`** on feature branches
-- **NEVER amend on `main`/`master`** — create new commits (exception: unpushed commits)
-- **Always check branch first**: `git branch --show-current`
+- **NEVER push** — user controls pushes
+- **Prefer `--amend`** on feature branches (never on `main`/`master`)
+- **Check branch first**: `git branch --show-current`
+- **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
 
-### Detecting Repository Type
-**Automatically check the git remote** before committing to determine if this is a GitHub or GitLab repo:
+### Safe Amend
+Verify HEAD before amending: `git log --oneline -1`
 
-```bash
-git remote -v
-```
+If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i --autosquash <sha>~1`
 
-- **Do NOT ask the user** — just check the remote URL and apply the correct conventions
-- Look for `github.com` vs `gitlab` (including self-hosted like `gitlab.example.com`) in the URL
-- This affects commit conventions (Co-Authored-By format, flair, etc.)
+**Why?** Blind `--amend` can modify the wrong commit if something was committed in between (hook, CI, user).
 
-**Precedence:** Local project `CLAUDE.md` files always override these global defaults. Check for project-specific instructions first.
+### Pre-Commit
+**Always lint/format before committing.** See `~/.claude/formatter-reference.md`
 
-### Safe Amend Workflow
-Before amending, **always verify HEAD is the commit you intend to modify**:
-
-```bash
-# 1. Check current commit title matches your intent
-git log --oneline -1
-
-# 2. Only then stage and amend
-git add <files>
-git commit --amend
-```
-
-**If the target commit is not HEAD**, search history for the matching commit title and use fixup:
-
-```bash
-# Find the commit you want to amend
-git log --oneline | grep "commit title keywords"
-
-# Create a fixup commit targeting that SHA
-git commit --fixup=<sha>
-
-# Rebase to squash the fixup into the target commit
-git rebase -i --autosquash <sha>~1
-```
-
-**Why?** If another commit was made in between (by user, hook, or CI), `--amend` modifies *that* commit instead. This can accidentally squash unrelated changes or lose work.
-
-### Pre-Commit Checks
-**Always lint and format before committing.** See `~/.claude/formatter-reference.md` for commands by file type.
-
-Quick reference:
 | Type | Check | Format |
 |------|-------|--------|
 | Python | `ruff check` | `ruff format` |
 | Terraform | `terraform validate` | `terraform fmt` |
 | YAML/JSON | `prettier --check` | `prettier --write` |
 
-**Workflow**: Change → Lint → Fix issues → Format → Commit
-
 ### Grouping Changes
-
-**Split commits when:**
-- Changes affect different features/concerns
-- Mixing unrelated fixes
-- Changes span different layers (frontend/backend, infra/app)
-
-**Single commit when:**
-- Changes are tightly related to one feature
-- Changes are interdependent
-
-**Tools:**
-- `git add <specific-files>` for file-level staging
-- `git add -p <file>` for line-level (hunk) staging
-- Separate `style:` commits for pure formatting changes
+- **Split**: Different features, layers, or unrelated fixes
+- **Single**: Tightly related or interdependent changes
+- Use `git add -p` for hunk-level staging
 {{ if .isWork }}
 ## GitLab CLI (glab)
 
-The `glab` CLI tool is available locally for GitLab operations.
-
-**Capabilities:**
-- **Merge Requests**: Create, update, view, and close MRs
-- **Project Info**: Fetch project and repository information
-- **Issues**: Create and manage issues
-- **Pipelines**: View CI/CD pipeline status
-
-**Common Commands:**
 | Action | Command |
 |--------|---------|
-| Create MR | `glab mr create` |
-| View MR | `glab mr view <id>` |
-| List MRs | `glab mr list` |
-| Close MR | `glab mr close <id>` |
+| Create/View/List/Close MR | `glab mr create/view/list/close <id>` |
 | Project info | `glab repo view` |
 | Pipeline status | `glab ci status` |
-
-**Usage**: Use `glab` to support GitLab workflows — creating MRs, checking pipeline status, fetching repo metadata, etc.
 {{ end }}
 ## File Formatting
 
-**Defaults:** Files end with newline, no trailing whitespace.
-
-**Commands:** See `~/.claude/formatter-reference.md`
+Files end with newline, no trailing whitespace. See `~/.claude/formatter-reference.md`
 
 ## Commit Messages
 
-- Use conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
-- Keep messages concise but descriptive
+Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 ### Co-Authored-By
 
-**Detect repo type first** (see "Detecting Repository Type" above), then apply the correct format:
+| Repo Type | Format |
+|-----------|--------|
+| GitHub | `Co-Authored-By: Claude <noreply@anthropic.com>` (all commits) |
+| GitLab | Initial: none. Subsequent: `Co-Authored-By: <Character> <email>` |
 
-**GitHub repos:**
-- Use standard format for all commits:
-  ```
-  Co-Authored-By: Claude <noreply@anthropic.com>
-  ```
-- No character flair or quotes
+**GitLab characters**: Match vibe (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
 
-**GitLab repos:**
-- **Initial commits** — no co-author line (no flavour)
-- **Subsequent commits** — use fun character names:
-  ```
-  Co-Authored-By: <Character> <email@domain.com>
-  ```
-
-**Character guidelines** (GitLab subsequent commits only):
-- Match character to commit vibe (bug fix → John Wick, delete code → Thanos)
-- **Vary each commit** — no repetition!
-- Full list: `~/.claude/commit-flair.md`
-
-### Quotes (Optional)
-- **Subsequent commits only** — never on initial commits
-- Keep under 50 characters
-- Use sparingly when mood fits
-- Full list: `~/.claude/commit-flair.md`
-
-### What Counts as "Initial"?
-The first commit made on a branch is considered the initial commit for that branch, even if commits from the default branch or another branch already exist.
+**Initial commit** = first commit on a branch (even if branch has prior commits from base).
 {{ if .isWork }}
-## Work Environment Context
+## Work Environment
 
 ### AWS & Kubernetes
-- AWS access is configured via SSO (`aws sso login --sso-session KN-Operations`)
-- Multiple AWS profiles available: `dev`, `prod`
-- K8s clusters are accessed via `kubectl` with contexts configured for each environment
-- Use `update_kubectl` to sync kubectl client version with cluster
+- SSO: `aws sso login --sso-session KN-Operations`
+- Profiles: `dev`, `prod`
+- Sync kubectl: `update_kubectl`
 
-### Bitwarden for Secrets
-Secrets (GitLab tokens, Jira tokens, SSO credentials) are stored in Bitwarden:
-- Use `bw_get_secret "Item Name"` to retrieve secrets
-- Bitwarden unlock is handled automatically via `ensure_bw_session`
-- Available helper functions in `~/.oh-my-zsh/custom/bitwarden.zsh`
+### Secrets (Bitwarden)
+- `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
+- Helpers: `~/.oh-my-zsh/custom/bitwarden.zsh`
 
-### Jira Integration
-- Jira CLI (`jira`) is available for ticket operations
-- Token is retrieved from Bitwarden via `set_jira_token`
-- Use `jira issue view <TICKET-ID>` to view ticket details
+### Jira
+- `jira issue view <TICKET-ID>` (token via `set_jira_token`)
 
-### Chezmoi (Dotfile Management)
-**When modifying files in `~` (home directory)**, always add them to chezmoi:
+### Chezmoi (Dotfiles)
+Home directory files must be added to chezmoi: `chezmoi add <file>` or `chezmoi re-add <file>`
 
-```bash
-# After editing a dotfile
-chezmoi add ~/.claude/settings.json
+**Templates** (`.tmpl`): Check with `ls ~/.local/share/chezmoi/ | grep <file>`. Edit templates directly — don't force-add over them.
 
-# Or re-add if already tracked
-chezmoi re-add ~/.claude/settings.json
-```
-
-**Why?** Dotfiles are managed by chezmoi for version control and sync across machines. Changes not added to chezmoi will be lost on the next `chezmoi apply` or when setting up a new machine.
-
-**Template files (`.tmpl`):**
-- Check if a file is a template: `ls ~/.local/share/chezmoi/ | grep <filename>`
-- Templates use Go template syntax (e.g., conditionals, variables)
-- If `chezmoi apply` errors or `re-add` doesn't work, **edit the template directly** at `~/.local/share/chezmoi/<filename>.tmpl`
-- Don't force-add over a template — you'll lose the template logic
+**Always commit and push** chezmoi changes to `~/.local/share/chezmoi` after modifying dotfiles.
 {{ end }}
