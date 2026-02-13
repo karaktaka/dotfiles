@@ -2,15 +2,17 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
 {{- if .isWork }}
   "env": {
-    "AWS_REGION": "eu-central-1",
-    "AWS_PROFILE": "dev",
-    "CLAUDE_CODE_USE_BEDROCK": "true",
-    "CLAUDE_CODE_PROXY_RESOLVES_HOSTS": "false",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "eu.anthropic.claude-opus-4-5-20251101-v1:0",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "eu.anthropic.claude-opus-4-6-v1",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    "AWS_PROFILE": "dev",
+    "AWS_REGION": "eu-central-1",
+    "CLAUDE_CODE_PROXY_RESOLVES_HOSTS": "false",
+    "CLAUDE_CODE_USE_BEDROCK": "true"
   },
+  "model": "eu.anthropic.claude-opus-4-6-v1",
 {{- end }}
+  "outputStyle": "Explanatory",
   "permissions": {
     "allow": [
 {{- if .isWork }}
@@ -22,56 +24,68 @@
       "Bash(kubectl describe:*)",
       "Bash(kubectl show:*)",
       "Bash(kubectl logs:*)",
-      "Bash(glab*)",
 {{- end }}
       "Bash(ruff:*)",
       "Bash(uv:*)",
-      "Bash(git * main)",
-      "Bash(git commit:*)",
-      "Bash(git diff:*)",
-      "Bash(git ls:*)",
-      "Bash(git log:*)",
-      "Bash(git status:*)",
+      "Bash(git commit*)",
+      "Bash(git diff*)",
+      "Bash(git ls*)",
+      "Bash(git log*)",
+      "Bash(git status*)",
+      "Bash(git checkout*)",
+      "Bash(git stash*)",
+      "Bash(echo:*)",
+{{- if .isWork }}
+      "Bash(make tf/format:./workspace/**)",
       "Bash(cat:./workspace/**)",
       "Bash(find:./workspace/**)",
       "Bash(grep:./workspace/**)",
       "Bash(prettier:./workspace/**)",
-{{- if .isWork }}
+      "Bash(wc:./workspace/**)",
+      "Bash(ls:./workspace/**)",
+      "Bash(terraform fmt:./workspace/**)",
+      "Bash(terraform validate:./workspace/**)",
       "Read(~/.aws/config)",
       "Read(~/workspace/**)",
 {{- end }}
       "Read(~/CLAUDE*)",
       "Read(~/.gitconfig)"
     ],
+    "ask": [
+      "Bash(git add:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+{{- if .isWork }}
+      "Bash(glab*)",
+{{- end }}
+      "Bash(git push:*)",
+      "Bash(git stash drop*)"{{- if .isWork }},
+      "Bash(make plan-*)",
+      "Bash(make apply-*)",
+      "Bash(make destroy-*)",
+      "Bash(make tf/*)"
+{{- end }}
+    ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)",
 {{- if .isWork }}
-      "Bash(kubectl delete:*)",
-      "Bash(kubectl remove:*)",
-      "Bash(kubectl rm:*)",
-      "Bash(kubectl drain:*)",
-      "Bash(kubectl cordon:*)",
-      "Bash(kubectl uncordon:*)",
-      "Bash(kubectl scale:*)",
-      "Bash(aws * delete:*)",
+      "Bash(kubectl*delete*)",
+      "Bash(kubectl*remove*)",
+      "Bash(kubectl*rm*)",
+      "Bash(kubectl*drain*)",
+      "Bash(kubectl*cordon*)",
+      "Bash(kubectl*uncordon*)",
+      "Bash(kubectl*scale*)",
+      "Bash(aws*delete*)",
 {{- end }}
-      "Bash(git push:*)"
-    ],
-    "ask": [
-      "Bash(git add:*)",
-      "Bash(curl:*)",
-      "Bash(wget:*)"
+      "Bash(git stash clear)"
     ]
   },
-{{- if .isWork }}
-  "model": "eu.anthropic.claude-opus-4-5-20251101-v1:0",
-{{- end }}
-  "outputStyle": "Explanatory",
   "spinnerTipsEnabled": false,
   "statusLine": {
-    "type": "command",
-    "command": "/bin/bash ~/.claude/statusline-command.sh"
+    "command": "/bin/bash ~/.claude/statusline-command.sh",
+    "type": "command"
   }
 }
