@@ -1,4 +1,6 @@
 key.txt.age
+README.md
+bootstrap.sh
 
 # Work-only files - ignore on personal machines
 {{ if not .isWork }}
