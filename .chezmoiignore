@@ -7,3 +7,14 @@ bootstrap.sh
 .oh-my-zsh/custom/aws.zsh
 .oh-my-zsh/custom/k8s.zsh
 {{ end }}
+
+# Shell-specific files - only deploy when the shell is installed
+{{ if not (lookPath "zsh") }}
+.oh-my-zsh/**
+.zlogin
+.zprofile
+{{ end }}
+
+{{ if not (lookPath "fish") }}
+.config/fish/**
+{{ end }}
