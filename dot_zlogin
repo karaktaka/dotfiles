@@ -1,1 +1,1 @@
-fortune bofh-excuses | cowsay -f tux | lolcat
+command -v fortune &>/dev/null && command -v cowsay &>/dev/null && command -v lolcat &>/dev/null && fortune bofh-excuses | cowsay -f tux | lolcat
