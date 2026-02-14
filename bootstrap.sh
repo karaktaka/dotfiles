@@ -112,6 +112,11 @@ install_dependencies() {
             exit 1
             ;;
     esac
+
+    # Configure Bitwarden to use self-hosted server
+    if command_exists bw; then
+        bw config server https://passwords.ethernerd.net
+    fi
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -130,7 +135,7 @@ init_chezmoi() {
         echo -e "${YELLOW}⚠ Chezmoi already initialized. Updating...${NC}"
         chezmoi update --init
     else
-        chezmoi init karaktaka/dotfiles
+        chezmoi init --ssh karaktaka/dotfiles
     fi
 }
 
