@@ -25,7 +25,7 @@
 ## Git Workflow
 
 ### Core Rules
-- **NEVER push** — user controls pushes
+- **Always ASK before pushing** — never push without explicit user confirmation
 - **Prefer `--amend`** on feature branches (never on `main`/`master`)
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
@@ -45,6 +45,9 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 | Python | `ruff check` | `ruff format` |
 | Terraform | `terraform validate` | `terraform fmt` |
 | YAML/JSON | `prettier --check` | `prettier --write` |
+
+### Branch Naming
+See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
 
 ### Grouping Changes
 - **Split**: Different features, layers, or unrelated fixes

@@ -1,19 +1,16 @@
-Create a new git branch following these rules:
+Create a new git branch. Follow the git workflow and branch naming conventions from @CLAUDE.md.
 
-## Branch Name Generation
+## Steps
 
-### Step 1: Check for existing changes
-First, check if there are any uncommitted changes or staged files:
+1. Check for uncommitted changes or staged files:
 ```bash
 git status --porcelain
 git diff --name-only
 ```
 
-### Step 2: Generate branch name
+2. Generate a branch name based on the naming conventions — strategy depends on whether changes exist.
 
-Follow the naming conventions in @branch-naming.md — choose the appropriate strategy based on whether changes exist.
-
-### Step 3: Create the branch
+3. Create the branch:
 ```bash
 git checkout -b <generated-name>
 ```

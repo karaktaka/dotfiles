@@ -108,4 +108,4 @@ When addressing review comments:
 - **Architecture concerns**: Discuss with user before major refactoring
 - **Questions**: May need user input to answer properly
 
-Always create a **new commit** (or amend appropriately per project guidelines) with a clear message indicating the review feedback is being addressed.
+When committing changes, follow the git workflow in @CLAUDE.md (safe amend, commit messages, pre-commit formatting).

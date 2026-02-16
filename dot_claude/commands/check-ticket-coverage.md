@@ -1,1 +1,5 @@
-@mr-notes.md summarises what this branch implements with diffs available in @mr-diff.txt - get the jira ticket containing the requirements for this change and check if this MR fully implements the requirements in the ticket. you can retrieve the ticket by using the `jira` cli. the command to retrieve a ticket is `jira issue view <ticket-id> --plain` The ticket ID is in the branch name.
+@mr-notes.md summarises what this branch implements with diffs available in @mr-diff.txt.
+
+Get the Jira ticket containing the requirements for this change using the Jira CLI from @CLAUDE.md. The ticket ID is in the branch name.
+
+Check if this MR fully implements the requirements in the ticket.
