@@ -22,6 +22,11 @@
 - **Local**: Use `podman` (docker is symlinked to it)
 - **CI/Shared**: Standard Docker syntax for compatibility
 
+## Python Tooling
+
+- **Package manager**: `uv` — use `uv run` to execute Python, pytest, ruff, etc.
+- **Linting/Formatting**: `ruff check` / `ruff format`
+
 ## Git Workflow
 
 ### Core Rules
@@ -38,13 +43,7 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 **Why?** Blind `--amend` can modify the wrong commit if something was committed in between (hook, CI, user).
 
 ### Pre-Commit
-**Always lint/format before committing.** See `~/.claude/formatter-reference.md`
-
-| Type | Check | Format |
-|------|-------|--------|
-| Python | `ruff check` | `ruff format` |
-| Terraform | `terraform validate` | `terraform fmt` |
-| YAML/JSON | `prettier --check` | `prettier --write` |
+**Always lint/format before committing.** See `~/.claude/formatter-reference.md` for the full list of formatters by file type.
 
 ### Branch Naming
 See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
