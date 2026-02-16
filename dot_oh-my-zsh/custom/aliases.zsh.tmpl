@@ -16,8 +16,8 @@ alias ll='exa -la --icons --git'
 alias lt='exa -la --icons --git --tree --level=2'
 alias la='exa -a --icons'
 {{ else -}}
-alias ll='ls -la'
-alias la='ls -a'
+alias ll='ls -l'
+alias la='ls -la'
 {{ end -}}
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -72,7 +72,6 @@ alias gc='git commit'
 alias gca='git commit --amend'
 alias gco='git checkout'
 alias gb='git branch'
-alias gp='git pull'
 alias gl='git log --oneline -20'
 alias glog='git log --graph --oneline --decorate --all'
 
