@@ -109,7 +109,14 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - **Tenant/cluster mapping**: Check the Alloy configmap in `monitoring` ns for `tenant_id` and `external_labels`
 
 ### Jira
-- `jira issue view <TICKET-ID>` (token via `set_jira_token`)
+- **Server**: `https://jira.example.com` (Jira Data Center, local installation)
+- **Auth**: Bearer PAT from `bw_get_secret "Jira API Token"`
+- **CLI (`jira-cli`)**: `createmeta` v1 API is broken on this DC instance — use REST API directly for creating issues
+- **REST API**: `curl -H "Authorization: Bearer $JIRA_API_TOKEN" https://jira.example.com/rest/api/2/...`
+- **Epic link field**: `customfield_11571` (not the typical `customfield_10014`)
+- **Create issue**: `POST /rest/api/2/issue` with fields: `project.key`, `issuetype.id` (Bug=1, Story=14, Task=3, Epic=13), `summary`, `description` (Jira wiki markup), `labels`, `customfield_11571` (epic link)
+- **Search**: `GET /rest/api/2/search?jql=...&fields=key,summary`
+- **View** (CLI still works for reads): `jira issue view <TICKET-ID>` (token via `set_jira_token`)
 
 ### Confluence (wiki.example.com)
 - **REST API**: `wiki.example.com/rest/api/content` — uses Confluence storage format (XHTML), not markdown
