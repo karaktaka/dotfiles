@@ -92,6 +92,15 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - SSO: `aws sso login --sso-session KN-Operations`
 - Profiles: `dev`, `prod`
 - Sync kubectl: `update_kubectl`
+- Pod log retention is very short (minutes to ~1 hour due to kubelet rotation) — for historical logs, query Loki instead
+
+### Observability (Grafana/Loki)
+- **Architecture**: Grafana Alloy collectors (in `monitoring` ns) → centralized Loki → centralized Grafana
+- **Loki API**: `loki.nonprod.example.com/loki/api/v1/query_range`
+- **Auth**: OAuth2 client credentials from `monitoring/alloy-oauth2-credentials` secret (keys: `clientId`, `clientSecret`, `tenant_id`)
+- **Token endpoint**: `auth.nonprod.example.com/oauth2/token` (grant_type=client_credentials)
+- **Grafana UI**: `grafana.nonprod.example.com` — requires KN SSO, not accessible via CLI/WebFetch
+- **Tenant/cluster mapping**: Check the Alloy configmap in `monitoring` ns for `tenant_id` and `external_labels`
 
 ### Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
