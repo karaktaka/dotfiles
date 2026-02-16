@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "mcp-atlassian": {
-      "command": "/Users/dennis.bernardy/.claude/mcp-atlassian-wrapper.sh",
-      "args": []
-    }
-  }
-}

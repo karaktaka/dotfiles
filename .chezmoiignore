@@ -6,7 +6,13 @@ bootstrap.sh
 {{ if not .isWork }}
 .oh-my-zsh/custom/aws.zsh
 .oh-my-zsh/custom/k8s.zsh
+.claude/mcp-atlassian-wrapper.sh
+.claude/.mcp.json
 {{ end }}
+
+# Plugin state managed by Claude Code - don't track versions
+.claude/plugins/installed_plugins.json
+.claude/plugins/known_marketplaces.json
 
 # Shell-specific files - only deploy when the shell is installed
 {{ if not (lookPath "zsh") }}
