@@ -1,4 +1,3 @@
-{{ if .isWork -}}
 #!/usr/bin/env zsh
 # Kubernetes helper functions - work-only module
 
@@ -78,4 +77,3 @@ function helm-adopt-resources() {
     kubectl label $kind $name ${namespace:+--namespace=$namespace} app.kubernetes.io/managed-by=Helm
   done <<< $(helm template $release -n $release_namespace -f $values $@ | kubectl grep -s)
 }
-{{ end -}}

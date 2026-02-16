@@ -1,0 +1,15 @@
+# mark - Confluence markdown sync tool
+# https://github.com/kovetskiy/mark
+#
+# Auth is handled via MARK_PASSWORD env var (set by shell wrapper)
+# so no secrets are stored in this file.
+
+base-url = "https://wiki.example.com"
+space = "datascience"
+
+# Extract title from first H1 and don't duplicate it in the body
+title-from-h1 = true
+drop-h1 = true
+
+# Don't spam page watchers with notification emails
+minor-edit = true

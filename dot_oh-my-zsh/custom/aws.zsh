@@ -1,4 +1,3 @@
-{{ if .isWork -}}
 #!/usr/bin/env zsh
 # AWS helper functions - work-only module
 
@@ -51,4 +50,3 @@ function login_aws() {
 function login_ecr() {
   $_aws ecr get-login-password --region eu-central-1 --profile=prod | $_podman login --username AWS --password-stdin REDACTED_PROD_ACCOUNT.dkr.ecr.eu-central-1.amazonaws.com
 }
-{{ end -}}
