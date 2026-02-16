@@ -85,6 +85,12 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 **GitLab characters**: Match vibe (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
 
 **Initial commit** = first commit on a branch (even if branch has prior commits from base).
+
+## Secrets (Bitwarden)
+- `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
+- Helpers: zsh (`~/.oh-my-zsh/custom/bitwarden.zsh`), fish (`~/.config/fish/functions/bw_*.fish`)
+- Session file `~/.bw_session` stores raw token — shared across zsh and fish
+- **Non-interactive shells** (Claude Code): run `export BW_SESSION=$(cat ~/.bw_session)` before `bw` commands
 {{ if .isWork }}
 ## Work Environment
 
@@ -102,12 +108,14 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - **Grafana UI**: `grafana.nonprod.example.com` — requires KN SSO, not accessible via CLI/WebFetch
 - **Tenant/cluster mapping**: Check the Alloy configmap in `monitoring` ns for `tenant_id` and `external_labels`
 
-### Secrets (Bitwarden)
-- `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
-- Helpers: `~/.oh-my-zsh/custom/bitwarden.zsh`
-
 ### Jira
 - `jira issue view <TICKET-ID>` (token via `set_jira_token`)
+
+### Confluence (wiki.example.com)
+- **REST API**: `wiki.example.com/rest/api/content` — uses Confluence storage format (XHTML), not markdown
+- **Auth**: Bearer PAT from `bw_get_secret "Confluence API Token"` — **separate from Jira PAT** (DC products have independent PAT systems)
+- **Space key**: `datascience` (display name "AI")
+- **Gotcha**: Anonymous read is enabled — always verify auth with `/rest/api/user/current` (don't assume reads = authenticated)
 
 ### Chezmoi (Dotfiles)
 Home directory files must be added to chezmoi: `chezmoi add <file>` or `chezmoi re-add <file>`

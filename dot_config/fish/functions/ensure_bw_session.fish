@@ -1,6 +1,6 @@
 function ensure_bw_session -d "Ensure Bitwarden session is active, unlock if needed"
     if not command -q bw
-        echo "⚠️  Bitwarden CLI (bw) not found. Install with: pacman -S bitwarden-cli" >&2
+        echo "⚠️  Bitwarden CLI (bw) not found. Install it via your package manager (brew, pacman, etc.)" >&2
         return 1
     end
 
@@ -8,7 +8,7 @@ function ensure_bw_session -d "Ensure Bitwarden session is active, unlock if nee
 
     # Try to load existing session from file if not in environment
     if test -z "$BW_SESSION"; and test -f "$session_file"
-        source "$session_file"
+        set -gx BW_SESSION (cat "$session_file")
     end
 
     # Validate session is still active
@@ -30,8 +30,8 @@ function ensure_bw_session -d "Ensure Bitwarden session is active, unlock if nee
         return 1
     end
 
-    # Persist session with secure permissions
-    echo "set -gx BW_SESSION \"$BW_SESSION\"" >"$session_file"
+    # Persist raw session token (shell-agnostic format, shared with zsh)
+    printf '%s' "$BW_SESSION" >"$session_file"
     chmod 600 "$session_file"
 
     bw sync --quiet

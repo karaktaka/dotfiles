@@ -4,7 +4,7 @@
 
 # Ensure Bitwarden CLI is available
 if ! command -v bw &> /dev/null; then
-  echo "⚠️  Bitwarden CLI (bw) not found. Install with: brew install bitwarden-cli" >&2
+  echo "⚠️  Bitwarden CLI (bw) not found. Install it via your package manager (brew, pacman, etc.)" >&2
   return
 fi
 
@@ -17,7 +17,7 @@ _bw_session_file="${HOME}/.bw_session"
 function ensure_bw_session() {
   # Try to load existing session from file if not in environment
   if [[ -z "$BW_SESSION" && -f "$_bw_session_file" ]]; then
-    source "$_bw_session_file"
+    export BW_SESSION=$(<"$_bw_session_file")
   fi
 
   # Validate session is still active
@@ -39,8 +39,8 @@ function ensure_bw_session() {
     return 1
   fi
 
-  # Persist session with secure permissions
-  echo "export BW_SESSION=\"$BW_SESSION\"" > "$_bw_session_file"
+  # Persist raw session token (shell-agnostic format, shared with fish)
+  printf '%s' "$BW_SESSION" > "$_bw_session_file"
   chmod 600 "$_bw_session_file"
 
   $_bw sync --quiet
