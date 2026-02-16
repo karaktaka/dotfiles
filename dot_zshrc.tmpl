@@ -1,0 +1,79 @@
+{{ if .isWork -}}
+# Path to your oh-my-zsh installation.
+export ZSH="${HOME}/.oh-my-zsh"
+
+# kube-ps1
+KUBE_PS1_SYMBOL_ENABLE=true
+KUBE_PS1_NS_ENABLE=false
+KUBE_PS1_CLUSTER_FUNCTION=get_cluster_short
+KUBE_PS1_PREFIX=" ["
+KUBE_PS1_SUFFIX="]"
+
+# Virtualenv
+ZSH_THEME_VIRTUALENV_PREFIX=" ["
+
+# AWS
+SHOW_AWS_PROMPT=false
+AWS_PROFILE_STATE_ENABLED=true
+ZSH_THEME_AWS_PROFILE_PREFIX=" ["
+ZSH_THEME_AWS_PROFILE_SUFFIX=""
+ZSH_THEME_AWS_DIVIDER="|"
+ZSH_THEME_AWS_REGION_PREFIX=""
+ZSH_THEME_AWS_REGION_SUFFIX="]"
+
+export AWS_DEFAULT_REGION=eu-central-1
+
+# Theme
+ZSH_THEME="crcandy"
+
+# Update behavior
+zstyle ':omz:update' mode reminder
+
+# Completion
+COMPLETION_WAITING_DOTS="true"
+
+# VCS performance
+DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# iterm2 shell integration
+zstyle :omz:plugins:iterm2 shell-integration yes
+
+# Plugins
+plugins=(
+    aws
+    azure
+    brew
+    colored-man-pages
+    colorize
+    fzf
+    git
+    git-extras
+    helm
+    iterm2
+    kube-ps1
+    kubectl
+    kubectx
+    podman
+    terraform
+    virtualenv
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+source "${ZSH}/oh-my-zsh.sh"
+
+# User configuration
+export PATH="${PATH}:${HOME}/.krew/bin:${HOME}/go/bin"
+export LANG=en_US.UTF-8
+
+# homebrew completions
+if type brew &>/dev/null; then
+    FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+
+    autoload -Uz compinit
+    compinit
+fi
+
+source "${HOME}/.local/share/zshrc.ds"
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+{{ end -}}

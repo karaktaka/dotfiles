@@ -61,28 +61,6 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 {{ end -}}
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Git shortcuts
-# ─────────────────────────────────────────────────────────────────────────────
-alias g='git'
-alias gs='git status'
-alias gd='git diff'
-alias gds='git diff --staged'
-alias ga='git add'
-alias gc='git commit'
-alias gca='git commit --amend'
-alias gco='git checkout'
-alias gb='git branch'
-alias gl='git log --oneline -20'
-alias glog='git log --graph --oneline --decorate --all'
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Quick navigation
-# ─────────────────────────────────────────────────────────────────────────────
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Python/uv
 # ─────────────────────────────────────────────────────────────────────────────
 {{ if lookPath "uv" -}}
