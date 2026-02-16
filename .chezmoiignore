@@ -8,6 +8,10 @@ bootstrap.sh
 .oh-my-zsh/custom/k8s.zsh
 .claude/mcp-atlassian-wrapper.sh
 .claude/.mcp.json
+.claude/commands/check-pipeline.md
+.claude/commands/mr-summary.md
+.claude/commands/check-ticket-coverage.md
+.claude/commands/review-mr-comments.md
 {{ end }}
 
 # Plugin state managed by Claude Code - don't track versions
