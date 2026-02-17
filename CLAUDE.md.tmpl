@@ -135,5 +135,7 @@ Home directory files must be added to chezmoi: `chezmoi add <file>` or `chezmoi 
 
 **`~/CLAUDE.md` is a template** (`CLAUDE.md.tmpl`) — always edit `~/.local/share/chezmoi/CLAUDE.md.tmpl` directly, then `chezmoi apply --force ~/CLAUDE.md`.
 
+**`~/.claude/` is chezmoi-managed** (`dot_claude/`) — `settings.json`, `mcp.json`, and scripts are all templates. **Never edit files in `~/.claude/` directly** — always edit in `~/.local/share/chezmoi/dot_claude/` and then `chezmoi apply`.
+
 **Always commit and push** chezmoi changes to `~/.local/share/chezmoi` after modifying dotfiles.
 {{ end }}
