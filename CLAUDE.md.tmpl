@@ -32,6 +32,7 @@
 ## Git Workflow
 
 ### Core Rules
+- **Never chain git commands with `cd &&`** — use absolute paths or `git -C <path>` instead. Chaining breaks permission pattern matching (e.g. `Bash(git*commit*)` won't match `cd /foo && git commit`).
 - **Prefer `--amend`** on feature branches (never on `main`/`master`)
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
