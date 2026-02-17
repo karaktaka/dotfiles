@@ -1,1 +1,4 @@
-command -v fortune &>/dev/null && command -v cowsay &>/dev/null && command -v lolcat &>/dev/null && fortune bofh-excuses | cowsay -f tux | lolcat
+# Only show cowsay in real user login shells (not automated CLI shells)
+if [[ -o interactive && -t 0 ]]; then
+  command -v fortune &>/dev/null && command -v cowsay &>/dev/null && command -v lolcat &>/dev/null && fortune bofh-excuses | cowsay -f tux | lolcat
+fi
