@@ -66,6 +66,8 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 | Create/View/List/Close MR | `glab mr create/view/list/close <id>` |
 | Project info | `glab repo view` |
 | Pipeline status | `glab ci status` |
+
+- **Always create MRs as drafts** — prefix title with `Draft:` to avoid notification noise
 {{ end }}
 ## File Formatting
 
@@ -128,6 +130,8 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 Home directory files must be added to chezmoi: `chezmoi add <file>` or `chezmoi re-add <file>`
 
 **Templates** (`.tmpl`): Check with `ls ~/.local/share/chezmoi/ | grep <file>`. Edit templates directly — don't force-add over them.
+
+**`~/CLAUDE.md` is a template** (`CLAUDE.md.tmpl`) — always edit `~/.local/share/chezmoi/CLAUDE.md.tmpl` directly, then `chezmoi apply --force ~/CLAUDE.md`.
 
 **Always commit and push** chezmoi changes to `~/.local/share/chezmoi` after modifying dotfiles.
 {{ end }}
