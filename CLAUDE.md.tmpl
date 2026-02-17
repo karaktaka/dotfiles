@@ -48,11 +48,9 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 ### Branch Naming
 See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
 
-### Git Worktrees
-- **Preferred for parallel work** — use `.worktrees/` directory (project-local, globally gitignored)
-- Create with: `git worktree add .worktrees/<name> -b <branch>`
-- Each worktree gets its own Claude Code session for independent work
-- Clean up with: `git worktree remove .worktrees/<name>`
+### Branching
+- **Never use git worktrees** — always create normal branches with `git checkout -b <branch>`
+- For parallel work, use separate terminal sessions on different branches
 
 ### Grouping Changes
 - **Split**: Different features, layers, or unrelated fixes
