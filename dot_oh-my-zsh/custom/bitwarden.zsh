@@ -15,6 +15,10 @@ _bw_session_file="${HOME}/.bw_session"
 # Returns 0 on success, 1 on failure
 # Session is persisted to ~/.bw_session for sharing across terminals
 function ensure_bw_session() {
+  # Ensure variables are set (may be lost in non-interactive shells / shell snapshots)
+  : ${_bw:=$(command -v bw)} || { echo "❌ Bitwarden CLI (bw) not found" >&2; return 1; }
+  : ${_bw_session_file:="${HOME}/.bw_session"}
+
   # Try to load existing session from file if not in environment
   if [[ -z "$BW_SESSION" && -f "$_bw_session_file" ]]; then
     export BW_SESSION=$(<"$_bw_session_file")
@@ -108,6 +112,8 @@ function bw_sync() {
 # Lock Bitwarden and clear persisted session
 # Usage: bw_lock
 function bw_lock() {
+  : ${_bw:=$(command -v bw)}
+  : ${_bw_session_file:="${HOME}/.bw_session"}
   $_bw lock &>/dev/null
   unset BW_SESSION
   rm -f "$_bw_session_file"
