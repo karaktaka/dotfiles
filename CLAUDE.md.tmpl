@@ -5,7 +5,8 @@
 ## ⚠️ Golden Rules
 
 1. **When in doubt, ASK!** — Never proceed without crucial information
-2. **Be context-aware** — Minimize context usage; only include what's needed, remove what's not
+2. **NEVER push without explicit permission** — always show the diff/commit, then ask "Ready to push?" and WAIT. No exceptions, no implicit permission from previous pushes.
+3. **Be context-aware** — Minimize context usage; only include what's needed, remove what's not
 
 ## Communication Style
 
@@ -31,7 +32,6 @@
 ## Git Workflow
 
 ### Core Rules
-- **Always ASK before pushing** — never push without explicit user confirmation
 - **Prefer `--amend`** on feature branches (never on `main`/`master`)
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
