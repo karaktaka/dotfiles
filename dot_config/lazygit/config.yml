@@ -20,14 +20,6 @@ gui:
     searchingActiveBorderColor:
       - '#f9e2af'
 
-customCommands:
-  - key: 'G'
-    context: 'files'
-    command: 'git gen-commit'
-    loadingText: 'Generating commit message'
-    description: 'Generate a commit message with ollama based on the staged diff'
-    output: terminal
-
 git:
   parseEmoji: true
 

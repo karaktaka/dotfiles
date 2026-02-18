@@ -14,6 +14,8 @@ bootstrap.sh
 .claude/commands/review-mr-comments.md
 .oh-my-zsh/custom/confluence.zsh
 Library/Application Support/mark.toml
+Library/Application Support/k9s/hotkeys.yaml
+Library/Application Support/k9s/clusters/**
 {{ end }}
 
 # Plugin state managed by Claude Code - don't track versions
