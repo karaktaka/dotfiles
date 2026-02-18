@@ -113,7 +113,7 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - **Tenant/cluster mapping**: Check the Alloy configmap in `monitoring` ns for `tenant_id` and `external_labels`
 
 ### Jira
-- `jira` CLI on PATH — prefer over REST API. Auth: `bw_get_secret "Jira API Token"`
+- `jira` CLI on PATH — prefer over REST API. Auth: `export JIRA_API_TOKEN=$(bw_get_secret "Jira API Token")`
 - Full CLI/REST reference in `working-with-jira` skill (kn-internal-tools plugin)
 
 ### Confluence (wiki.example.com)
