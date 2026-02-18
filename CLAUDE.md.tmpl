@@ -115,9 +115,13 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 ### Jira
 - **Server**: `https://jira.example.com` (Jira Data Center, local installation)
 - **Auth**: Bearer PAT from `bw_get_secret "Jira API Token"`
-- **CLI (`jira-cli`)**: Installed at `~/.local/bin/jira` (not brew). Config at `~/.config/.jira/.config.yml` — `installation` **must** be `Local` (capital L) or all commands silently use Cloud v3 API which doesn't exist on DC. Token via `set_jira_token`.
-- **CLI commands**: `jira issue list -q "JQL"`, `jira issue view <KEY>`, `jira issue create --type Bug --summary "..." --label AIE --no-input`, `jira epic list`
-- **REST API**: `curl -H "Authorization: Bearer $JIRA_API_TOKEN" https://jira.example.com/rest/api/2/...`
+- **CLI (`jira-cli`)**: On PATH (installed at `~/.local/bin/jira`, not brew). Config at `~/.config/.jira/.config.yml` — `installation` **must** be `Local` (capital L) or all commands silently use Cloud v3 API which doesn't exist on DC. Token via `set_jira_token`.
+- **Prefer CLI over REST API** — handles auth automatically, less error-prone than curl
+- **CLI commands**: `jira issue list -q "JQL"`, `jira issue view <KEY>`, `jira issue create -t Story -s"..." -b"..." -l AIE --no-input`, `jira epic list`
+- **Sub-tasks**: `jira issue create -t Sub-task -P PARENT-KEY -s"..." -b"..." --no-input` (`-P` sets parent)
+- **Edit issues**: `jira issue edit AI-1234 -s"New summary" -b"New description" --no-input`
+- **Long descriptions**: Use `--template -` (stdin) or `--template /path/to/file` to avoid shell escaping
+- **REST API** (only when CLI lacks a feature): `curl -H "Authorization: Bearer $JIRA_API_TOKEN" https://jira.example.com/rest/api/2/...`
 - **Epic link field**: `customfield_11571` (not the typical `customfield_10014`)
 - **Create issue** (REST): `POST /rest/api/2/issue` with fields: `project.key`, `issuetype.id` (Bug=1, Story=14, Task=3, Epic=13), `summary`, `description` (Jira wiki markup), `labels`, `customfield_11571` (epic link)
 - **Search** (REST): `GET /rest/api/2/search?jql=...&fields=key,summary`
