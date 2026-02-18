@@ -1,0 +1,30 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Symlink ~/.config/{lazygit,k9s} → ~/Library/Application Support/ on macOS
+# These apps default to ~/Library/Application Support/ on macOS but ~/.config/ on Linux.
+# We store configs in ~/.config/ for cross-platform compatibility and symlink on macOS.
+
+set -euo pipefail
+
+symlink_config() {
+  local app="$1"
+  local src="$HOME/.config/$app"
+  local dest="$HOME/Library/Application Support/$app"
+
+  if [ -L "$dest" ]; then
+    return 0  # Already a symlink
+  fi
+
+  if [ -d "$dest" ]; then
+    # Merge any existing files into ~/.config, then replace with symlink
+    rsync -a "$dest/" "$src/"
+    rm -rf "$dest"
+  fi
+
+  ln -s "$src" "$dest"
+  echo "Symlinked $dest → $src"
+}
+
+symlink_config "lazygit"
+symlink_config "k9s"
+{{ end -}}
