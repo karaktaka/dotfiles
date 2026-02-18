@@ -90,11 +90,9 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 | Repo Type | Format |
 |-----------|--------|
 | GitHub | `Co-Authored-By: Claude <noreply@anthropic.com>` (all commits) |
-| GitLab | Initial: none. Subsequent: `Co-Authored-By: <Character> <email>` |
+| GitLab | `Co-Authored-By: <Character> <email>` (all commits) |
 
 **GitLab characters**: Match vibe (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
-
-**Initial commit** = first commit on a branch (even if branch has prior commits from base).
 
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
