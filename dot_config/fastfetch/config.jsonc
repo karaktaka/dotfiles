@@ -1,0 +1,46 @@
+// Fastfetch config — Catppuccin Mocha theme
+// Colors match lazygit, k9s, and fish shell
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "display": {
+        "color": {
+            "keys": "38;2;137;180;250"
+        }
+    },
+    "modules": [
+        {
+            "type": "title",
+            "color": {
+                "user": "38;2;148;226;213",
+                "at":   "38;2;205;214;244",
+                "host": "38;2;137;180;250"
+            }
+        },
+        "separator",
+        "os",
+        "host",
+        "kernel",
+        "uptime",
+        "packages",
+        "shell",
+        "display",
+        "de",
+        "wm",
+        "wmtheme",
+        "theme",
+        "icons",
+        "font",
+        "cursor",
+        "terminal",
+        "cpu",
+        "gpu",
+        "memory",
+        "swap",
+        { "type": "disk", "folders": "/" },
+        { "type": "disk", "folders": "/mnt/Games" },
+        { "type": "disk", "folders": "/mnt/Games2" },
+        "localip",
+        "locale",
+        "colors"
+    ]
+}
