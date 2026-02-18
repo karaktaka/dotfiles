@@ -98,6 +98,17 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 {{ if .isWork }}
 ## Work Environment
 
+### Datascience Workspace (`~/workspace/git/datascience/`)
+
+Contains **4 separate git repos**, not a monorepo:
+
+| Repo | Path | Default Branch | Workflow | Purpose |
+|------|------|----------------|----------|---------|
+| **datascience** | `datascience/datascience/` | `master` | Branch/MR | Source code, Dockerfiles, CI jobs |
+| **helm_charts** | `datascience/helm_charts/` | `main` | Branch/MR | Helm chart templates |
+| **config** | `datascience/config/` | `main` | Trunk-based | ArgoCD deployment config (values files) |
+| **infrastructure** | `datascience/infrastructure/` | `main` | Trunk-based | Terraform (AWS, ECR, EKS) |
+
 ### AWS & Kubernetes
 - SSO: `aws sso login --sso-session KN-Operations`
 - Profiles: `dev`, `prod`
