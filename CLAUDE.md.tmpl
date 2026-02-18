@@ -55,6 +55,11 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 - **Never use git worktrees** — always create normal branches with `git checkout -b <branch>`
 - For parallel work, use separate terminal sessions on different branches
 
+### GPG Signing
+- **Stale agent**: If import fails with "Bad secret key", restart: `gpgconf --kill gpg-agent` then retry
+- **Set trust non-interactively**: `echo "FINGERPRINT:6:" | gpg --import-ownertrust` (`--edit-key trust` needs a TTY)
+- **Check for local overrides**: When setting up `includeIf`-based signing, remove repo-level `user.*` overrides: `git -C <repo> config --local --unset user.name` / `user.email`
+
 ### Grouping Changes
 - **Split**: Different features, layers, or unrelated fixes
 - **Single**: Tightly related or interdependent changes
@@ -139,6 +144,9 @@ Contains **4 separate git repos**, not a monorepo:
 ### Chezmoi (Dotfiles)
 - Home dir files managed by chezmoi. **Never edit template targets directly** (`~/CLAUDE.md`, `~/.claude/settings.json`)
 - Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
+- `chezmoi forget` needs `--force` in non-interactive shells (no TTY for confirmation)
+- Autocommit only fires on `chezmoi add`/`re-add` — direct source edits need manual `git -C ~/.local/share/chezmoi` commit
+- **Go template whitespace**: `{{ "{{" }} if -}}` / `{{ "{{" }} end -}}` eats adjacent tabs/newlines — use inline conditionals for single values (e.g. `{{ "{{" }} if .x }}val1{{ "{{" }} else }}val2{{ "{{" }} end }}`)
 
 {{ if eq .chezmoi.os "darwin" }}
 ### macOS Config Paths
