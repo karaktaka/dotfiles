@@ -125,6 +125,10 @@ Contains **4 separate git repos**, not a monorepo:
 
 ### Jira
 - `jira` CLI on PATH — prefer over REST API. Auth: `export JIRA_API_TOKEN=$(bw_get_secret "Jira API Token")`
+- **Default project:** `AI` (AI and Data Science) — **always add label `AIE`** on tickets
+- **Always ask** which epic to attach the ticket to (if applicable)
+- **Formatting gotcha:** `jira issue create -b`/`-T` mangles Jira wiki markup (escapes special chars, converts `#` lists to `h1.`). Workaround: create ticket with CLI, then update description via REST API: `curl -X PUT -H "Authorization: Bearer $JIRA_API_TOKEN" -H "Content-Type: application/json" -d @body.json "https://jira.example.com/rest/api/2/issue/{KEY}"`
+- **Always invoke the `working-with-jira` skill** before doing any Jira operations
 - Full CLI/REST reference in `working-with-jira` skill (kn-internal-tools plugin)
 
 ### Confluence (wiki.example.com)
