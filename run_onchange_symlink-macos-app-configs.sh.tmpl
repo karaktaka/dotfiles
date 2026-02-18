@@ -1,7 +1,8 @@
 #!/bin/bash
-# Symlink ~/.config/{lazygit,k9s} → ~/Library/Application Support/ on macOS
-# These apps default to ~/Library/Application Support/ on macOS but ~/.config/ on Linux.
+# Symlink ~/.config/lazygit → ~/Library/Application Support/lazygit on macOS
+# Lazygit defaults to ~/Library/Application Support/ on macOS but ~/.config/ on Linux.
 # We store configs in ~/.config/ for cross-platform compatibility and symlink on macOS.
+# NOTE: k9s uses lstat (no symlink follow), so it gets OS-specific paths via .chezmoiignore instead.
 
 {{ if ne .chezmoi.os "darwin" -}}
 exit 0
@@ -29,4 +30,3 @@ symlink_config() {
 }
 
 symlink_config "lazygit"
-symlink_config "k9s"

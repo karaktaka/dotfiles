@@ -30,3 +30,10 @@ Library/Application Support/mark.toml
 {{ if not (lookPath "fish") }}
 .config/fish/**
 {{ end }}
+
+# k9s: OS-specific config paths (macOS uses ~/Library, Linux uses ~/.config)
+{{ if eq .chezmoi.os "darwin" }}
+.config/k9s/**
+{{ else }}
+Library/Application Support/k9s/**
+{{ end }}
