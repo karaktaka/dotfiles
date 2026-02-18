@@ -113,33 +113,14 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - **Tenant/cluster mapping**: Check the Alloy configmap in `monitoring` ns for `tenant_id` and `external_labels`
 
 ### Jira
-- **Server**: `https://jira.example.com` (Jira Data Center, local installation)
-- **Auth**: Bearer PAT from `bw_get_secret "Jira API Token"`
-- **CLI (`jira-cli`)**: On PATH (installed at `~/.local/bin/jira`, not brew). Config at `~/.config/.jira/.config.yml` — `installation` **must** be `Local` (capital L) or all commands silently use Cloud v3 API which doesn't exist on DC. Token via `set_jira_token`.
-- **Prefer CLI over REST API** — handles auth automatically, less error-prone than curl
-- **CLI commands**: `jira issue list -q "JQL"`, `jira issue view <KEY>`, `jira issue create -t Story -s"..." -b"..." -l AIE --no-input`, `jira epic list`
-- **Sub-tasks**: `jira issue create -t Sub-task -P PARENT-KEY -s"..." -b"..." --no-input` (`-P` sets parent)
-- **Edit issues**: `jira issue edit AI-1234 -s"New summary" -b"New description" --no-input`
-- **Long descriptions**: Use `--template -` (stdin) or `--template /path/to/file` to avoid shell escaping
-- **REST API** (only when CLI lacks a feature): `curl -H "Authorization: Bearer $JIRA_API_TOKEN" https://jira.example.com/rest/api/2/...`
-- **Epic link field**: `customfield_11571` (not the typical `customfield_10014`)
-- **Create issue** (REST): `POST /rest/api/2/issue` with fields: `project.key`, `issuetype.id` (Bug=1, Story=14, Task=3, Epic=13), `summary`, `description` (Jira wiki markup), `labels`, `customfield_11571` (epic link)
-- **Search** (REST): `GET /rest/api/2/search?jql=...&fields=key,summary`
+- `jira` CLI on PATH — prefer over REST API. Auth: `bw_get_secret "Jira API Token"`
+- Full CLI/REST reference in `working-with-jira` skill (kn-internal-tools plugin)
 
 ### Confluence (wiki.example.com)
-- **REST API**: `wiki.example.com/rest/api/content` — uses Confluence storage format (XHTML), not markdown
-- **Auth**: Bearer PAT from `bw_get_secret "Confluence API Token"` — **separate from Jira PAT** (DC products have independent PAT systems)
-- **Space key**: `datascience` (display name "AI")
-- **Gotcha**: Anonymous read is enabled — always verify auth with `/rest/api/user/current` (don't assume reads = authenticated)
+- REST API + `mark` CLI. Auth: `bw_get_secret "Confluence API Token"` (separate from Jira PAT)
+- Full reference in `working-with-confluence` skill (kn-internal-tools plugin)
 
 ### Chezmoi (Dotfiles)
-Home directory files must be added to chezmoi: `chezmoi add <file>` or `chezmoi re-add <file>`
-
-**Templates** (`.tmpl`): Check with `ls ~/.local/share/chezmoi/ | grep <file>`. Edit templates directly — don't force-add over them.
-
-**`~/CLAUDE.md` is a template** (`CLAUDE.md.tmpl`) — always edit `~/.local/share/chezmoi/CLAUDE.md.tmpl` directly, then `chezmoi apply --force ~/CLAUDE.md`.
-
-**`~/.claude/` is chezmoi-managed** (`dot_claude/`) — `settings.json`, `mcp.json`, and scripts are all templates. **Never edit files in `~/.claude/` directly** — always edit in `~/.local/share/chezmoi/dot_claude/` and then `chezmoi apply`.
-
-**Always commit and push** chezmoi changes to `~/.local/share/chezmoi` after modifying dotfiles.
+- Home dir files managed by chezmoi. **Never edit template targets directly** (`~/CLAUDE.md`, `~/.claude/settings.json`)
+- Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
 {{ end }}
