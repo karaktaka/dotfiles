@@ -1,6 +1,8 @@
 [user]
 	name = {{ .name }}
 	email = {{ .email }}
+[commit]
+	gpgsign = true
 [pull]
 	rebase = true
 [stash]
@@ -14,3 +16,7 @@
 	enabled = true
 [branch]
 	autosetuprebase = always
+[includeIf "gitdir:~/workspace/"]
+	path = ~/.gitconfig-work
+[includeIf "gitdir:~/personal/"]
+	path = ~/.gitconfig-personal
