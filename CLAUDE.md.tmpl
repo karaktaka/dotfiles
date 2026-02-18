@@ -7,6 +7,7 @@
 1. **When in doubt, ASK!** — Never proceed without crucial information
 2. **NEVER push without explicit permission** — always show the diff/commit, then ask "Ready to push?" and WAIT. No exceptions, no implicit permission from previous pushes.
 3. **Be context-aware** — Minimize context usage; only include what's needed, remove what's not
+4. **Minimal blast radius** — Only touch files directly related to the ask. Never move, restructure, or delete files that weren't requested. Verify async operations completed before acting on their results.
 
 ## Communication Style
 
@@ -138,4 +139,13 @@ Contains **4 separate git repos**, not a monorepo:
 ### Chezmoi (Dotfiles)
 - Home dir files managed by chezmoi. **Never edit template targets directly** (`~/CLAUDE.md`, `~/.claude/settings.json`)
 - Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
+
+{{ if eq .chezmoi.os "darwin" }}
+### macOS Config Paths
+- lazygit/k9s use `~/Library/Application Support/` on macOS, `~/.config/` on Linux
+- lazygit follows symlinks; **k9s does NOT** (uses `lstat`) — needs real files at native path
+- k9s per-cluster skins fully override global skin (no inheritance) — per-cluster skins must include the full theme
+- Cross-platform chezmoi strategy: `.chezmoiignore` with OS conditionals for k9s; symlink script for lazygit
+- Time Machine local snapshots: `/Volumes/com.apple.TimeMachine.localsnapshots/Backups.backupdb/`
+{{ end }}
 {{ end }}
