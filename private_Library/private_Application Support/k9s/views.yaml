@@ -1,0 +1,67 @@
+views:
+  v1/pods:
+    sortColumn: NAMESPACE:asc
+    columns:
+      - STATUS
+      - NAMESPACE
+      - NAME
+      - RESTARTS
+      - READY
+      - "CPU"
+      - "MEM"
+      - "CPU/R:L"
+      - "MEM/R:L"
+      - "%CPU/R"
+      - "%CPU/L"
+      - "%MEM/R"
+      - "%MEM/L"
+      - AGE
+      - NODE
+  v1/services:
+    sortColumn: NAME:asc
+    columns:
+      - NAME
+      - TYPE
+      - PORTS
+      - AGE
+      - NODE
+  v1/nodes:
+    sortColumn: AGE:desc
+    columns:
+      - STATUS
+      - NAME
+      - TAINTS
+      - VERSION
+      - INSTANCE-TYPE:.metadata.labels.node\.kubernetes\.io/instance-type
+      - PODS
+      - "%CPU"
+      - CPU
+      - "CPU/A"
+      - "%MEM"
+      - MEM
+      - "MEM/A"
+      - AGE
+  v1/namespaces:
+    sortColumn: NAME:asc
+    columns:
+      - NAME
+      - STATUS
+      - AGE
+  apps/v1/deployments:
+    sortColumn: NAMESPACE:asc
+    columns:
+      - NAMESPACE
+      - NAME
+      - READY
+      - UP-TO-DATE
+      - AVAILABLE
+      - AGE
+  apps/v1/replicasets:
+    sortColumn: NAMESPACE:asc
+    columns:
+      - NAMESPACE
+      - NAME
+      - DESIRED
+      - CURRENT
+      - READY
+      - AGE
