@@ -1,5 +1,24 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+{{- if .isWork }}
+    "kn-internal-tools@kn-claude-plugins": true,
+    "mr-summary@kn-claude-plugins": true,
+{{- end }}
+    "pr-review-toolkit@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+{{- if .isWork }}
+    "rtk-hook@kn-claude-plugins": true,
+{{- end }}
+    "security-guidance@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  },
 {{- if .isWork }}
   "env": {
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
@@ -19,6 +38,8 @@
       "WebFetch(domain:gitlab.example.com)",
       "Bash(aws *)",
       "Bash(az *)",
+      "Bash(glab --version)",
+      "Bash(glab auth status*)",
       "Bash(glab*list*)",
       "Bash(glab*view*)",
       "Bash(helm*lint*)",
@@ -151,18 +172,6 @@
       "Bash(git*branch*-D*)",
       "Bash(git*stash*clear)"
     ]
-  },
-  "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true
   },
   "spinnerTipsEnabled": false,
   "statusLine": {
