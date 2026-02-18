@@ -1,7 +1,7 @@
-{{ if .isWork -}}
+{{- $isDarwin := eq .chezmoi.os "darwin" -}}
 # Path to your oh-my-zsh installation.
 export ZSH="${HOME}/.oh-my-zsh"
-
+{{ if .isWork -}}
 # kube-ps1
 KUBE_PS1_SYMBOL_ENABLE=true
 KUBE_PS1_NS_ENABLE=false
@@ -9,9 +9,10 @@ KUBE_PS1_CLUSTER_FUNCTION=get_cluster_short
 KUBE_PS1_PREFIX=" ["
 KUBE_PS1_SUFFIX="]"
 
+{{ end -}}
 # Virtualenv
 ZSH_THEME_VIRTUALENV_PREFIX=" ["
-
+{{ if .isWork -}}
 # AWS
 SHOW_AWS_PROMPT=false
 AWS_PROFILE_STATE_ENABLED=true
@@ -23,6 +24,7 @@ ZSH_THEME_AWS_REGION_SUFFIX="]"
 
 export AWS_DEFAULT_REGION=eu-central-1
 
+{{ end -}}
 # Theme
 ZSH_THEME="crcandy"
 
@@ -30,42 +32,56 @@ ZSH_THEME="crcandy"
 zstyle ':omz:update' mode reminder
 
 # Completion
+HYPHEN_INSENSITIVE="true"
 COMPLETION_WAITING_DOTS="true"
 
 # VCS performance
 DISABLE_UNTRACKED_FILES_DIRTY="true"
+{{ if $isDarwin -}}
 
 # iterm2 shell integration
 zstyle :omz:plugins:iterm2 shell-integration yes
+{{ end -}}
 
 # Plugins
 plugins=(
-    aws
-    azure
-    brew
     colored-man-pages
     colorize
     fzf
     git
     git-extras
-    helm
-    iterm2
-    kube-ps1
-    kubectl
-    kubectx
     podman
-    terraform
     virtualenv
     zsh-autosuggestions
     zsh-syntax-highlighting
+{{ if .isWork -}}
+    aws
+    azure
+    helm
+    kube-ps1
+    kubectl
+    kubectx
+    terraform
+{{ end -}}
+{{ if $isDarwin -}}
+    iterm2
+{{ end -}}
+{{ if lookPath "brew" -}}
+    brew
+{{ end -}}
 )
 
 source "${ZSH}/oh-my-zsh.sh"
 
 # User configuration
-export PATH="${PATH}:${HOME}/.krew/bin:${HOME}/go/bin"
 export LANG=en_US.UTF-8
-
+{{ if lookPath "go" -}}
+export PATH="${PATH}:${HOME}/go/bin"
+{{ end -}}
+{{ if .isWork -}}
+export PATH="${PATH}:${HOME}/.krew/bin"
+{{ end -}}
+{{ if lookPath "brew" -}}
 # homebrew completions
 if type brew &>/dev/null; then
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
@@ -73,7 +89,10 @@ if type brew &>/dev/null; then
     autoload -Uz compinit
     compinit
 fi
-
+{{ end -}}
+{{ if .isWork -}}
 source "${HOME}/.local/share/zshrc.ds"
+{{ end -}}
+{{ if $isDarwin -}}
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 {{ end -}}

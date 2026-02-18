@@ -1,3 +1,4 @@
+{{- $isDarwin := eq .chezmoi.os "darwin" -}}
 #!/usr/bin/env zsh
 # Generic shell functions - mixed universal and work-specific
 
@@ -10,15 +11,18 @@ function update_system() {
 {{ if .isWork -}}
   update_kubectl && \
 {{ end -}}
+{{ if $isDarwin -}}
   brew update && \
   brew upgrade && \
+{{ end -}}
   omz update
 }
-
+{{ if lookPath "ollama" }}
 # Run Ollama with optimized settings
 function ollama_run() {
-  OLLAMA_FLASH_ATTENTION="1" OLLAMA_KV_CACHE_TYPE="q8_0" /opt/homebrew/opt/ollama/bin/ollama serve
+  OLLAMA_FLASH_ATTENTION="1" OLLAMA_KV_CACHE_TYPE="q8_0" ollama serve
 }
+{{ end -}}
 {{ if .isWork }}
 # ─────────────────────────────────────────────────────────────────────────────
 # Work Functions - SSO Admin API

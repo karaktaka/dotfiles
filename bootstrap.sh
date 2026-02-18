@@ -120,6 +120,53 @@ install_dependencies() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Install shell extras (plugins & tools)
+# ─────────────────────────────────────────────────────────────────────────────
+install_shell_extras() {
+    echo ""
+    echo -e "${BLUE}▶ Installing shell extras...${NC}"
+
+    # Oh-My-Zsh custom plugins (only when zsh is available)
+    if command_exists zsh; then
+        ZSH_CUSTOM="${HOME}/.oh-my-zsh/custom"
+
+        for plugin_repo in \
+            "zsh-users/zsh-autosuggestions" \
+            "zsh-users/zsh-syntax-highlighting"; do
+            plugin_name="${plugin_repo##*/}"
+            if [[ ! -d "${ZSH_CUSTOM}/plugins/${plugin_name}" ]]; then
+                echo -e "${YELLOW}▶ Installing ${plugin_name}...${NC}"
+                git clone "https://github.com/${plugin_repo}.git" \
+                    "${ZSH_CUSTOM}/plugins/${plugin_name}"
+            else
+                echo -e "${GREEN}✓ ${plugin_name} already installed${NC}"
+            fi
+        done
+
+        # Zsh-specific CLI fun (fortune, cowsay, lolcat for .zlogin)
+        echo -e "${BLUE}▶ Installing zsh extras (fortune, cowsay, lolcat)...${NC}"
+        case $OS in
+            macos)
+                for pkg in fortune cowsay lolcat; do
+                    if brew list "$pkg" &>/dev/null; then
+                        echo -e "${GREEN}✓ $pkg already installed${NC}"
+                    else
+                        echo -e "${YELLOW}▶ Installing $pkg...${NC}"
+                        brew install "$pkg"
+                    fi
+                done
+                ;;
+            arch)
+                sudo pacman -S --needed --noconfirm fortune-mod cowsay lolcat
+                ;;
+            debian)
+                sudo apt install -y fortune-mod cowsay lolcat
+                ;;
+        esac
+    fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Initialize chezmoi
 # ─────────────────────────────────────────────────────────────────────────────
 init_chezmoi() {
@@ -288,6 +335,7 @@ show_post_install() {
 # ─────────────────────────────────────────────────────────────────────────────
 main() {
     install_dependencies
+    install_shell_extras
     init_chezmoi
     setup_age_key
     apply_dotfiles
