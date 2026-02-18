@@ -1,8 +1,11 @@
-{{- if eq .chezmoi.os "darwin" -}}
 #!/bin/bash
 # Symlink ~/.config/{lazygit,k9s} → ~/Library/Application Support/ on macOS
 # These apps default to ~/Library/Application Support/ on macOS but ~/.config/ on Linux.
 # We store configs in ~/.config/ for cross-platform compatibility and symlink on macOS.
+
+{{ if ne .chezmoi.os "darwin" -}}
+exit 0
+{{ end -}}
 
 set -euo pipefail
 
@@ -27,4 +30,3 @@ symlink_config() {
 
 symlink_config "lazygit"
 symlink_config "k9s"
-{{ end -}}
