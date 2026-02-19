@@ -46,7 +46,8 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 **Why?** Blind `--amend` can modify the wrong commit if something was committed in between (hook, CI, user).
 
 ### Pre-Commit
-**Always lint/format before committing.** See `~/.claude/formatter-reference.md` for the full list of formatters by file type.
+- **Always lint/format before committing.** See `~/.claude/formatter-reference.md` for the full list of formatters by file type.
+- **Always test ALL changes before committing** — run the project's test suite (or the relevant subset) using the appropriate tools (e.g. `pytest`, `npm test`, `make test`). Don't commit code you haven't verified.
 
 ### Branch Naming
 See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
@@ -73,7 +74,8 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 | Project info | `glab repo view` |
 | Pipeline status | `glab ci status` |
 
-- **Always create MRs as drafts** — prefix title with `Draft:` to avoid notification noise
+- **Always create MRs as drafts** — use `--draft` flag (do **not** also prefix the title with `Draft:` — the flag does that automatically)
+- **Always enable "Delete source branch"** and **"Squash commits"** when creating MRs
 {{ end }}
 ## File Formatting
 
@@ -87,10 +89,12 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 ### Co-Authored-By
 
+**⚠️ BEFORE every commit**, run `git remote -v` to determine GitHub vs GitLab — then use the matching format. **Never guess, never ask.**
+
 | Repo Type | Format |
 |-----------|--------|
-| GitHub | `Co-Authored-By: Claude <noreply@anthropic.com>` (all commits) |
-| GitLab | `Co-Authored-By: <Character> <email>` (all commits) |
+| GitHub (`github.com`) | `Co-Authored-By: Claude <noreply@anthropic.com>` (all commits) |
+| GitLab (`gitlab` in remote URL, incl. self-hosted) | `Co-Authored-By: <Character> <email>` (all commits) |
 
 **GitLab characters**: Match vibe (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
 
