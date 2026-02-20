@@ -14,7 +14,7 @@
     "pr-review-toolkit@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
 {{- if .isWork }}
-    "rtk-hook@kn-claude-plugins": true,
+    "rtk-hook@kn-claude-plugins": false,
 {{- end }}
     "security-guidance@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true
@@ -59,7 +59,10 @@
       "Bash(kubectl*logs*)",
       "Bash(kubectl*version*)",
       "Bash(kubectl rollout status*)",
+      "Bash(kubectl config use-context arn:aws:eks:eu-central-1:REDACTED_SANDBOX_ACCOUNT:cluster/sandbox-cluster)",
       "Bash(make tf/format*)",
+      "Bash(make tf/init*)",
+      "Bash(make tf/plan*)",
       "Bash(terraform*fmt*)",
       "Bash(terraform*validate*)",
       "Read(~/.aws/config)",
@@ -158,12 +161,17 @@
       "Bash(kubectl delete*)",
       "Bash(kubectl drain*)",
       "Bash(kubectl remove*)",
+      "Bash(kubectl config use-context arn:aws:eks:eu-central-1:REDACTED_DEV_ACCOUNT:cluster/apps-dev-cluster)",
+      "Bash(kubectl config use-context arn:aws:eks:eu-central-1:REDACTED_PROD_ACCOUNT:cluster/apps-prod-cluster)",
       "Bash(kubectl scale*)",
       "Bash(mark*)",
       "Bash(make apply-*)",
       "Bash(make destroy-*)",
       "Bash(make plan-*)",
-      "Bash(make tf/*)",
+      "Bash(make tf/apply*)",
+      "Bash(make tf/destroy*)",
+      "Bash(make tf/import*)",
+      "Bash(make tf/state*)",
 {{- end }}
       "Bash(wget *)"
     ],
