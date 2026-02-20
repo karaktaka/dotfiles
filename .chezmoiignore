@@ -33,6 +33,10 @@ Library/Application Support/k9s/clusters/**
 .config/fish/**
 {{ end }}
 
+{{ if not (lookPath "fastfetch") }}
+.config/fastfetch/**
+{{ end }}
+
 # k9s: OS-specific config paths (macOS uses ~/Library, Linux uses ~/.config)
 {{ if eq .chezmoi.os "darwin" }}
 .config/k9s/**
