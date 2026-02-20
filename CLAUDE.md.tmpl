@@ -76,6 +76,7 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 
 - **Always create MRs as drafts** — use `--draft` flag (do **not** also prefix the title with `Draft:` — the flag does that automatically)
 - **Always enable "Delete source branch"** and **"Squash commits"** when creating MRs
+- **MR description flag**: `glab mr create --description "..."` (NOT `--body` — that's `gh`)
 {{ end }}
 ## File Formatting
 
@@ -87,16 +88,16 @@ Files end with newline, no trailing whitespace. See `~/.claude/formatter-referen
 
 Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
-### Co-Authored-By
+### Co-Authored-By & PR/MR Footer
 
-**⚠️ BEFORE every commit**, run `git remote -v` to determine GitHub vs GitLab — then use the matching format. **Never guess, never ask.**
+**⚠️ BEFORE every commit/PR/MR**, run `git remote -v` to determine the remote — then use the matching format. **Never guess, never ask.**
 
-| Repo Type | Format |
-|-----------|--------|
-| GitHub (`github.com`) | `Co-Authored-By: Claude <noreply@anthropic.com>` (all commits) |
-| GitLab (`gitlab` in remote URL, incl. self-hosted) | `Co-Authored-By: <Character> <email>` (all commits) |
+| Remote | Co-Authored-By | PR/MR footer |
+|--------|---------------|--------------|
+| KN GitLab (`gitlab.example.com`) | `Co-Authored-By: <Character> <email>` | `"<Quote>" — <Character>, Generated with [Claude Code](https://claude.com/claude-code)` |
+| Everything else (GitHub, other GitLab, etc.) | `Co-Authored-By: Claude <noreply@anthropic.com>` | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
 
-**GitLab characters**: Match vibe (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
+**KN GitLab flair**: Match character/quote vibe to the change (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
 
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
