@@ -93,14 +93,23 @@ Files end with newline, no trailing whitespace. See `~/.claude/formatter-referen
 
 Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
-### Co-Authored-By & PR/MR Footer
+### Co-Authored-By & Flair
 
 **⚠️ BEFORE every commit/PR/MR**, run `git remote -v` to determine the remote — then use the matching format. **Never guess, never ask.**
 
-| Remote | Co-Authored-By | PR/MR footer |
-|--------|---------------|--------------|
-| KN GitLab (`gitlab.example.com`) | `Co-Authored-By: <Character> <email>` | `"<Quote>" — <Character>, Generated with [Claude Code](https://claude.com/claude-code)` |
-| Everything else (GitHub, other GitLab, etc.) | `Co-Authored-By: Claude <noreply@anthropic.com>` | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
+#### Commits
+
+| Remote | Co-Authored-By | Quote (last line of body) |
+|--------|---------------|--------------------------|
+| KN GitLab (`gitlab.example.com`) | `Co-Authored-By: <Character> <email>` | `"<Quote>" — <Character>` |
+| Everything else (GitHub, other GitLab, etc.) | `Co-Authored-By: Claude <noreply@anthropic.com>` | *(none)* |
+
+#### PR/MR descriptions (not commits!)
+
+| Remote | Footer |
+|--------|--------|
+| KN GitLab (`gitlab.example.com`) | `"<Quote>" — <Character>` |
+| Everything else (GitHub, other GitLab, etc.) | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
 
 **KN GitLab flair**: Match character/quote vibe to the change (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
 
