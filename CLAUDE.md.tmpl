@@ -33,9 +33,15 @@
 
 ### Core Rules
 - **Never chain git commands with `cd &&`** — use absolute paths or `git -C <path>` instead. Chaining breaks permission pattern matching (e.g. `Bash(git*commit*)` won't match `cd /foo && git commit`).
+- **Always pull before pushing** — if there are no unstaged changes and everything is committed, just `git pull`. Resolve conflicts if any, then push.
 - **Prefer `--amend`** on feature branches (never on `main`/`master`)
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
+
+### Gitconfig Defaults (don't add these flags explicitly)
+- `pull.rebase=true` — `git pull` rebases automatically, no `--rebase` needed
+- `branch.autosetuprebase=always` — new branches auto-configured for rebase
+- `init.defaultbranch=main` — default branch is `main`
 
 ### Safe Amend
 Verify HEAD before amending: `git log --oneline -1`
