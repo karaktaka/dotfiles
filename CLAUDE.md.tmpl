@@ -58,7 +58,7 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
 
 ### Branching
-- **Never use git worktrees** — always create normal branches with `git checkout -b <branch>`
+- **Never use git worktrees** — always create normal branches with `git switch -c <branch>`
 - For parallel work, use separate terminal sessions on different branches
 
 ### GPG Signing
@@ -103,7 +103,9 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 | Remote | Co-Authored-By |
 |--------|---------------|
+{{- if .isWork }}
 | KN GitLab (`gitlab.example.com`) | `Co-Authored-By: <Character> <email>` |
+{{- end }}
 | Everything else (GitHub, other GitLab, etc.) | `Co-Authored-By: Claude <noreply@anthropic.com>` |
 
 **No quotes in commits** — quotes are exclusively for MR/PR descriptions.
@@ -112,10 +114,14 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 | Remote | Footer |
 |--------|--------|
+{{- if .isWork }}
 | KN GitLab (`gitlab.example.com`) | `"<Quote>" — <Character>` |
+{{- end }}
 | Everything else (GitHub, other GitLab, etc.) | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
+{{- if .isWork }}
 
 **KN GitLab flair**: Match character/quote vibe to the change (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
+{{- end }}
 
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
