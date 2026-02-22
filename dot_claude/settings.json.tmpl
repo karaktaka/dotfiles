@@ -199,6 +199,21 @@
       "Bash(git*stash*clear)"
     ]
   },
+{{- if not .isWork }}
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/dennis/.claude/hooks/rtk-rewrite.sh"
+          }
+        ]
+      }
+    ]
+  },
+{{- end }}
   "spinnerTipsEnabled": false,
   "statusLine": {
     "command": "/bin/bash ~/.claude/statusline-command.sh",
