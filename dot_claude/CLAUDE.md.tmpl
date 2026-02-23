@@ -173,7 +173,7 @@ Contains **4 separate git repos**, not a monorepo:
 - Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
 - `chezmoi forget` needs `--force` in non-interactive shells (no TTY for confirmation)
 - Autocommit only fires on `chezmoi add`/`re-add` — direct source edits need manual `git -C ~/.local/share/chezmoi` commit
-- **Go template whitespace**: `{{ "{{" }} if -}}` / `{{ "{{" }} end -}}` eats adjacent tabs/newlines — use inline conditionals for single values (e.g. `{{ "{{" }} if .x }}val1{{ "{{" }} else }}val2{{ "{{" }} end }}`)
+- **Go template whitespace**: `{{ "{{" }}- if }}` (left-dash) trims before — preserves indentation of next line. `{{ "{{" }} if -}}` (right-dash) trims after — use for block-level conditionals. Inline for single values: `{{ "{{" }} if .x }}val1{{ "{{" }} else }}val2{{ "{{" }} end }}`
 
 {{ if eq .chezmoi.os "darwin" }}
 ### macOS Config Paths
