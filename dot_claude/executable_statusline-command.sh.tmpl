@@ -5,12 +5,7 @@ input=$(cat)
 
 # Extract values from JSON
 cwd=$(echo "$input" | jq -r '.workspace.current_dir')
-model_name=$(echo "$input" | jq -r '.model.display_name')
 output_style=$(echo "$input" | jq -r '.output_style.name')
-
-# Extract context window and cost information
-used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
-session_cost=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
 
 {{ if .isWork -}}
 # Get AWS Profile
@@ -56,51 +51,35 @@ if cd "$cwd" 2>/dev/null && git rev-parse --git-dir > /dev/null 2>&1; then
     fi
 fi
 
-# ANSI colors using $'...' syntax so they're real escape bytes
-reset=$'\033[0m'
-blue=$'\033[34m'
-dim=$'\033[90m'
-green=$'\033[32m'
-yellow=$'\033[33m'
-red=$'\033[31m'
-
-# Build usage/cost info
-usage_info=""
-if [ -n "$used_pct" ]; then
-    # Color code context % based on usage
-    if (( $(echo "$used_pct >= 90" | bc -l 2>/dev/null || echo 0) )); then
-        ctx_color="$red"
-    elif (( $(echo "$used_pct >= 75" | bc -l 2>/dev/null || echo 0) )); then
-        ctx_color="$yellow"
-    else
-        ctx_color="$green"
-    fi
-
-    # Format session cost
-    formatted_cost=$(printf '$%.2f' "$session_cost")
-
-    usage_info=$(printf ' %s|%s %sctx:%d%%%s %s|%s %s%s%s' \
-        "$blue" "$reset" \
-        "$ctx_color" "$used_pct" "$reset" \
-        "$blue" "$reset" \
-        "$dim" "$formatted_cost" "$reset")
+# Get ccusage statusline (handles model, cost, context, burn rate)
+ccusage_bin="$HOME/.local/bin/ccusage"
+ccusage_output=""
+if [ -x "$ccusage_bin" ]; then
+    ccusage_output=$(echo "$input" | "$ccusage_bin" statusline \
+        --visual-burn-rate emoji \
+        --context-low-threshold 75 \
+        --context-medium-threshold 90 2>/dev/null)
+{{ if .isWork -}}
+    # Strip cost section on work machines (Bedrock — no per-token billing)
+    ccusage_output=$(echo "$ccusage_output" | sed 's/ | 💰[^|]* |/ |/')
+{{ end -}}
 fi
 
-# Build status line
+# Build status line: custom prefix + ccusage output
 {{ if .isWork -}}
-printf '\033[37m%s\033[0m%s%s%s \033[34m|\033[0m \033[1;34m%s\033[0m \033[90m[%s]\033[0m%s' \
+printf '\033[37m%s\033[0m%s%s%s \033[90m[%s]\033[0m' \
     "$dir_name" \
     "$git_info" \
     "$aws_info" \
     "$k8s_info" \
-    "$model_name" \
-    "$output_style" \
-    "$usage_info"
+    "$output_style"
 {{ else -}}
-printf '\033[37m%s\033[0m%s \033[34m|\033[0m \033[1;34m%s\033[0m \033[90m[%s]\033[0m%s' \
+printf '\033[37m%s\033[0m%s \033[90m[%s]\033[0m' \
     "$dir_name" \
     "$git_info" \
-    "$model_name" \
-    "$output_style" \
-    "$usage_info"
+    "$output_style"
 {{ end -}}
+
+if [ -n "$ccusage_output" ]; then
+    printf ' %s' "$ccusage_output"
+fi
