@@ -50,6 +50,8 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 
 **Why?** Blind `--amend` can modify the wrong commit if something was committed in between (hook, CI, user).
 
+**After amending, do NOT `git pull` before pushing** — `pull.rebase=true` will try to rebase the amended commit on top of the old remote version, causing conflicts. Go straight to `git push --force-with-lease`.
+
 ### Pre-Commit
 - **Always lint/format before committing.** See `~/.claude/formatter-reference.md` for the full list of formatters by file type.
 - **Always test ALL changes before committing** — run the project's test suite (or the relevant subset) using the appropriate tools (e.g. `pytest`, `npm test`, `make test`). Don't commit code you haven't verified.
