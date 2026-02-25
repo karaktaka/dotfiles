@@ -29,6 +29,10 @@
 - **Package manager**: `uv` — use `uv run` to execute Python, pytest, ruff, etc.
 - **Linting/Formatting**: `ruff check` / `ruff format`
 
+## JSON Processing
+
+- **Prefer `jq` over Python** for parsing CLI JSON output — e.g., `kubectl -o json | jq '.items[].metadata.name'` instead of `python3 -c "import json,sys; ..."`
+
 ## Git Workflow
 
 ### Core Rules
