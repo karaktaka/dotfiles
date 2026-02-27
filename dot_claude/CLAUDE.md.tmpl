@@ -57,7 +57,8 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 **After amending, do NOT `git pull` before pushing** — `pull.rebase=true` will try to rebase the amended commit on top of the old remote version, causing conflicts. Go straight to `git push --force-with-lease`.
 
 ### Pre-Commit
-- **Always lint/format before committing.** See `~/.claude/formatter-reference.md` for the full list of formatters by file type.
+- **Repos with `.pre-commit-config.yaml`**: Formatting hooks run automatically on `git commit`. If a hook fails, fix the issue and re-stage. Run `pre-commit run --all-files` to check everything. Install: `uv tool install pre-commit`, then `pre-commit install` per repo.
+- **Repos without pre-commit hooks**: Lint/format manually before committing. See `~/.claude/formatter-reference.md`.
 - **Always test ALL changes before committing** — run the project's test suite (or the relevant subset) using the appropriate tools (e.g. `pytest`, `npm test`, `make test`). Don't commit code you haven't verified.
 
 ### Branch Naming
@@ -93,9 +94,10 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 {{ end }}
 ## File Formatting
 
-Files end with newline, no trailing whitespace. See `~/.claude/formatter-reference.md`
+Files end with newline, no trailing whitespace — enforced by pre-commit hooks where configured, manual elsewhere. See `~/.claude/formatter-reference.md`
 
-- **Prettier**: Installed locally — use `prettier` directly (not `npx`)
+- **pre-commit**: Repos with `.pre-commit-config.yaml` enforce formatting automatically. Run `pre-commit run --all-files` to format an entire repo.
+- **Prettier**: Use `prettier` directly if installed locally, or `npx prettier` if only Node is available. Also runs as a pre-commit hook where configured.
 - **macOS `sed -i`**: Fails with complex paths or inline expressions — use `perl -pi -e 's/old/new/g' file` instead
 
 ## Commit Messages
