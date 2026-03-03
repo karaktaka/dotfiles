@@ -91,6 +91,15 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 - **MR description flag**: `glab mr create --description "..."` (NOT `--body` — that's `gh`)
 - **CWD determines project** — `glab` resolves the target project from the git remote in CWD. `--repo` is unreliable. See project `CLAUDE.md` for CWD handling rules.
 - **MR dependencies**: Open the dependency MR first, then the dependent MR. Set via: `glab api --method POST "projects/<project_id>/merge_requests/<iid>/blocks" -f "blocking_merge_request_id=<internal_mr_id>"` (use internal `id` from API, not `iid`)
+
+### MR Code Reviews via API
+
+- **`glab api -f` can't do nested JSON** — use `curl -H "Content-Type: application/json" -d @payload.json` for endpoints requiring nested objects (e.g., `position` in draft notes)
+- **Extract glab token for curl**: `glab auth status -t 2>&1 | grep 'Token found' | awk '{print $NF}'`
+- **Draft notes (pending review)**: `POST projects/:id/merge_requests/:iid/draft_notes` with `position` object → user publishes via "Submit review" in UI
+- **Inline code suggestions**: Use `` ```suggestion:-N+M `` in note body (`-N` = lines above, `+M` = lines below to replace). Requires `position.new_line` to be set.
+- **JSON payloads with bash code**: Use Python (`json.dump`) to a temp file to avoid multi-layer shell escaping
+- **Verify remote file paths**: MR diff versions may show different paths than local — check via `projects/:id/merge_requests/:iid/versions`
 {{ end }}
 ## File Formatting
 
