@@ -66,6 +66,7 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 
 ### Branching
 - **Prefer git worktrees** for feature work — they provide isolated working directories without stashing or switching context
+- **Worktree location**: Always create worktrees in `.worktrees/` at the repo root (e.g. `git worktree add .worktrees/<branch-name>`)
 - Use the `using-git-worktrees` skill when starting feature work that needs isolation
 - For quick single-file fixes, a normal branch with `git switch -c <branch>` is fine
 
