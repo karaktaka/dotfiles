@@ -65,8 +65,9 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
 
 ### Branching
-- **Never use git worktrees** — always create normal branches with `git switch -c <branch>`
-- For parallel work, use separate terminal sessions on different branches
+- **Prefer git worktrees** for feature work — they provide isolated working directories without stashing or switching context
+- Use the `using-git-worktrees` skill when starting feature work that needs isolation
+- For quick single-file fixes, a normal branch with `git switch -c <branch>` is fine
 
 ### GPG Signing
 - **Stale agent**: If import fails with "Bad secret key", restart: `gpgconf --kill gpg-agent` then retry
