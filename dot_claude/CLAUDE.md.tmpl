@@ -153,14 +153,7 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 ### Datascience Workspace (`~/workspace/git/datascience/`)
 
-Contains **4 separate git repos**, not a monorepo:
-
-| Repo | Path | Default Branch | Workflow | Purpose |
-|------|------|----------------|----------|---------|
-| **datascience** | `datascience/datascience/` | `master` | Branch/MR | Source code, Dockerfiles, CI jobs |
-| **helm_charts** | `datascience/helm_charts/` | `main` | Branch/MR | Helm chart templates |
-| **config** | `datascience/config/` | `main` | Trunk-based | ArgoCD deployment config (values files) |
-| **infrastructure** | `datascience/infrastructure/` | `main` | Trunk-based | Terraform (AWS, ECR, EKS) |
+Multi-repo workspace (6 independent git repos, not a monorepo). See the group-level `CLAUDE.md` in that directory for repo details, cross-repo workflows, and deployment pipeline docs.
 
 ### AWS & Kubernetes
 - SSO: `aws sso login --sso-session KN-Operations`
