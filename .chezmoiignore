@@ -37,8 +37,11 @@ Library/Application Support/k9s/clusters/**
 .config/fastfetch/**
 {{ end }}
 
-# k9s: OS-specific config paths (macOS uses ~/Library, Linux uses ~/.config)
-{{ if eq .chezmoi.os "darwin" }}
+# k9s: work machines only, OS-specific paths
+{{ if not .isWork }}
+.config/k9s/**
+Library/Application Support/k9s/**
+{{ else if eq .chezmoi.os "darwin" }}
 .config/k9s/**
 {{ else }}
 Library/Application Support/k9s/**
