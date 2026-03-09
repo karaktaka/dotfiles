@@ -179,7 +179,7 @@ Multi-repo workspace (6 independent git repos, not a monorepo). See the group-le
 - Full CLI/REST reference in `working-with-jira` skill (kn-internal-tools plugin)
 
 ### Confluence (wiki.example.com)
-- REST API + `mark` CLI. Auth: `bw_get_secret "Confluence API Token"` (separate from Jira PAT)
+- REST API + `mark` CLI. Auth: `bw_get_secret "Confluence API Token"` (separate from Jira PAT) — `mark` reads it via `MARK_PASSWORD` env var; NOT in chezmoi (no passwords in git), set manually each session
 - Full reference in `working-with-confluence` skill (kn-internal-tools plugin)
 
 ### Chezmoi (Dotfiles)
