@@ -156,6 +156,7 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 Multi-repo workspace (6 independent git repos, not a monorepo). See the group-level `CLAUDE.md` in that directory for repo details, cross-repo workflows, and deployment pipeline docs.
 
 ### AWS & Kubernetes
+- **NEVER patch live Kubernetes resources directly** (`kubectl apply/patch/edit`) without explicit user permission. Make code/Terraform changes → show plan → wait for user to apply. Direct kubectl changes bypass Terraform state and cause `resourceVersion` conflicts requiring `terraform state rm` to recover.
 - SSO: `aws sso login --sso-session KN-Operations`
 - Profiles: `dev`, `prod`
 - Sync kubectl: `update_kubectl`
