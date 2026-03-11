@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.14"
 # dependencies = []
 # ///
 import json, sys, subprocess, os, re
@@ -111,14 +111,16 @@ if git_root and branch and remote_web_url:
                 cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=3
             )
             pr = json.loads(out)
-            mr_str = f' {CYAN}{osc8(f"PR#{pr[\"number\"]}", pr["url"])}{RESET}'
+            pr_num, pr_url = pr["number"], pr["url"]
+            mr_str = f' {CYAN}{osc8(f"PR#{pr_num}", pr_url)}{RESET}'
         else:
             out = subprocess.check_output(
                 ['glab', 'mr', 'view', '--output', 'json'],
                 cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=3
             )
             mr = json.loads(out)
-            mr_str = f' {CYAN}{osc8(f"MR!{mr[\"iid\"]}", mr["web_url"])}{RESET}'
+            mr_iid, mr_url = mr["iid"], mr["web_url"]
+            mr_str = f' {CYAN}{osc8(f"MR!{mr_iid}", mr_url)}{RESET}'
     except Exception:
         pass
 
