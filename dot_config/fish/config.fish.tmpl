@@ -12,3 +12,7 @@ bind alt-left prevd-or-backward-word
 
 bind alt-backspace backward-kill-word
 bind alt-delete kill-word
+{{ if stat (joinPath .chezmoi.homeDir ".mammouth/bin") }}
+# Mammouth Code
+set -gx PATH $HOME/.mammouth/bin $PATH
+{{ end -}}
