@@ -8,6 +8,16 @@
 2. **NEVER push without explicit permission** — always show the diff/commit, then ask "Ready to push?" and WAIT. No exceptions, no implicit permission from previous pushes.
 3. **Minimal blast radius** — Only touch files directly related to the ask. Never move, restructure, or delete files that weren't requested. Verify async operations completed before acting on their results.
 
+## Investigation Rules
+- When the user says a solution exists in another repo/branch, check there **FIRST** before investigating from scratch
+- Limit autonomous investigation to **3 commands** — if the answer isn't found, stop and ask the user for direction
+- When the user asks multiple questions, address **ALL** of them. Re-read the original message before finishing.
+
+## Scope Discipline
+- Fix the problem the user described, not adjacent problems you notice
+- If the user clarifies the real problem, **immediately pivot** — do not continue the previous approach
+- Do not add extra features, enrichments, or improvements unless explicitly asked
+
 ## Communication Style
 
 - **Tone**: Casual but professional
@@ -60,6 +70,8 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 - **Repos with `.pre-commit-config.yaml`**: Formatting hooks run automatically on `git commit`. If a hook fails, fix the issue and re-stage. Run `pre-commit run --all-files` to check everything. Install: `uv tool install pre-commit`, then `pre-commit install` per repo.
 - **Repos without pre-commit hooks**: Lint/format manually before committing. See `~/.claude/formatter-reference.md`.
 - **Always test ALL changes before committing** — run the project's test suite (or the relevant subset) using the appropriate tools (e.g. `pytest`, `npm test`, `make test`). Don't commit code you haven't verified.
+- **Before committing**, run `git status` and `git diff --staged` to verify only intended files are staged
+- **Never stage untracked utility/script files** unless explicitly asked
 
 ### Branch Naming
 See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
@@ -162,6 +174,9 @@ Multi-repo workspace (6 independent git repos, not a monorepo). See the group-le
 - Update kubectl binary to match cluster version: `update_kubectl` (does NOT update kubeconfig contexts)
 - Check available contexts: `kubectl config get-contexts` — context names are full ARNs (e.g. `arn:aws:eks:eu-central-1:...:cluster/apps-prod-cluster`)
 - Pod log retention is very short (minutes to ~1 hour due to kubelet rotation) — for historical logs, query Loki instead
+- **ALWAYS verify kubectl context before any kubectl command**: run `kubectl config current-context` first
+- **Pass `--context=<name>` directly** to each command — never rely on ambient context being set correctly
+- **Confirm target cluster** (sandbox/dev/prod) with user before any mutating operation
 
 ### Observability (Grafana/Loki)
 - **Architecture**: Grafana Alloy collectors (in `monitoring` ns) → centralized Loki → centralized Grafana

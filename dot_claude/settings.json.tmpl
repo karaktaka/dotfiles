@@ -198,6 +198,21 @@
       "Bash(git*stash*clear)"
     ]
   },
+{{- if .isWork }}
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/infra-safety.sh"
+          }
+        ]
+      }
+    ]
+  },
+{{- end }}
 {{- if not .isWork }}
   "hooks": {
     "PreToolUse": [
