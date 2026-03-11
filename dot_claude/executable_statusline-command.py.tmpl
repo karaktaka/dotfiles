@@ -1,0 +1,149 @@
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+import json, sys, subprocess, os, re
+from urllib.parse import urlparse
+
+data = json.load(sys.stdin)
+
+cwd          = data.get('workspace', {}).get('current_dir', os.getcwd())
+model        = data.get('model', {}).get('display_name', '')
+style        = data.get('output_style', {}).get('name', '')
+cost         = data.get('cost', {}).get('total_cost_usd', 0) or 0
+pct          = int(data.get('context_window', {}).get('used_percentage', 0) or 0)
+duration_ms  = data.get('cost', {}).get('total_duration_ms', 0) or 0
+
+CYAN, GREEN, YELLOW, RED, GREY, WHITE, RESET = (
+    '\033[36m', '\033[32m', '\033[33m', '\033[31m', '\033[90m', '\033[37m', '\033[0m'
+)
+
+def osc8(text, url):
+    """iTerm2 / VTE clickable hyperlink (OSC 8). Degrades gracefully elsewhere."""
+    return f'\033]8;;{url}\033\\{text}\033]8;;\033\\'
+
+# Context bar
+bar_color = RED if pct >= 90 else YELLOW if pct >= 70 else GREEN
+bar = '█' * (pct // 10) + '░' * (10 - pct // 10)
+
+# Duration
+mins, secs = duration_ms // 60000, (duration_ms % 60000) // 1000
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+git_root = None
+try:
+    git_root = subprocess.check_output(
+        ['git', 'rev-parse', '--show-toplevel'], cwd=cwd,
+        text=True, stderr=subprocess.DEVNULL, timeout=5
+    ).strip()
+    dir_name = os.path.basename(git_root)
+except Exception:
+    dir_name = os.path.basename(cwd)
+
+branch = ''
+dirty  = ''
+lines_added = lines_removed = 0
+remote_web_url = None
+is_github = False
+MAX_BRANCH = 25
+
+if git_root:
+    try:
+        raw = subprocess.check_output(
+            ['git', 'remote', 'get-url', 'origin'],
+            cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=5
+        ).strip()
+        # SSH → HTTPS:  git@github.com:user/repo.git  →  https://github.com/user/repo
+        if raw.startswith('git@'):
+            raw = re.sub(r'^git@([^:]+):(.+?)(?:\.git)?$', r'https://\1/\2', raw)
+        else:
+            raw = re.sub(r'\.git$', '', raw)
+        remote_web_url = raw
+        hostname = urlparse(raw).hostname or ''
+        is_github = 'github' in hostname
+    except Exception:
+        pass
+
+    try:
+        branch = subprocess.check_output(
+            ['git', '-c', 'core.fsmonitor=false', 'branch', '--show-current'],
+            cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=5
+        ).strip()
+        branch = (branch[:MAX_BRANCH] + '…') if len(branch) > MAX_BRANCH else branch
+    except Exception:
+        pass
+
+    try:
+        subprocess.check_call(
+            ['git', '-c', 'core.fsmonitor=false', 'diff', '--quiet'],
+            cwd=git_root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5
+        )
+        subprocess.check_call(
+            ['git', '-c', 'core.fsmonitor=false', 'diff', '--cached', '--quiet'],
+            cwd=git_root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5
+        )
+    except subprocess.CalledProcessError:
+        dirty = f'{RED}*{RESET}'
+    except Exception:
+        pass
+
+    try:
+        numstat = subprocess.check_output(
+            ['git', 'diff', 'HEAD', '--numstat'],
+            cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=5
+        )
+        for line in numstat.splitlines():
+            parts = line.split('\t')
+            if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+                lines_added   += int(parts[0])
+                lines_removed += int(parts[1])
+    except Exception:
+        pass
+
+# ── Open PR / MR ─────────────────────────────────────────────────────────────
+mr_str = ''
+if git_root and branch and remote_web_url:
+    try:
+        if is_github:
+            out = subprocess.check_output(
+                ['gh', 'pr', 'view', '--json', 'url,number'],
+                cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=3
+            )
+            pr = json.loads(out)
+            mr_str = f' {CYAN}{osc8(f"PR#{pr[\"number\"]}", pr["url"])}{RESET}'
+        else:
+            out = subprocess.check_output(
+                ['glab', 'mr', 'view', '--output', 'json'],
+                cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=3
+            )
+            mr = json.loads(out)
+            mr_str = f' {CYAN}{osc8(f"MR!{mr[\"iid\"]}", mr["web_url"])}{RESET}'
+    except Exception:
+        pass
+
+# ── Line 1: repo  branch  PR/MR  [model]  [style] ────────────────────────────
+repo_str   = f'{WHITE}{osc8(dir_name, remote_web_url) if remote_web_url else dir_name}{RESET}'
+
+branch_url = None
+if remote_web_url and branch:
+    branch_url = f'{remote_web_url}/tree/{branch}' if is_github \
+              else f'{remote_web_url}/-/tree/{branch}'
+branch_text = osc8(branch, branch_url) if branch_url else branch
+branch_str  = f' {GREEN}{branch_text}{RESET}{dirty}' if branch else ''
+
+model_str = f' {CYAN}[{model}]{RESET}' if model else ''
+style_str = f' {GREY}[{style}]{RESET}' if style else ''
+
+# ── Line 2: context bar  duration  cost  +lines -lines ───────────────────────
+lines_str = f'  {GREEN}+{lines_added}{RESET} {RED}-{lines_removed}{RESET}' \
+            if (lines_added or lines_removed) else ''
+
+{{ if .isWork -}}
+cost_str = ''  # Bedrock — no per-token billing
+{{ else -}}
+cost_str = f'  {YELLOW}${cost:.2f}{RESET}' if cost > 0 else ''
+{{ end -}}
+
+print(f"{repo_str}{branch_str}{mr_str}{model_str}{style_str}")
+print(f"{bar_color}{bar}{RESET} {pct}%  ⏱️ {mins}m{secs:02d}s{cost_str}{lines_str}")
