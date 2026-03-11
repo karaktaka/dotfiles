@@ -3,8 +3,11 @@
 # Shows current kubectl context and AWS_PROFILE before infrastructure commands.
 # Claude Code PreToolUse hook — provides informational context, never blocks.
 
-INPUT=$(cat 2>/dev/null || echo "{}")
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.command // ""' 2>/dev/null || echo "")
+INPUT=$(cat); INPUT=${INPUT:-{}}
+COMMAND=$(jq -r '.command // ""' <<< "$INPUT" 2>/dev/null || echo "")
+
+# Short-circuit: skip all checks for the vast majority of non-infra commands
+[[ "$COMMAND" != *kubectl* && "$COMMAND" != *terraform* && "$COMMAND" != *terragrunt* ]] && exit 0
 
 if [[ "$COMMAND" == *kubectl* ]]; then
     ctx=$(kubectl config current-context 2>/dev/null || echo "unknown")
