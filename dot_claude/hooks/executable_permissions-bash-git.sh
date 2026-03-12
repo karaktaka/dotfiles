@@ -85,6 +85,13 @@ case "$STRIPPED" in
 esac
 
 # ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
+# Yield if a dangerous command appears after a chain operator — let
+# permissions-bash-dangerous.sh make the call so we don't conflict with it.
+case "$COMMAND" in
+  *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") exit 0 ;;
+  *"&& curl "*|*"; curl "*)              exit 0 ;;
+  *"&& wget "*|*"; wget "*)              exit 0 ;;
+esac
 case "$STRIPPED" in
   add*|blame*|branch*|commit*|describe*|diff*|fetch*|log*|ls*|pull*|\
   reflog*|remote*|rev-parse*|shortlog*|show*|stash*|status*|switch*|tag*)
