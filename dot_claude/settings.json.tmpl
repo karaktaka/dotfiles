@@ -11,184 +11,51 @@
     "CLAUDE_CODE_USE_BEDROCK": "true"
   },
 {{- end }}
-  "permissions": {
-    "allow": [
-{{- if .isWork }}
-      "WebFetch(domain:gitlab.example.com)",
-      "Bash(aws *)",
-      "Bash(az *)",
-      "Bash(actionlint *)",
-      "Bash(act *)",
-      "Bash(glab --version)",
-      "Bash(glab auth status*)",
-      "Bash(glab*list*)",
-      "Bash(glab*view*)",
-      "Bash(helm*lint*)",
-      "Bash(helm*list*)",
-      "Bash(helm*template*)",
-      "Bash(helm*history*)",
-      "Bash(jira epic*)",
-      "Bash(jira issue list*)",
-      "Bash(jira issue view*)",
-      "Bash(jira sprint*)",
-      "Bash(mark*--compile-only*)",
-      "Bash(mark*--dry-run*)",
-      "Bash(kubectl describe*)",
-      "Bash(kubectl get*)",
-      "Bash(kubectl logs*)",
-      "Bash(kubectl top*)",
-      "Bash(kubectl version*)",
-      "Bash(kubectl rollout status*)",
-      "Bash(kubectl config get-contexts*)",
-      "Bash(kubectl*sandbox-cluster*)",
-      "Bash(make*tf/format*)",
-      "Bash(make*tf/init*)",
-      "Bash(make*tf/plan*)",
-      "Bash(make*init-*)",
-      "Bash(make*plan-*)",
-      "Bash(terraform*fmt*)",
-      "Bash(terraform*validate*)",
-      "Read(~/.aws/config)",
-      "Read(~/workspace/**)",
-{{- end }}
-      "Bash(awk *)",
-      "Bash(basename *)",
-      "Bash(cat *)",
-      "Bash(column *)",
-      "Bash(cut *)",
-      "Bash(date *)",
-      "Bash(diff *)",
-      "Bash(dig *)",
-      "Bash(dirname *)",
-      "Bash(du *)",
-      "Bash(echo *)",
-      "Bash(file *)",
-      "Bash(find *)",
-      "Bash(git*blame*)",
-      "Bash(git*branch*)",
-      "Bash(git*commit*)",
-      "Bash(git*describe*)",
-      "Bash(git*diff*)",
-      "Bash(git*fetch*)",
-      "Bash(git*log*)",
-      "Bash(git*ls*)",
-      "Bash(git*pull)",
-      "Bash(git*reflog*)",
-      "Bash(git*remote*)",
-      "Bash(git*rev-parse*)",
-      "Bash(git*shortlog*)",
-      "Bash(git*show*)",
-      "Bash(git*add*)",
-      "Bash(git*stash*)",
-      "Bash(git*status*)",
-      "Bash(git*switch*)",
-      "Bash(git*tag*)",
-      "Bash(grep *)",
-      "Bash(head *)",
-      "Bash(hostname *)",
-      "Bash(id *)",
-      "Bash(jq *)",
-      "Bash(less *)",
-      "Bash(ls *)",
-      "Bash(md5 *)",
-      "Bash(more *)",
-      "Bash(ping *)",
-      "Bash(prettier *)",
-      "Bash(pwd *)",
-      "Bash(realpath *)",
-      "Bash(ruff *)",
-      "Bash(sed *)",
-      "Bash(shasum *)",
-      "Bash(shellcheck *)",
-      "Bash(shfmt *)",
-      "Bash(sort *)",
-      "Bash(stat *)",
-      "Bash(tail *)",
-      "Bash(tr *)",
-      "Bash(uname *)",
-      "Bash(uniq *)",
-      "Bash(uv *)",
-      "Bash(wc *)",
-      "Bash(which *)",
-      "Bash(whoami *)",
-      "Bash(yq *)",
-      "Read(~/CLAUDE*)",
-      "Read(~/.claude)",
-      "Read(~/.local)",
-      "Read(~/.gitconfig)",
-      "Read(~/personal)",
-      "Read(~/workspace)",
-      "Read(/tmp)"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-{{- if .isWork }}
-      "Bash(aws*delete*)",
-      "Bash(aws*terminate*)",
-{{- end }}
-      "Bash(find*-delete*)",
-      "Bash(find*-exec*rm*)",
-      "Bash(git*branch*-D*)",
-      "Bash(git*stash*clear)"
-    ],
-    "ask": [
-      "Bash(curl *)",
-      "Bash(git*checkout*)",
-      "Bash(git*push*)",
-      "Bash(git*remote*add*)",
-      "Bash(git*remote*remove*)",
-      "Bash(git*remote*rename*)",
-      "Bash(git*remote*set-url*)",
-      "Bash(git*stash*drop*)",
-      "Bash(rm *)",
-      "Bash(awk* -i*inplace*)",
-      "Bash(sed* -i*)",
-      "Bash(yq* -i*)",
-{{- if .isWork }}
-      "Bash(aws*create*)",
-      "Bash(aws*modify*)",
-      "Bash(aws*put*)",
-      "Bash(aws*run*)",
-      "Bash(aws*start*)",
-      "Bash(aws*stop*)",
-      "Bash(aws*update*)",
-      "Bash(aws s3 cp*)",
-      "Bash(aws s3 mv*)",
-      "Bash(aws s3 rm*)",
-      "Bash(aws s3 sync*)",
-      "Bash(glab*)",
-      "Bash(jira issue comment*)",
-      "Bash(jira issue create*)",
-      "Bash(jira issue edit*)",
-      "Bash(kubectl config use-context *apps-dev-cluster*)",
-      "Bash(kubectl config use-context *apps-prod-cluster*)",
-      "Bash(kubectl cordon*)",
-      "Bash(kubectl delete*)",
-      "Bash(kubectl drain*)",
-      "Bash(kubectl remove*)",
-      "Bash(kubectl scale*)",
-      "Bash(mark*)",
-      "Bash(make*apply-*)",
-      "Bash(make*destroy-*)",
-      "Bash(make*tf/apply*)",
-      "Bash(make*tf/destroy*)",
-      "Bash(make*tf/import*)",
-      "Bash(make*tf/state*)",
-{{- end }}
-      "Bash(wget *)"
-    ]
-  },
+  "permissions": {},
   "model": "opusplan",
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-read.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-webfetch.sh"
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/{{ if .isWork }}infra-safety{{ else }}rtk-rewrite{{ end }}.sh"
-          }
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-git.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-utils.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-dangerous.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-work.sh"
+          }{{ if .isWork }},
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/infra-safety.sh"
+          }{{ end }}
         ]
       }
     ]
