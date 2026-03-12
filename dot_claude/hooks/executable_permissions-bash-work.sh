@@ -108,10 +108,35 @@ case "$CMD_NAME" in
     exit 0 ;;
 
   glab)
+    # API: allow GET, ask for write methods
     case "$COMMAND" in
-      "glab --version"|"glab auth status"*|glab*list*|glab*view*) allow "GitLab read-only" ;;
-      *) ask "GitLab CLI — may mutate remote state" ;;
-    esac ;;
+      glab*api*)
+        case "$COMMAND" in
+          *"-X POST"*|*"--method POST"*|\
+          *"-X PUT"*|*"--method PUT"*|\
+          *"-X PATCH"*|*"--method PATCH"*|\
+          *"-X DELETE"*|*"--method DELETE"*)
+            ask "glab api write operation — confirm method and endpoint" ;;
+        esac
+        allow "glab api (read — GET)" ;;
+    esac
+    # Safe read operations
+    case "$COMMAND" in
+      "glab --version"|"glab auth status"*|\
+      glab*mr*list*|glab*mr*view*|glab*mr*diff*|glab*mr*note*list*|\
+      glab*mr*approvals*|glab*mr*checks*|\
+      glab*issue*list*|glab*issue*view*|glab*issue*note*list*|\
+      glab*ci*list*|glab*ci*view*|glab*ci*status*|\
+      glab*pipeline*list*|glab*pipeline*view*|glab*pipeline*status*|\
+      glab*repo*view*|glab*repo*list*|\
+      glab*release*list*|glab*release*view*|\
+      glab*label*list*|\
+      glab*milestone*list*|\
+      glab*variable*list*|glab*variable*get*|\
+      glab*user*get*|glab*user*list*)
+        allow "GitLab CLI read-only" ;;
+    esac
+    ask "GitLab CLI — may mutate remote state" ;;
 
   jira)
     case "$COMMAND" in

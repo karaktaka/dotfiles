@@ -50,6 +50,10 @@
           },
           {
             "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-gh.sh"
+          },
+          {
+            "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-work.sh"
           }{{ if .isWork }},
           {
