@@ -84,6 +84,14 @@ case "$STRIPPED" in
     ask "Stash drop" ;;
 esac
 
+# Also ask when ask-worthy git operations appear after a chain operator.
+# The STRIPPED match above only catches them when they are the leading command;
+# this catches e.g. "git commit && git push".
+case "$COMMAND" in
+  *"&& git"*"push"*|*"; git"*"push"*)       ask "Chained git push — confirm intent" ;;
+  *"&& git"*"checkout"*|*"; git"*"checkout"*) ask "Chained git checkout — confirm intent" ;;
+esac
+
 # ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
 # Yield if a dangerous command appears after a chain operator — let
 # permissions-bash-dangerous.sh make the call so we don't conflict with it.
