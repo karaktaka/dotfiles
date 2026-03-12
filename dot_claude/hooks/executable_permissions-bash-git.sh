@@ -62,7 +62,7 @@ case "$COMMAND" in
 esac
 # git checkout -- <file>  →  ask, hint to use git restore
 case "$COMMAND" in
-  *" -- "*)
+  *checkout*" -- "*)
     ask "Discards file changes — use 'git restore <file>' instead of 'git checkout -- <file>'"
     ;;
 esac
