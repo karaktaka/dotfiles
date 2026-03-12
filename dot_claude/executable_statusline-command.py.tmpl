@@ -28,7 +28,10 @@ bar_color = RED if pct >= 90 else YELLOW if pct >= 70 else GREEN
 bar = '█' * (pct // 10) + '░' * (10 - pct // 10)
 
 # Duration
-mins, secs = duration_ms // 60000, (duration_ms % 60000) // 1000
+total_secs = duration_ms // 1000
+hours, rem  = divmod(total_secs, 3600)
+mins,  secs = divmod(rem, 60)
+duration_str = f'{hours}h{mins:02d}m' if hours else f'{mins}m{secs:02d}s'
 
 # ── Git ───────────────────────────────────────────────────────────────────────
 git_root = None
@@ -42,6 +45,7 @@ except Exception:
     dir_name = os.path.basename(cwd)
 
 branch = ''
+branch_full = ''
 dirty  = ''
 lines_added = lines_removed = 0
 remote_web_url = None
@@ -70,6 +74,7 @@ if git_root:
             ['git', '-c', 'core.fsmonitor=false', 'branch', '--show-current'],
             cwd=git_root, text=True, stderr=subprocess.DEVNULL, timeout=5
         ).strip()
+        branch_full = branch
         branch = (branch[:MAX_BRANCH] + '…') if len(branch) > MAX_BRANCH else branch
     except Exception:
         pass
@@ -128,9 +133,9 @@ if git_root and branch and remote_web_url:
 repo_str   = f'{WHITE}{osc8(dir_name, remote_web_url) if remote_web_url else dir_name}{RESET}'
 
 branch_url = None
-if remote_web_url and branch:
-    branch_url = f'{remote_web_url}/tree/{branch}' if is_github \
-              else f'{remote_web_url}/-/tree/{branch}'
+if remote_web_url and branch_full:
+    branch_url = f'{remote_web_url}/tree/{branch_full}' if is_github \
+              else f'{remote_web_url}/-/tree/{branch_full}'
 branch_text = osc8(branch, branch_url) if branch_url else branch
 branch_str  = f' {GREEN}{branch_text}{RESET}{dirty}' if branch else ''
 
@@ -148,4 +153,4 @@ cost_str = f'  {YELLOW}${cost:.2f}{RESET}' if cost > 0 else ''
 {{ end -}}
 
 print(f"{repo_str}{branch_str}{mr_str}{model_str}{style_str}")
-print(f"{bar_color}{bar}{RESET} {pct}%  ⏱️ {mins}m{secs:02d}s{cost_str}{lines_str}")
+print(f"{bar_color}{bar}{RESET} {pct}%  ⏱️ {duration_str}{cost_str}{lines_str}")
