@@ -84,13 +84,28 @@ case "$STRIPPED" in
     ask "Stash drop" ;;
 esac
 
-# Also ask when ask-worthy git operations appear after a chain operator.
-# The STRIPPED match above only catches them when they are the leading command;
-# this catches e.g. "git commit && git push".
-case "$COMMAND" in
-  *"&& git"*"push"*|*"; git"*"push"*)       ask "Chained git push — confirm intent" ;;
-  *"&& git"*"checkout"*|*"; git"*"checkout"*) ask "Chained git checkout — confirm intent" ;;
-esac
+# Also check the last segment of a && / ; chain for ask-worthy operations.
+# String-pattern matching on "&&" is unreliable when && is followed by a
+# line-continuation backslash + newline, so we extract the last segment
+# by stripping everything up to the last && or ; instead.
+if [[ "$COMMAND" == *"&&"* || "$COMMAND" == *";"* ]]; then
+  _last="${COMMAND##*&&}"
+  # If ; produces a later segment, prefer that
+  [[ "${COMMAND##*;}" != "$COMMAND" && "${#COMMAND##*;}" -lt "${#_last}" ]] && _last="${COMMAND##*;}"
+  # Strip leading whitespace and backslash continuations, then normalise
+  _last_trimmed=$(printf '%s' "$_last" | sed -E 's/^[[:space:]\\]*//' | xargs 2>/dev/null || printf '%s' "$_last")
+  _last_name=$(basename "${_last_trimmed%% *}" 2>/dev/null)
+  if [[ "$_last_name" == "git" ]]; then
+    _last_stripped=$(printf '%s' "$_last_trimmed" \
+      | sed -E 's/^git[[:space:]]*//' \
+      | sed -E 's/(-C|-c)[[:space:]]+\S+[[:space:]]*//' \
+      | xargs 2>/dev/null || echo "")
+    case "$_last_stripped" in
+      push*)     ask "Chained git push — confirm intent" ;;
+      checkout*) ask "Chained git checkout — confirm intent" ;;
+    esac
+  fi
+fi
 
 # ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
 # Yield if a dangerous command appears after a chain operator — let
