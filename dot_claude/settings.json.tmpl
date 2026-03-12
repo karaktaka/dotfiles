@@ -1,21 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-{{- if .isWork }}
-    "kn-internal-tools@kn-claude-plugins": true,
-    "mr-summary@kn-claude-plugins": true,
-{{- end }}
-    "pr-review-toolkit@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true
-  },
 {{- if .isWork }}
   "env": {
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
@@ -26,10 +10,7 @@
     "CLAUDE_CODE_PROXY_RESOLVES_HOSTS": "false",
     "CLAUDE_CODE_USE_BEDROCK": "true"
   },
-  "effortLevel": "high",
-  "model": "opusplan",
 {{- end }}
-  "outputStyle": "Explanatory",
   "permissions": {
     "allow": [
 {{- if .isWork }}
@@ -139,6 +120,18 @@
       "Read(~/workspace)",
       "Read(/tmp)"
     ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+{{- if .isWork }}
+      "Bash(aws*delete*)",
+      "Bash(aws*terminate*)",
+{{- end }}
+      "Bash(find*-delete*)",
+      "Bash(find*-exec*rm*)",
+      "Bash(git*branch*-D*)",
+      "Bash(git*stash*clear)"
+    ],
     "ask": [
       "Bash(curl *)",
       "Bash(git*checkout*)",
@@ -184,21 +177,11 @@
       "Bash(make*tf/state*)",
 {{- end }}
       "Bash(wget *)"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-{{- if .isWork }}
-      "Bash(aws*delete*)",
-      "Bash(aws*terminate*)",
-{{- end }}
-      "Bash(find*-delete*)",
-      "Bash(find*-exec*rm*)",
-      "Bash(git*branch*-D*)",
-      "Bash(git*stash*clear)"
     ]
   },
 {{- if .isWork }}
+  "model": "opusplan",
+{{- end }}
   "hooks": {
     "PreToolUse": [
       {
@@ -206,31 +189,32 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/infra-safety.sh"
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/{{ if .isWork }}infra-safety{{ else }}rtk-rewrite{{ end }}.sh"
           }
         ]
       }
     ]
   },
-{{- end }}
-{{- if not .isWork }}
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/rtk-rewrite.sh"
-          }
-        ]
-      }
-    ]
-  },
-{{- end }}
-  "spinnerTipsEnabled": false,
   "statusLine": {
-    "command": "uv run ~/.claude/statusline-command.py",
-    "type": "command"
-  }
+    "type": "command",
+    "command": "uv run ~/.claude/statusline-command.py"
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+{{- if .isWork }}
+    "kn-internal-tools@kn-claude-plugins": true,
+{{- end }}
+    "pr-review-toolkit@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "outputStyle": "Explanatory",
+  "spinnerTipsEnabled": false{{ if .isWork }},
+  "effortLevel": "high"{{ end }}
 }
