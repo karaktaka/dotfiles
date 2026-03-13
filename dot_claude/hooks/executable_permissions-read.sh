@@ -1,21 +1,29 @@
 #!/usr/bin/env bash
-# Permissions gate for the Read tool.
+# Permissions gate for Read, Grep, and Glob tools.
 # Deny: .env files. Allow: trusted home-dir paths.
 
 command -v jq &>/dev/null || exit 0
 
 INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Read" ]] && exit 0
+TOOL=$(jq -r '.tool_name // ""' <<< "$INPUT")
+
+case "$TOOL" in
+  Read)           PATH_KEY="file_path" ;;
+  Grep|Glob)      PATH_KEY="path" ;;
+  *)              exit 0 ;;
+esac
 
 allow() { jq -n --arg r "$1" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r}}'; exit 0; }
 deny()  { jq -n --arg r "$1" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'; exit 0; }
 
-FILE=$(jq -r '.tool_input.file_path // ""' <<< "$INPUT")
+FILE=$(jq -r --arg k "$PATH_KEY" '.tool_input[$k] // ""' <<< "$INPUT")
 FILE="${FILE/#\~/$HOME}"  # expand leading ~
 
-# DENY: .env files (any directory depth)
-BASE=$(basename "$FILE")
-[[ "$BASE" == ".env" || "$BASE" == .env.* ]] && deny ".env file is protected"
+# DENY: .env files (Read only — Grep/Glob on a directory is fine)
+if [[ "$TOOL" == "Read" ]]; then
+  BASE=$(basename "$FILE")
+  [[ "$BASE" == ".env" || "$BASE" == .env.* ]] && deny ".env file is protected"
+fi
 
 # ALLOW: trusted home-dir paths
 case "$FILE" in
