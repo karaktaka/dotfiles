@@ -19,7 +19,7 @@ CMD_NAME=$(basename "${COMMAND%% *}" 2>/dev/null || echo "${COMMAND%% *}")
 # content or branch names from accidentally matching deny/ask patterns.
 STRIPPED=$(echo "$COMMAND" \
   | sed -E 's/^git[[:space:]]*//' \
-  | sed -E 's/(-C|-c)[[:space:]]+\S+[[:space:]]*//' \
+  | sed -E 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
   | xargs 2>/dev/null || echo "$COMMAND")
 
 allow() {
@@ -98,7 +98,7 @@ if [[ "$COMMAND" == *"&&"* || "$COMMAND" == *";"* ]]; then
   if [[ "$_last_name" == "git" ]]; then
     _last_stripped=$(printf '%s' "$_last_trimmed" \
       | sed -E 's/^git[[:space:]]*//' \
-      | sed -E 's/(-C|-c)[[:space:]]+\S+[[:space:]]*//' \
+      | sed -E 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
       | xargs 2>/dev/null || echo "")
     case "$_last_stripped" in
       push*)     ask "Chained git push — confirm intent" ;;
