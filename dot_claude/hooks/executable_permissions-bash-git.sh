@@ -116,8 +116,8 @@ case "$COMMAND" in
   *"&& wget "*|*"; wget "*)              exit 0 ;;
 esac
 case "$STRIPPED" in
-  add*|blame*|branch*|commit*|describe*|diff*|fetch*|log*|ls*|pull*|\
-  reflog*|remote*|rev-parse*|shortlog*|show*|stash*|status*|switch*|tag*)
+  add*|blame*|branch*|check-ignore*|commit*|describe*|diff*|fetch*|log*|ls*|pull*|\
+  reflog*|remote*|rev-parse*|shortlog*|show*|stash*|status*|switch*|tag*|worktree*)
     allow "Safe git command" ;;
 esac
 
