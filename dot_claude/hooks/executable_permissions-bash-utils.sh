@@ -51,7 +51,7 @@ case "$CMD_NAME" in
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
-  basename|cat|column|cut|date|diff|dig|dirname|du|echo|file|\
+  basename|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
   grep|head|hostname|id|jq|less|ls|md5|more|ping|prettier|pwd|realpath|\
   ruff|shasum|shellcheck|shfmt|sort|stat|tail|tr|uname|uniq|uv|wc|\
   which|whoami)
