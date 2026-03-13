@@ -48,6 +48,9 @@ case "$CMD_NAME" in
     [[ "$COMMAND" == *" -i"* ]] && ask "In-place yq edit — modifies files directly"
     allow "Safe yq (read-only)" ;;
 
+  get-flair.sh)
+    allow "Claude flair generator (read-only)" ;;
+
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
