@@ -41,7 +41,11 @@
 ## Git Workflow
 
 ### Core Rules
-- **Never chain git commands with `cd &&`** — use absolute paths or `git -C <path>` instead. Chaining breaks permission pattern matching (e.g. `Bash(git*commit*)` won't match `cd /foo && git commit`).
+- **Never use `cd /path && <command>`** — use absolute paths or tool-native directory flags instead. This applies to ALL tools, not just git:
+  - git: `git -C <path> commit` (not `cd /path && git commit`)
+  - uv/ruff/pytest: `uv run --directory <path> ruff check file.py` or pass the full file path
+  - When a `cd && cmd` is denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
+- **Worktrees**: Commands run in the shell's CWD, not the worktree. Always pass the worktree path explicitly (e.g. `git -C .worktrees/my-branch status`, `uv run --directory .worktrees/my-branch pytest`).
 - **Always pull before pushing** — if there are no unstaged changes and everything is committed, just `git pull`. Resolve conflicts if any, then push.
 - **Prefer `--amend`** on feature branches (never on `main`/`master`)
 - **Check branch first**: `git branch --show-current`
