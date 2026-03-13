@@ -89,14 +89,38 @@ case "$CMD_NAME" in
         ask "Destructive kubectl on '$kube_ctx' — confirm intent" ;;
     esac
 
-    # Read-only operations: allow
-    case "$COMMAND" in
-      "kubectl get"*|"kubectl describe"*|"kubectl logs"*|"kubectl top"*|\
-      "kubectl version"*|"kubectl rollout status"*|\
-      "kubectl config get-contexts"*|"kubectl config current-context"*|\
-      "kubectl config view"*|"kubectl explain"*|\
-      "kubectl api-resources"*|"kubectl api-versions"*)
+    # Extract kubectl verb (first positional arg, skipping flags and their values).
+    # Uses read -ra to avoid glob expansion on custom-columns or field-selector values.
+    kubectl_verb=""
+    _skip_val=false
+    IFS=' ' read -ra _words <<< "$COMMAND"
+    for _word in "${_words[@]}"; do
+      $_skip_val && { _skip_val=false; continue; }
+      [[ "$_word" == "kubectl" ]] && continue
+      [[ "$_word" == "|" || "$_word" == "&&" || "$_word" == "||" ]] && break
+      case "$_word" in
+        --context|--namespace|-n|--kubeconfig|--output|-o|\
+        --field-selector|--selector|-l|--user|--cluster|--server|\
+        --token|--as|--as-group|--subresource|--sort-by|\
+        --certificate-authority|--client-certificate|--client-key)
+          _skip_val=true; continue ;;
+      esac
+      [[ "$_word" == -* ]] && continue
+      kubectl_verb="$_word"
+      break
+    done
+
+    # Read-only operations: allow by verb
+    case "$kubectl_verb" in
+      get|describe|logs|top|version|explain|api-resources|api-versions)
         allow "kubectl read-only on '$kube_ctx'" ;;
+      rollout)
+        [[ "$COMMAND" == *"rollout status"* ]] && allow "kubectl read-only on '$kube_ctx'" ;;
+      config)
+        case "$COMMAND" in
+          *"get-contexts"*|*"current-context"*|*"config view"*)
+            allow "kubectl read-only on '$kube_ctx'" ;;
+        esac ;;
     esac
 
     exit 0 ;;  # anything else: no decision
