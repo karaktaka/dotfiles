@@ -73,6 +73,10 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-work.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-command-chaining.sh"
           }{{ if .isWork }},
           {
             "type": "command",
