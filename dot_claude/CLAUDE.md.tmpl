@@ -124,31 +124,11 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 ### Co-Authored-By & Flair
 
-**⚠️ BEFORE every commit/PR/MR**, run `git remote -v` to determine the remote — then use the matching format. **Never guess, never ask.**
+Run `~/.claude/get-flair.sh <type>` for the Co-Authored-By line, or `~/.claude/get-flair.sh --mr <type>` for MR/PR description footers. The script auto-detects the git remote and selects the appropriate format. **Never pick characters manually — always use the script.**
 
-#### Commits
-
-| Remote | Co-Authored-By |
-|--------|---------------|
-{{- if .isWork }}
-| KN GitLab (`gitlab.example.com`) | `Co-Authored-By: <Character> <email>` |
-{{- end }}
-| Everything else (GitHub, other GitLab, etc.) | `Co-Authored-By: Claude <noreply@anthropic.com>` |
+Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo
 
 **No quotes in commits** — quotes are exclusively for MR/PR descriptions.
-
-#### MR/PR descriptions (not commits!)
-
-| Remote | Footer |
-|--------|--------|
-{{- if .isWork }}
-| KN GitLab (`gitlab.example.com`) | `"<Quote>" — <Character>` |
-{{- end }}
-| Everything else (GitHub, other GitLab, etc.) | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
-{{- if .isWork }}
-
-**KN GitLab flair**: Match character/quote vibe to the change (bug fix → John Wick, delete → Thanos). Vary each commit. See `~/.claude/commit-flair.md`
-{{- end }}
 
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`

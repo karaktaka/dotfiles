@@ -23,6 +23,8 @@ FILE="${FILE/#\~/$HOME}"  # expand leading ~
 if [[ "$TOOL" == "Read" ]]; then
   BASE=$(basename "$FILE")
   [[ "$BASE" == ".env" || "$BASE" == .env.* ]] && deny ".env file is protected"
+  # DENY: commit-flair.md (deprecated — use get-flair.sh)
+  [[ "$BASE" == "commit-flair.md" ]] && deny "commit-flair.md no longer exists. Run ~/.claude/get-flair.sh [--mr] <type> instead. Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo"
 fi
 
 # ALLOW: trusted home-dir paths
