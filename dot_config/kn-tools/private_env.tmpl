@@ -1,0 +1,6 @@
+# KN Tools credentials — managed by chezmoi (bitwarden-sourced, not stored in git).
+# Sourced automatically by kn-claude-plugins bin scripts when the env var isn't
+# already set, so Claude can call the scripts directly without any token preamble.
+CONFLUENCE_API_TOKEN={{ (bitwarden "item" "Confluence API Token").login.password }}
+MARK_PASSWORD={{ (bitwarden "item" "Confluence API Token").login.password }}
+JIRA_API_TOKEN={{ (bitwarden "item" "Jira API Token").login.password }}
