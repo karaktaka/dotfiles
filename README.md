@@ -126,7 +126,7 @@ The setup automatically detects work/personal based on your email:
 ├── .claude/
 │   ├── settings.json            # Claude settings (work-conditional)
 │   ├── commands/                # Custom slash commands
-│   ├── commit-flair.md          # Co-author characters reference
+│   ├── get-flair.sh             # Randomised commit/MR flair generator
 │   ├── formatter-reference.md   # Linter/formatter commands
 │   └── statusline-command.sh    # Custom status line script
 ├── .oh-my-zsh/custom/
