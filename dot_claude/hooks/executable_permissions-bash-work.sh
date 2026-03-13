@@ -122,7 +122,7 @@ case "$CMD_NAME" in
     esac
     # Safe read operations
     case "$COMMAND" in
-      "glab --version"|"glab auth status"*|\
+      "glab --version"*|"glab auth status"*|\
       glab*mr*list*|glab*mr*view*|glab*mr*diff*|glab*mr*note*list*|\
       glab*mr*approvals*|glab*mr*checks*|\
       glab*issue*list*|glab*issue*view*|glab*issue*note*list*|\
