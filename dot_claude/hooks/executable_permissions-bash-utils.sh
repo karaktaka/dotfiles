@@ -51,6 +51,34 @@ case "$CMD_NAME" in
   get-flair.sh)
     allow "Claude flair generator (read-only)" ;;
 
+  npm)
+    case "$COMMAND" in
+      # Registry operations — always ask
+      *"npm publish"*|*"npm adduser"*|*"npm login"*|*"npm logout"*|\
+      *"npm owner"*|*"npm access"*|*"npm deprecate"*|*"npm unpublish"*)
+        ask "npm registry operation — confirm intent" ;;
+      # Package mutations — ask because npm packages can contain malicious code
+      *"npm install "*|*"npm i "*|*"npm add "*|*"npm update"*|*"npm upgrade"*)
+        ask "npm package install/update — review packages being added" ;;
+      # Bare 'npm install' (restore from lockfile) — ask to be safe
+      *"npm install"|*"npm i")
+        ask "npm install (no args) — restores all dependencies from lockfile" ;;
+      # Safe local operations: run scripts, build, test, lint, audit, list
+      *"npm run "*|*"npm test"*|*"npm start"*|*"npm build"*|*"npm ci"*|\
+      *"npm ls"*|*"npm list"*|*"npm audit"*|*"npm outdated"*|*"npm pack"*)
+        allow "Safe npm local operation (no package mutations)" ;;
+    esac
+    ask "Unknown npm command — confirm intent" ;;
+
+  npx)
+    case "$COMMAND" in
+      # Known-safe linting, formatting, and type-checking tools
+      *"npx prettier"*|*"npx eslint"*|*"npx tsc"*|*"npx stylelint"*|\
+      *"npx markdownlint"*|*"npx jest"*|*"npx vitest"*|*"npx ruff"*)
+        allow "npx with known-safe dev tool" ;;
+    esac
+    ask "npx may download and execute an npm package — confirm package name and intent" ;;
+
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
