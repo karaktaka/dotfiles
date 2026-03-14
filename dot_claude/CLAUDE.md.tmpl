@@ -13,6 +13,13 @@
 - Limit autonomous investigation to **3 commands** — if the answer isn't found, stop and ask the user for direction
 - When the user asks multiple questions, address **ALL** of them. Re-read the original message before finishing.
 
+## General Rules
+- **Verify completeness before declaring done** — after making changes, grep/search for remaining instances of the pattern being fixed. Do not declare work complete while there are still open items.
+- **Verify before removing** — before removing code or dependencies, confirm they are truly unused. If uncertain, ask. Do not assume something is dead code.
+
+## Debugging
+- **Investigate before fixing** — read the code and trace the actual root cause before proposing a fix. Do not guess speculatively. Show the traced code path, then propose the fix.
+
 ## Communication Style
 
 - **Tone**: Casual but professional
