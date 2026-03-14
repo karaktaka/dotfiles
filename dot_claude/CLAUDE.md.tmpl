@@ -76,7 +76,7 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 ### Pre-Commit
 - **Repos with `.pre-commit-config.yaml`**: Formatting hooks run automatically on `git commit`. If a hook fails, fix the issue and re-stage. Run `pre-commit run --all-files` to check everything. Install: `uv tool install pre-commit`, then `pre-commit install` per repo.
 - **Repos without pre-commit hooks**: Lint/format manually before committing. See `~/.claude/formatter-reference.md`.
-- **Always test ALL changes before committing** — run the project's test suite (or the relevant subset) using the appropriate tools (e.g. `pytest`, `npm test`, `make test`). Don't commit code you haven't verified.
+- **Always test ALL changes before committing** — run the project's build and test suite before staging anything. Check the project `CLAUDE.md` for the exact commands. Don't commit code you haven't verified.
 - **Before committing**, run `git status` and `git diff --staged` to verify only intended files are staged
 - **Never stage untracked utility/script files** unless explicitly asked
 
