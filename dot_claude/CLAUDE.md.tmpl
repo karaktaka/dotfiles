@@ -44,6 +44,7 @@
 ## JSON Processing
 
 - **Prefer `jq` over Python** for parsing CLI JSON output — e.g., `kubectl -o json | jq '.items[].metadata.name'` instead of `python3 -c "import json,sys; ..."`
+- **`jq --arg` and newlines**: Literal newlines in bash variables passed via `jq --arg` cause parse errors. Keep strings single-line.
 
 ## Git Workflow
 
@@ -54,7 +55,7 @@
   - When a `cd && cmd` is denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
 - **Worktrees**: Commands run in the shell's CWD, not the worktree. Always pass the worktree path explicitly (e.g. `git -C .worktrees/my-branch status`, `uv run --directory .worktrees/my-branch pytest`).
 - **Always pull before pushing** — if there are no unstaged changes and everything is committed, just `git pull`. Resolve conflicts if any, then push.
-- **Prefer `--amend`** on feature branches (never on `main`/`master`)
+- **Prefer `--amend`** on feature branches; OK on `main`/`master` only if the commit has **not been pushed yet**
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
 
@@ -128,6 +129,7 @@ Files end with newline, no trailing whitespace — enforced by pre-commit hooks 
 - **pre-commit**: Repos with `.pre-commit-config.yaml` enforce formatting automatically. Run `pre-commit run --all-files` to format an entire repo.
 - **Prettier**: Use `prettier` directly if installed locally, or `npx prettier` if only Node is available. Also runs as a pre-commit hook where configured.
 - **macOS `sed -i`**: Fails with complex paths or inline expressions — use `perl -pi -e 's/old/new/g' file` instead
+- **Write tool CRLF**: Shell scripts written by the Write tool may have CRLF line endings — verify with `file <path>` before executing. Strip with `sed -i 's/\r//' <file>` if needed.
 
 ## Commit Messages
 
@@ -188,7 +190,8 @@ Multi-repo workspace (6 independent git repos, not a monorepo). See the group-le
 - Home dir files managed by chezmoi. **Never edit template targets directly** (`~/CLAUDE.md`, `~/.claude/settings.json`)
 - Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
 - `chezmoi forget` needs `--force` in non-interactive shells (no TTY for confirmation)
-- Autocommit only fires on `chezmoi add`/`re-add` — direct source edits need manual `git -C ~/.local/share/chezmoi` commit
+- Autocommit fires on `chezmoi add`/`re-add`/`forget` — direct source edits need manual `git -C ~/.local/share/chezmoi` commit
+- **XDG git ignore**: `~/.config/git/ignore` is git's default global excludes file. Setting `core.excludesfile` overrides it entirely (no merging) — prefer adding entries to the XDG file instead.
 - **Go template whitespace**: `{{ "{{" }}- if }}` (left-dash) trims before — preserves indentation of next line. `{{ "{{" }} if -}}` (right-dash) trims after — use for block-level conditionals. Inline for single values: `{{ "{{" }} if .x }}val1{{ "{{" }} else }}val2{{ "{{" }} end }}`
 
 {{ if eq .chezmoi.os "darwin" }}
