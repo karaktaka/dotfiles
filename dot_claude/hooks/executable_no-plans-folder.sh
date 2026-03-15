@@ -23,9 +23,10 @@ fi
 IMPLEMENTATIONS_PATH="$HOME/workspace/git/Implementations"
 
 # Allow writes inside the Implementations repo
-if [[ "$FILE_PATH" == "$IMPLEMENTATIONS_PATH"* ]]; then
-    exit 0
-fi
+[[ "$FILE_PATH" == "$IMPLEMENTATIONS_PATH"* ]] && exit 0
+
+# Allow Claude Code's own internal plans directory (~/.claude/plans/)
+[[ "$FILE_PATH" == "$HOME/.claude/plans/"* ]] && exit 0
 
 REASON="Plans folder blocked: write plans to $IMPLEMENTATIONS_PATH/<repo>/plans/ instead. Tried to write: $FILE_PATH"
 jq -n --arg r "$REASON" \
