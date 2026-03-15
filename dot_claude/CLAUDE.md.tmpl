@@ -143,6 +143,18 @@ Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config,
 
 **No quotes in commits** — quotes are exclusively for MR/PR descriptions.
 
+{{- if not .isWork }}
+## Plans Repository
+
+Design docs and implementation plans are stored centrally in `~/workspace/git/Implementations/`, **not** inside individual repos.
+
+- **Location**: `Implementations/<repo-name>/plans/<date>-<topic>.md`
+- **Structure**: One subfolder per repo (e.g. `NerpyBot/plans/`), files named by date and topic
+- **Why**: Keeps repos clean; plans are gitignored per-repo anyway — centralizing them makes them findable and versioned
+
+When creating a new plan, always write it to the Implementations repo, not to `docs/plans/` or any local plans folder inside the project repo.
+
+{{ end -}}
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
 - Helpers: zsh (`~/.oh-my-zsh/custom/bitwarden.zsh`), fish (`~/.config/fish/functions/bw_*.fish`)

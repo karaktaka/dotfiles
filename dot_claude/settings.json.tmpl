@@ -30,7 +30,11 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-branch-check.sh"
-          }
+          }{{ if not .isWork }},
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-plans-folder.sh"
+          }{{ end }}
         ]
       },
       {
