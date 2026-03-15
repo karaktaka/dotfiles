@@ -112,7 +112,7 @@ fi
 # and plain Claude attribution on KN GitLab repos where a character is required.
 case "$STRIPPED" in
   commit*)
-    if echo "$COMMAND" | grep -Eqi "Claude[[:space:]]+[A-Za-z][^<]*noreply@anthropic\.com"; then
+    if echo "$COMMAND" | grep -Eqi "Claude[[:space:]]+[A-Za-z][^<]*<noreply@anthropic\.com"; then
       deny "Claude model name as co-author — run ~/.claude/get-flair.sh <type> instead"
     fi
     REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
