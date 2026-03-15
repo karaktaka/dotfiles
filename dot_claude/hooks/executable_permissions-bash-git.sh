@@ -107,6 +107,21 @@ if [[ "$COMMAND" == *"&&"* || "$COMMAND" == *";"* ]]; then
   fi
 fi
 
+# COMMIT: reject wrong co-author formats before allowing
+# Catches model-name variants (e.g. "Claude Sonnet 4.6") on all repos,
+# and plain Claude attribution on KN GitLab repos where a character is required.
+case "$STRIPPED" in
+  commit*)
+    if echo "$COMMAND" | grep -Eqi "Claude[[:space:]]+[A-Za-z][^<]*noreply@anthropic\.com"; then
+      deny "Claude model name as co-author — run ~/.claude/get-flair.sh <type> instead"
+    fi
+    REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
+    if [[ "$REMOTE" == *"gitlab.example.com"* ]] && echo "$COMMAND" | grep -qi "noreply@anthropic\.com"; then
+      deny "KN repo: use ~/.claude/get-flair.sh <type> for a character co-author"
+    fi
+    ;;
+esac
+
 # ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
 # Yield if a dangerous command appears after a chain operator — let
 # permissions-bash-dangerous.sh make the call so we don't conflict with it.

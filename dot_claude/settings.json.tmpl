@@ -21,6 +21,10 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-branch-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-chezmoi-template-edit.sh"
           }
         ]
       },
@@ -30,6 +34,10 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-branch-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-chezmoi-template-edit.sh"
           }{{ if not .isWork }},
           {
             "type": "command",
