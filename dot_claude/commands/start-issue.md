@@ -37,11 +37,7 @@ glab issue view <number>
 
 Read the full output including description and any existing comments.
 
-## Step 4: Enter plan mode
-
-Use the `EnterPlanMode` tool now — before proposing anything.
-
-## Step 5: Summarise and ask clarifying questions
+## Step 4: Summarise and ask clarifying questions
 
 Present a structured summary of the issue:
 
@@ -57,3 +53,7 @@ Then ask targeted clarifying questions. Focus on things that would materially ch
 - Dependencies: "Does this need to be backwards-compatible with Z?"
 
 Do **not** start proposing a solution yet. Wait for the user's answers before forming a plan.
+
+## Step 5: Invoke scope-and-plan
+
+Once clarifying questions are answered (or if none were needed), invoke the `scope-and-plan` skill to assess scope, decide whether plan mode is needed, and present the implementation plan.
