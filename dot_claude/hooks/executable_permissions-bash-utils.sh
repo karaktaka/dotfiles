@@ -63,6 +63,9 @@ case "$CMD_NAME" in
       # Bare 'npm install' (restore from lockfile) — ask to be safe
       *"npm install"|*"npm i")
         ask "npm install (no args) — restores all dependencies from lockfile" ;;
+      # Registry read operations — safe, no side effects
+      *"npm info "*|*"npm show "*|*"npm view "*)
+        allow "npm registry read (no mutations)" ;;
       # Safe local operations: run scripts, build, test, lint, audit, list
       *"npm run "*|*"npm test"*|*"npm start"*|*"npm build"*|*"npm ci"*|\
       *"npm ls"*|*"npm list"*|*"npm audit"*|*"npm outdated"*|*"npm pack"*)

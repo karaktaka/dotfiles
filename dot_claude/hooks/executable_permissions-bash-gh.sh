@@ -42,7 +42,8 @@ case "$COMMAND" in
   "gh --version"|\
   "gh auth status"*|\
   gh*pr*list*|gh*pr*view*|gh*pr*diff*|gh*pr*checks*|gh*pr*status*|\
-  gh*issue*list*|gh*issue*view*|gh*issue*status*|\
+  gh*pr*comment*list*|gh*pr*review*list*|\
+  gh*issue*list*|gh*issue*view*|gh*issue*status*|gh*issue*comment*list*|\
   gh*run*list*|gh*run*view*|gh*run*watch*|gh*run*logs*|\
   gh*release*list*|gh*release*view*|\
   gh*workflow*list*|gh*workflow*view*|\
