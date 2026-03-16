@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # get-flair.sh — randomised commit/MR flair generator
-# Usage: get-flair.sh [--mr] <type>
+# Usage: get-flair.sh --dir <repo-path> [--mr] <type>
 # Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo
 
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
