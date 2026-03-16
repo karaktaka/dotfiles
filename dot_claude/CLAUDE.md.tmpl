@@ -141,7 +141,7 @@ Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
 ### Co-Authored-By & Flair
 
-Run `~/.claude/get-flair.sh <type>` for the Co-Authored-By line, or `~/.claude/get-flair.sh --mr <type>` for MR/PR description footers. The script auto-detects the git remote and selects the appropriate format. **Never pick characters manually — always use the script.**
+Run `~/.claude/get-flair.sh --dir <repo-path> <type>` for the Co-Authored-By line, or `~/.claude/get-flair.sh --dir <repo-path> --mr <type>` for MR/PR description footers. The script auto-detects the git remote and selects the appropriate format. **Never pick characters manually — always use the script.**
 
 Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo
 

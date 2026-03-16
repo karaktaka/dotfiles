@@ -113,11 +113,11 @@ fi
 case "$STRIPPED" in
   commit*)
     if echo "$COMMAND" | grep -Eqi "Claude[[:space:]]+[A-Za-z][^<]*<noreply@anthropic\.com"; then
-      deny "Claude model name as co-author — run ~/.claude/get-flair.sh <type> instead"
+      deny "Claude model name as co-author — run ~/.claude/get-flair.sh --dir <repo-path> <type> instead"
     fi
     REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
     if [[ "$REMOTE" == *"gitlab.example.com"* ]] && echo "$COMMAND" | grep -qi "noreply@anthropic\.com"; then
-      deny "KN repo: use ~/.claude/get-flair.sh <type> for a character co-author"
+      deny "KN repo: use ~/.claude/get-flair.sh --dir <repo-path> <type> for a character co-author"
     fi
     ;;
 esac
