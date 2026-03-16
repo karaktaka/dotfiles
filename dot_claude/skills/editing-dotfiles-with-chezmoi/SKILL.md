@@ -1,6 +1,6 @@
 ---
 name: editing-dotfiles-with-chezmoi
-description: Use when modifying dotfiles, home directory configuration files, ~/CLAUDE.md, ~/.claude/ files, or any chezmoi-managed files. Also use when adding new config files to home directory.
+description: Use when modifying dotfiles, home directory configuration files, ~/.claude/CLAUDE.md, ~/.claude/ files, or any chezmoi-managed files. Also use when adding new config files to home directory.
 ---
 
 # Editing Dotfiles with Chezmoi
@@ -35,7 +35,7 @@ git -C ~/.local/share/chezmoi push
 
 ```bash
 # 1. Edit the template in chezmoi source
-#    e.g. ~/.local/share/chezmoi/CLAUDE.md.tmpl
+#    e.g. ~/.local/share/chezmoi/dot_claude/CLAUDE.md.tmpl
 # 2. Apply to target
 chezmoi apply --force ~/path/to/file
 # 3. Commit & push
@@ -48,7 +48,7 @@ git -C ~/.local/share/chezmoi push
 
 | Target | Chezmoi source | Type |
 |--------|---------------|------|
-| `~/CLAUDE.md` | `CLAUDE.md.tmpl` | Template |
+| `~/.claude/CLAUDE.md` | `CLAUDE.md.tmpl` | Template |
 | `~/.claude/settings.json` | `dot_claude/settings.json.tmpl` | Template |
 | `~/.claude/mcp.json` | `dot_claude/dot_mcp.json.tmpl` | Template |
 | `~/.claude/commands/` | `dot_claude/commands/` | Regular |
@@ -64,6 +64,6 @@ chezmoi add ~/path/to/new/file
 
 ## Common Mistakes
 
-- **Editing a template target directly** (`~/CLAUDE.md`, `~/.claude/settings.json`): Gets overwritten on next apply. Edit the `.tmpl` source.
+- **Editing a template target directly** (`~/.claude/CLAUDE.md`, `~/.claude/settings.json`): Gets overwritten on next apply. Edit the `.tmpl` source.
 - **`chezmoi add --force` on a template**: Destroys template conditionals. Edit `.tmpl` directly.
 - **Forgetting to push**: Changes only persist across machines if committed and pushed to the chezmoi repo.
