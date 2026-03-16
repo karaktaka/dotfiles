@@ -51,6 +51,7 @@
 ### Core Rules
 - **Never use `cd /path && <command>`** — use absolute paths or tool-native directory flags instead. This applies to ALL tools, not just git:
   - git: `git -C <path> commit` (not `cd /path && git commit`)
+  - go: `go -C <path> build .` (not `cd /path && go build .`) — `-C` must be the first flag
   - uv/ruff/pytest: `uv run --directory <path> ruff check file.py` or pass the full file path
   - When a `cd && cmd` is denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
 - **Worktrees**: Commands run in the shell's CWD, not the worktree. Always pass the worktree path explicitly (e.g. `git -C .worktrees/my-branch status`, `uv run --directory .worktrees/my-branch pytest`).
@@ -111,7 +112,7 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 - **Always create MRs as drafts** — use `--draft` flag (do **not** also prefix the title with `Draft:` — the flag does that automatically)
 - **Always enable "Delete source branch"** and **"Squash commits"** when creating MRs — flags: `--squash-before-merge` and `--remove-source-branch`
 - **MR description flag**: `glab mr create --description "..."` (NOT `--body` — that's `gh`)
-- **CWD determines project** — `glab` resolves the target project from the git remote in CWD. `--repo` is unreliable. See project `CLAUDE.md` for CWD handling rules.
+- **CWD determines project** — `glab` resolves the target project and current branch from CWD. `--repo` works for project-level commands (list, view) but does **not** set git context, so branch-aware commands like `mr create` still need the correct CWD (or explicit `--source-branch`). In worktrees, use `cd <worktree> && glab ...`.
 - **MR dependencies**: Open the dependency MR first, then the dependent MR. Set via: `glab api --method POST "projects/<project_id>/merge_requests/<iid>/blocks" -f "blocking_merge_request_id=<internal_mr_id>"` (use internal `id` from API, not `iid`)
 
 ### MR Code Reviews via API

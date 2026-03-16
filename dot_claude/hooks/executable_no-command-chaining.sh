@@ -5,8 +5,9 @@
 #
 # Exception: && is allowed when the leading command is a shell-state-modifier —
 # i.e. a command that changes directory, environment, or sets up prerequisites
-# that subsequent commands genuinely depend on. These have no --directory/--env
-# flag equivalent and cannot be moved to a separate tool call.
+# that subsequent commands genuinely depend on.
+# Note: prefer tool-native dir flags where they exist (git -C, go -C, uv --directory)
+# over cd &&. Use cd && only for tools that truly have no directory flag (e.g. glab).
 # Allowed leading commands: cd, pushd, export, source, ., mkdir, eval, unset
 
 command -v jq &>/dev/null || exit 0
