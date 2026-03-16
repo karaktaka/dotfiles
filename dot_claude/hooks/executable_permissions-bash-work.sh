@@ -200,11 +200,17 @@ case "$CMD_NAME" in
       make*tf/import*|make*tf/refresh*|make*tf/unlock-state*|\
       make*tf/state-rm*|make*tf/state-mv*|make*tf/state-import*|\
       make*tg/apply*|make*tg/destroy*|\
-      make*tg/state-rm*|make*tg/state-mv*)  ask "Infrastructure apply/destroy/state-mutate" ;;
+      make*tg/state-rm*|make*tg/state-mv*|\
+      make*tg/state-import*|make*tg/unlock-state*)  ask "Infrastructure apply/destroy/state-mutate" ;;
     esac
     exit 0 ;;
 
   terraform)
+    # Sandbox: all operations permitted (test account)
+    case "$COMMAND" in
+      *sandbox*) allow "Sandbox environment" ;;
+    esac
+
     case "$COMMAND" in
       terraform*fmt*|\
       terraform*validate*|\
