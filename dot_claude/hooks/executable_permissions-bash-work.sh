@@ -176,11 +176,31 @@ case "$CMD_NAME" in
     esac ;;
 
   make)
+    # Sandbox: all operations permitted (test account)
+    case "$COMMAND" in
+      *sandbox*) allow "Sandbox environment" ;;
+    esac
+
+    # Read-only: terraform + terragrunt
     case "$COMMAND" in
       make*tf/format*|make*tf/init*|make*tf/plan*|\
-      make*init-*|make*plan-*)                         allow "Terraform plan/init (read-only)" ;;
-      make*apply-*|make*destroy-*|make*tf/apply*|\
-      make*tf/destroy*|make*tf/import*|make*tf/state*) ask "Infrastructure apply/destroy" ;;
+      make*tf/output*|make*tf/module-docs*|\
+      make*tf/state-list*|make*tf/state-show*|\
+      make*init-*|make*plan-*|\
+      make*tg/format*|make*tg/init*|\
+      make*tg/validate*|make*tg/plan*|\
+      make*tg/output*|\
+      make*tg/state-list*|make*tg/state-show*)  allow "Terraform/Terragrunt read-only" ;;
+    esac
+
+    # State-mutating / destructive
+    case "$COMMAND" in
+      make*apply-*|make*destroy-*|\
+      make*tf/apply*|make*tf/destroy*|\
+      make*tf/import*|make*tf/refresh*|make*tf/unlock-state*|\
+      make*tf/state-rm*|make*tf/state-mv*|make*tf/state-import*|\
+      make*tg/apply*|make*tg/destroy*|\
+      make*tg/state-rm*|make*tg/state-mv*)  ask "Infrastructure apply/destroy/state-mutate" ;;
     esac
     exit 0 ;;
 
@@ -201,6 +221,11 @@ case "$CMD_NAME" in
     exit 0 ;;
 
   terragrunt)
+    # Sandbox: all operations permitted (test account)
+    case "$COMMAND" in
+      *sandbox*) allow "Sandbox environment" ;;
+    esac
+
     case "$COMMAND" in
       terragrunt*hclfmt*|\
       terragrunt*fmt*|\
