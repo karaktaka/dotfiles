@@ -82,11 +82,33 @@ case "$CMD_NAME" in
     esac
     ask "npx may download and execute an npm package — confirm package name and intent" ;;
 
+  # --- Go toolchain ---
+  go)
+    case "$COMMAND" in
+      # Risky: executes code or mutates dependencies
+      *"go run "*)       ask "go run — executes arbitrary Go code" ;;
+      *"go generate"*)   ask "go generate — runs arbitrary //go:generate directives" ;;
+      *"go install"*)    ask "go install — installs a binary (may download code)" ;;
+      *"go get"*)        ask "go get — adds or updates module dependencies" ;;
+      # Safe: build, analysis, formatting, module inspection
+      *"go build"*|*"go test"*|*"go vet"*|*"go fmt"*|\
+      *"go list"*|*"go doc"*|*"go env"*|*"go version"*|\
+      *"go clean"*|*"go tool"*|\
+      *"go mod tidy"*|*"go mod download"*|*"go mod verify"*|\
+      *"go mod graph"*|*"go mod why"*|*"go mod edit"*|*"go mod vendor"*|\
+      *"go work"*)
+        allow "Safe go command (no code execution or dep mutation)" ;;
+    esac
+    ask "Unknown go subcommand — confirm intent" ;;
+
+  gopls)
+    allow "gopls — read-only Go language server / analysis tool" ;;
+
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
   basename|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
-  grep|head|hostname|id|jq|less|ls|md5|more|ping|prettier|pwd|realpath|\
+  gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|prettier|pwd|realpath|\
   ruff|shasum|shellcheck|shfmt|sort|stat|tail|tr|uname|uniq|uv|wc|\
   which|whoami)
     case "$COMMAND" in
