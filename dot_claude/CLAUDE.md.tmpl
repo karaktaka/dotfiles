@@ -56,6 +56,7 @@
   - uv/ruff/pytest: `uv run --directory <path> ruff check file.py` or pass the full file path
   - When a `cd && cmd` is denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
 - **Worktrees**: Commands run in the shell's CWD, not the worktree. Always pass the worktree path explicitly (e.g. `git -C .worktrees/my-branch status`, `uv run --directory .worktrees/my-branch pytest`).
+- **`gh` has no `-C` directory flag** — Unlike `git -C path`, `gh` subcommands don't accept a directory argument. For worktree branches use `gh pr view <branch> --repo owner/repo` or `gh pr view <PR-number>` from any directory.
 - **Worktree frontend setup**: If `npm run build` fails with "command not found" in a worktree, run `npm install --prefix <worktree>/web/frontend` first — don't fiddle with PATH.
 - **Always pull before pushing** — if there are no unstaged changes and everything is committed, just `git pull`. Resolve conflicts if any, then push.
 - **Prefer `--amend`** on feature branches; OK on `main`/`master` only if the commit has **not been pushed yet**
