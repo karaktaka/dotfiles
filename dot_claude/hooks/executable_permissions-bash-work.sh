@@ -186,7 +186,40 @@ case "$CMD_NAME" in
 
   terraform)
     case "$COMMAND" in
-      terraform*fmt*|terraform*validate*) allow "Terraform validate (read-only)" ;;
+      terraform*fmt*|\
+      terraform*validate*|\
+      terraform*plan*|\
+      terraform*init*|\
+      terraform*show*|\
+      terraform*output*|\
+      terraform*state*list*|terraform*state*show*|\
+      terraform*workspace*list*|terraform*workspace*show*|\
+      terraform*providers*|\
+      terraform*version*|\
+      terraform*graph*)  allow "Terraform read-only" ;;
+    esac
+    exit 0 ;;
+
+  terragrunt)
+    case "$COMMAND" in
+      terragrunt*hclfmt*|\
+      terragrunt*fmt*|\
+      terragrunt*validate*|\
+      terragrunt*plan*|\
+      terragrunt*init*|\
+      terragrunt*show*|\
+      terragrunt*output*|\
+      terragrunt*state*list*|terragrunt*state*show*|\
+      terragrunt*workspace*list*|terragrunt*workspace*show*|\
+      terragrunt*providers*|\
+      terragrunt*version*|\
+      terragrunt*graph*|\
+      terragrunt*run-all*validate*|\
+      terragrunt*run-all*plan*|\
+      terragrunt*run-all*init*|\
+      terragrunt*run-all*show*|\
+      terragrunt*run-all*output*|\
+      terragrunt*run-all*state*list*)  allow "Terragrunt read-only" ;;
     esac
     exit 0 ;;
 
