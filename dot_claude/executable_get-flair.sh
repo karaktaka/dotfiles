@@ -11,15 +11,22 @@ fi
 # --- Parse args ---
 MR_MODE=false
 TYPE=""
-for arg in "$@"; do
-  case "$arg" in
-    --mr) MR_MODE=true ;;
-    *)    TYPE="$arg" ;;
+DIR=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mr)  MR_MODE=true; shift ;;
+    --dir) DIR="$2"; shift 2 ;;
+    *)     TYPE="$1"; shift ;;
   esac
 done
 
+if [[ -z "$DIR" ]]; then
+  echo "Error: --dir <repo-path> is required" >&2
+  exit 1
+fi
+
 # --- Detect remote ---
-REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+REMOTE_URL=$(git -C "$DIR" remote get-url origin 2>/dev/null || echo "")
 IS_KN=false
 [[ "$REMOTE_URL" == *"gitlab.example.com"* ]] && IS_KN=true
 
