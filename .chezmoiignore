@@ -16,7 +16,6 @@ bootstrap.sh
 .claude/.mcp.json
 .claude/commands/check-pipeline.md
 .claude/commands/check-ticket-coverage.md
-.claude/commands/review-mr-comments.md
 .oh-my-zsh/custom/confluence.zsh
 Library/Application Support/mark.toml
 Library/Application Support/k9s/hotkeys.yaml

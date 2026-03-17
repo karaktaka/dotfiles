@@ -8,6 +8,15 @@ version: 1.0.0
 
 Work through all open review comments on the current PR/MR, fix what can be fixed, and properly resolve or escalate each finding.
 
+## Step 0 — Determine mode
+
+**Read-only mode** — use when the user asks to "show", "list", or "summarise" review comments, or passes `--read-only`:
+1. Execute Steps 1–3 only (identify PR/MR, fetch threads, categorise)
+2. Present a summary table: reviewer name, file:line, brief description of feedback, category (human/AI/bot)
+3. Ask: "How would you like to proceed?" and stop — do **not** apply fixes, resolve threads, or post any comments
+
+**Full mode** (default) — proceed through all steps below.
+
 ## Step 1 — Identify the PR/MR
 
 Detect the platform and PR/MR automatically:

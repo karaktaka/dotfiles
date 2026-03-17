@@ -12,7 +12,7 @@ git diff --name-only
 
 3. Create the branch:
 ```bash
-git checkout -b <generated-name>
+git switch -c <generated-name>
 ```
 
 Confirm the branch was created successfully.
