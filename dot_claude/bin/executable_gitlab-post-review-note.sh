@@ -52,7 +52,46 @@ fi
 TMPJSON=$(mktemp /tmp/gitlab-draft-note-XXXXXX.json)
 trap 'rm -f "$TMPJSON"' EXIT
 
-if [[ -z "$UPDATE_ID" && -n "$REPO_FILE" && -n "$NEW_LINE" ]]; then
+if [[ -n "$UPDATE_ID" ]]; then
+  # Update mode: fetch existing note to preserve its position, then PUT with new text
+  echo "Fetching existing draft note ${UPDATE_ID} to preserve position..."
+  EXISTING=$(curl -sS --fail -H "PRIVATE-TOKEN: $TOKEN" \
+    "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes/${UPDATE_ID}")
+
+  TMPEXISTING=$(mktemp /tmp/gitlab-draft-existing-XXXXXX.json)
+  echo "$EXISTING" > "$TMPEXISTING"
+
+  python3 - "$NOTE_FILE" "$TMPEXISTING" "$TMPJSON" <<'PYEOF'
+import json, sys
+note_file, existing_file, out_file = sys.argv[1:]
+note = open(note_file).read()
+existing = json.load(open(existing_file))
+payload = {"note": note}
+pos = existing.get("position")
+if pos and pos.get("base_sha"):
+    payload["position"] = pos
+json.dump(payload, open(out_file, "w"), ensure_ascii=False)
+PYEOF
+
+  rm -f "$TMPEXISTING"
+
+  HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+    -X PUT \
+    -H "PRIVATE-TOKEN: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @"$TMPJSON" \
+    "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes/${UPDATE_ID}")
+
+  if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
+    echo "Draft note updated (HTTP $HTTP_CODE)"
+    echo "Go to the MR and click 'Submit review' to publish."
+  else
+    echo "ERROR: Failed to update draft note (HTTP $HTTP_CODE)" >&2
+    exit 1
+  fi
+
+elif [[ -n "$REPO_FILE" && -n "$NEW_LINE" ]]; then
+  # Inline comment: fetch diff version SHAs and POST with position
   echo "Fetching diff version SHAs for inline comment..."
   VERSIONS=$(curl -sS --fail -H "PRIVATE-TOKEN: $TOKEN" \
     "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/versions")
@@ -80,32 +119,30 @@ payload = {
 json.dump(payload, open(out_file, "w"), ensure_ascii=False)
 PYEOF
 
+  HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+    -X POST \
+    -H "PRIVATE-TOKEN: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @"$TMPJSON" \
+    "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes")
+
+  if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
+    echo "Draft note posted (HTTP $HTTP_CODE)"
+    echo "Go to the MR and click 'Submit review' to publish."
+  else
+    echo "ERROR: Failed to post draft note (HTTP $HTTP_CODE)" >&2
+    exit 1
+  fi
+
 else
+  # General comment: POST without position
   python3 - "$NOTE_FILE" "$TMPJSON" <<'PYEOF'
 import json, sys
 note_file, out_file = sys.argv[1:]
 note = open(note_file).read()
 json.dump({"note": note}, open(out_file, "w"), ensure_ascii=False)
 PYEOF
-fi
 
-if [[ -n "$UPDATE_ID" ]]; then
-  # Update mode: PUT to existing draft note (text only, position is immutable)
-  HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
-    -X PUT \
-    -H "PRIVATE-TOKEN: $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d @"$TMPJSON" \
-    "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes/${UPDATE_ID}")
-
-  if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
-    echo "Draft note updated (HTTP $HTTP_CODE)"
-    echo "Go to the MR and click 'Submit review' to publish."
-  else
-    echo "ERROR: Failed to update draft note (HTTP $HTTP_CODE)" >&2
-    exit 1
-  fi
-else
   HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
     -X POST \
     -H "PRIVATE-TOKEN: $TOKEN" \
