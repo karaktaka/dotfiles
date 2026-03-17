@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# gitlab-post-review-note.sh — post a pending (draft) review comment on a KN GitLab MR
+# gitlab-post-review-note.sh — post or update a pending (draft) review comment on a KN GitLab MR
 #
 # Comments are posted as draft notes: only visible to you until you click
 # "Submit review" in the GitLab UI. Never published automatically.
@@ -13,6 +13,9 @@ set -euo pipefail
 #   Inline diff comment:
 #     gitlab-post-review-note.sh <project> <mr_iid> <note_file> <repo_file_path> <new_line>
 #
+#   Update existing draft note (text only, position unchanged):
+#     gitlab-post-review-note.sh --update <draft_note_id> <project> <mr_iid> <note_file>
+#
 # Arguments:
 #   project        Numeric project ID (e.g. 1566) or URL-encoded path
 #                  (e.g. datascience%2Fdatascience)
@@ -23,8 +26,14 @@ set -euo pipefail
 
 GITLAB_API="https://gitlab.example.com/api/v4"
 
+UPDATE_ID=""
+if [[ "${1:-}" == "--update" ]]; then
+  UPDATE_ID="$2"
+  shift 2
+fi
+
 if [[ $# -lt 3 ]]; then
-  echo "Usage: $0 <project> <mr_iid> <note_file> [repo_file_path] [new_line]" >&2
+  echo "Usage: $0 [--update <draft_note_id>] <project> <mr_iid> <note_file> [repo_file_path] [new_line]" >&2
   exit 1
 fi
 
@@ -43,7 +52,7 @@ fi
 TMPJSON=$(mktemp /tmp/gitlab-draft-note-XXXXXX.json)
 trap 'rm -f "$TMPJSON"' EXIT
 
-if [[ -n "$REPO_FILE" && -n "$NEW_LINE" ]]; then
+if [[ -z "$UPDATE_ID" && -n "$REPO_FILE" && -n "$NEW_LINE" ]]; then
   echo "Fetching diff version SHAs for inline comment..."
   VERSIONS=$(curl -sS --fail -H "PRIVATE-TOKEN: $TOKEN" \
     "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/versions")
@@ -80,17 +89,35 @@ json.dump({"note": note}, open(out_file, "w"), ensure_ascii=False)
 PYEOF
 fi
 
-HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
-  -X POST \
-  -H "PRIVATE-TOKEN: $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d @"$TMPJSON" \
-  "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes")
+if [[ -n "$UPDATE_ID" ]]; then
+  # Update mode: PUT to existing draft note (text only, position is immutable)
+  HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+    -X PUT \
+    -H "PRIVATE-TOKEN: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @"$TMPJSON" \
+    "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes/${UPDATE_ID}")
 
-if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
-  echo "Draft note posted (HTTP $HTTP_CODE)"
-  echo "Go to the MR and click 'Submit review' to publish."
+  if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
+    echo "Draft note updated (HTTP $HTTP_CODE)"
+    echo "Go to the MR and click 'Submit review' to publish."
+  else
+    echo "ERROR: Failed to update draft note (HTTP $HTTP_CODE)" >&2
+    exit 1
+  fi
 else
-  echo "ERROR: Failed to post draft note (HTTP $HTTP_CODE)" >&2
-  exit 1
+  HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+    -X POST \
+    -H "PRIVATE-TOKEN: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @"$TMPJSON" \
+    "$GITLAB_API/projects/${PROJECT}/merge_requests/${MR_IID}/draft_notes")
+
+  if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
+    echo "Draft note posted (HTTP $HTTP_CODE)"
+    echo "Go to the MR and click 'Submit review' to publish."
+  else
+    echo "ERROR: Failed to post draft note (HTTP $HTTP_CODE)" >&2
+    exit 1
+  fi
 fi
