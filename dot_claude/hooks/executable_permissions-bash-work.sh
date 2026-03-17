@@ -128,7 +128,7 @@ case "$CMD_NAME" in
 
   helm)
     case "$COMMAND" in
-      helm*lint*|helm*list*|helm*template*|helm*history*) allow "Helm read-only" ;;
+      *helm*lint*|*helm*list*|*helm*template*|*helm*history*) allow "Helm read-only" ;;
     esac
     exit 0 ;;
 
