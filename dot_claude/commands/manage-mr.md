@@ -174,7 +174,7 @@ EOF
 
 ### Merge
 
-Ask the user before merging. Remind them to verify the pipeline is green and changes are tested.
+Use the `AskUserQuestion` tool to ask: "Merge this MR/PR? Verify the pipeline is green and changes are tested." with options: "Yes, merge now", "Cancel"
 
 **GitLab:**
 ```bash

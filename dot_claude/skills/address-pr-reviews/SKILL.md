@@ -13,7 +13,7 @@ Work through all open review comments on the current PR/MR, fix what can be fixe
 **Read-only mode** — use when the user asks to "show", "list", or "summarise" review comments, or passes `--read-only`:
 1. Execute Steps 1–3 only (identify PR/MR, fetch threads, categorise)
 2. Present a summary table: reviewer name, file:line, brief description of feedback, category (human/AI/bot)
-3. Ask: "How would you like to proceed?" and stop — do **not** apply fixes, resolve threads, or post any comments
+3. Use the `AskUserQuestion` tool to ask: "How would you like to proceed?" with options: "Walk me through each fix", "Apply all fixes automatically", "Leave as-is for now" — stop here, do **not** apply fixes, resolve threads, or post any comments without the user's choice
 
 **Full mode** (default) — proceed through all steps below.
 
@@ -120,12 +120,14 @@ For each unresolved thread, evaluate the finding:
 Is the finding valid?
 ├── No (false positive / already correct)
 │   ├── AI review  → acknowledge and resolve directly
-│   └── Human      → explain to user, ask if they want a reply posted
+│   └── Human      → explain; AskUserQuestion: "Post a reply explaining why this doesn't apply?"
+│                    options: "Yes, post reply and resolve" / "No, leave open"
 │
 ├── Yes, small fix
 │   ├── Fix the code
 │   ├── AI review  → resolve thread after fix
-│   └── Human      → show fix, ask user "Should I reply with the fix and resolve?"
+│   └── Human      → show fix; AskUserQuestion: "Reply with the fix and resolve this thread?"
+│                    options: "Yes, reply and resolve" / "Apply fix only, skip reply" / "Skip"
 │
 └── Yes, but out of scope / needs bigger refactor
     → Ask user how to proceed (see Step 6)
@@ -153,12 +155,9 @@ Present the finding clearly:
 > **⚠ Out-of-scope finding** in thread [link]:
 > "[brief summary of what the reviewer flagged]"
 >
-> This would require [explanation of scope]. Options:
-> 1. Create a tracking issue and resolve the thread with a reference to it
-> 2. Leave the thread open for now
-> 3. Address it in this PR (I can help scope it)
->
-> **What would you like to do?**
+> This would require [explanation of scope].
+
+Use the `AskUserQuestion` tool to ask: "How would you like to handle this finding?" with options: "Create a tracking issue and resolve the thread", "Leave the thread open for now", "Address it in this PR"
 
 If the user chooses to create an issue, create it with:
 ```bash
@@ -183,8 +182,8 @@ Then reply to the thread with the issue link and resolve it.
 |---------------|---------------------|
 | AI review (fixed) | Resolve automatically after fix |
 | AI review (not fixable / false positive) | Post explanation, then resolve |
-| Human review (fixed) | **Ask user**: "Should I post the fix summary and resolve this thread?" |
-| Human review (false positive) | **Ask user**: "Should I reply explaining why this doesn't apply and resolve?" |
+| Human review (fixed) | Use `AskUserQuestion`: "Reply with fix summary and resolve this thread?" → "Yes, reply and resolve" / "Apply fix only, no reply" / "Skip" |
+| Human review (false positive) | Use `AskUserQuestion`: "Reply explaining why this doesn't apply and resolve?" → "Yes, reply and resolve" / "No, leave open" |
 | Out of scope (issue created) | Resolve with issue link after user confirms |
 | Out of scope (deferred) | Leave open |
 
@@ -223,7 +222,7 @@ glab api -X POST "projects/$PROJECT_ID/merge_requests/$MR_IID/discussions/$DISCU
 
 ## Step 8 — Final Status
 
-After all threads are processed, post a summary comment on the PR/MR:
+After all threads are processed, use the `AskUserQuestion` tool to ask: "Post a summary comment on the PR/MR?" with options: "Yes, post summary", "No, skip" — then post if confirmed:
 
 ```
 ## Review addressed ✓

@@ -60,4 +60,4 @@ For Small tasks, steps 1–3 are enough. For Large tasks, all steps are required
 
 ## Step 5 — Wait for Approval (Large only)
 
-For Large/plan-mode tasks: do not begin implementation until the user explicitly approves the plan. For Small/Medium: proceed after presenting the plan summary.
+For Large/plan-mode tasks: use the `AskUserQuestion` tool to ask: "Ready to proceed with this plan?" with options: "Yes, proceed", "Modify the plan first", "Cancel" — do not begin implementation until the user explicitly approves. For Small/Medium: proceed after presenting the plan summary.
