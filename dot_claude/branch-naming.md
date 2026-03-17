@@ -1,8 +1,16 @@
 # Branch Naming Conventions
 
+## When Working from an Issue
+
+**Issue context takes priority over all other naming rules below.**
+
+- GitHub/GitLab issues: `feature/<issue-number>-short-description` or `fix/<issue-number>-short-description`
+- **KN (Jira)**: `<PROJECT>-<ticket_id>/short-description` — e.g. `AI-123/add-user-auth`. The `<PROJECT>-<id>/` prefix auto-links the branch to the Jira ticket.
+- Always link the MR/PR back to the issue in its description, and cross-reference the MR from the issue.
+
 ## With Existing Changes
 
-When there are uncommitted changes, derive the branch name from the changes:
+When there are uncommitted changes (and no issue context), derive the branch name from the changes:
 
 - Analyze changed files and their content
 - Format: `feature/<short-description>` or `fix/<short-description>`
