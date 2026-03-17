@@ -130,14 +130,7 @@ When multiple interconnected MRs/PRs are opened in the same session:
 - **MR dependencies**: When opening multiple related MRs, **always** set the blocking relationship immediately after creating the dependent MR — do not skip this. Use: `glab api --method POST "projects/<project_id>/merge_requests/<iid>/blocks" -f "blocking_merge_request_id=<internal_mr_id>"` (use internal `id` from API, not `iid`)
 
 ### MR Code Reviews via API
-
-- **`glab api -f` can't do nested JSON** — use `curl -H "Content-Type: application/json" -d @payload.json` for endpoints requiring nested objects (e.g., `position` in draft notes)
-- **Extract glab token for curl**: `glab auth status -t 2>&1 | grep 'Token found' | awk '{print $NF}'`
-- **Draft notes (pending review)**: `POST projects/:id/merge_requests/:iid/draft_notes` with `position` object → user publishes via "Submit review" in UI
-- **Inline code suggestions**: Use `` ```suggestion:-N+M `` in note body (`-N` = lines above, `+M` = lines below to replace). Requires `position.new_line` to be set.
-- **JSON payloads with bash code**: Use Python (`json.dump`) to a temp file to avoid multi-layer shell escaping
-- **Verify remote file paths**: MR diff versions may show different paths than local — check via `projects/:id/merge_requests/:iid/versions`
-- **Posting review comments — always use draft notes**: use `~/.claude/bin/gitlab-post-review-note.sh <project> <mr_iid> <note_file> [repo_file_path] [new_line]` — never post directly to `/notes`. Script auto-fetches diff SHAs for inline comments, posts to `/draft_notes` so comments stay pending until you click "Submit review" in the GitLab UI. Write comment text to a temp file first to avoid all shell quoting/backtick issues.
+→ See `~/.claude/gitlab-mr-api.md` for draft notes, inline suggestions, curl token auth, and the review posting script.
 {{ end }}
 ## File Formatting
 
@@ -174,6 +167,19 @@ Design docs and implementation plans are stored centrally in `~/workspace/git/Im
 When creating a new plan, always write it to the Implementations repo, not to `docs/plans/` or any local plans folder inside the project repo.
 
 {{ end -}}
+## Reference Files
+
+Detailed reference material is split into separate files to keep this file concise. Read them on demand when working on the relevant area.
+
+| File | Contents |
+|------|----------|
+| `~/.claude/branch-naming.md` | Branch naming conventions (issue-based, KN prefix, fun names) |
+| `~/.claude/formatter-reference.md` | Linting/formatting commands per language |{{ if eq .chezmoi.os "darwin" }}
+| `~/.claude/macos-config.md` | macOS paths, k9s config quirks, Time Machine |{{ end }}{{ if .isWork }}
+| `~/.claude/gitlab-mr-api.md` | GitLab MR review API, draft notes, inline suggestions |
+| `~/.claude/observability.md` | Grafana URLs, Loki log querying, Alloy auth |
+| `~/.claude/kubernetes.md` | AWS SSO, `_op` profiles, kubectl contexts and safety rules |{{ end }}
+
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
 - Helpers: zsh (`~/.oh-my-zsh/custom/bitwarden.zsh`), fish (`~/.config/fish/functions/bw_*.fish`)
@@ -188,22 +194,12 @@ Multi-repo workspace (6 independent git repos, not a monorepo). See the group-le
 
 ### AWS & Kubernetes
 - **NEVER patch live Kubernetes resources directly** (`kubectl apply/patch/edit`) without explicit user permission. Make code/Terraform changes → show plan → wait for user to apply. Direct kubectl changes bypass Terraform state and cause `resourceVersion` conflicts requiring `terraform state rm` to recover.
-- SSO: `aws sso login --sso-session KN-Operations`
-- Profiles: `dev`, `prod`
-- Update kubectl binary to match cluster version: `update_kubectl` (does NOT update kubeconfig contexts)
-- Check available contexts: `kubectl config get-contexts` — context names are full ARNs (e.g. `arn:aws:eks:eu-central-1:...:cluster/apps-prod-cluster`)
-- Pod log retention is very short (minutes to ~1 hour due to kubelet rotation) — for historical logs, query Loki instead
-- **ALWAYS verify kubectl context before any kubectl command**: run `kubectl config current-context` first
-- **Pass `--context=<name>` directly** to each command — never rely on ambient context being set correctly
-- **Confirm target cluster** (sandbox/dev/prod) with user before any mutating operation
+- **ALWAYS verify kubectl context first**: `kubectl config current-context`. Pass `--context=<name>` to every command. Confirm target cluster (sandbox/dev/prod) before any mutating operation.
+→ See `~/.claude/kubernetes.md` for SSO, profiles (`_op` preferred), context ARNs, and kubectl commands.
 
 ### Observability (Grafana/Loki)
-- **Architecture**: Grafana Alloy collectors (in `monitoring` ns) → centralized Loki → centralized Grafana
-- **Grafana (dev)**: `grafana.nonprod.example.com` — `apps-dev-cluster`
-- **Grafana (prod)**: `grafana.prod.example.com` — `apps-prod-cluster`
-- **Querying logs via CLI**: Use Grafana session cookie (no K8s access needed). `export GRAFANA_SESSION_DEV=<cookie>` / `GRAFANA_SESSION_PROD=<cookie>`. Get cookie: browser DevTools → Application → Cookies → `grafana_session`. Query via `/api/datasources/proxy/<id>/loki/api/v1/query_range` (POST with `--data-urlencode`). Default datascience datasource: `aie-grafana-loki` (id 221 on dev).
-- **Direct Loki auth**: OAuth2 client credentials from `monitoring/alloy-oauth2-credentials` K8s secret. Token endpoint is AWS Cognito — only `client_credentials` grant supported, no personal user CLI auth.
-- **Tenant/cluster mapping**: Check the Alloy configmap in `monitoring` ns for `tenant_id` and `external_labels`
+Architecture: Grafana Alloy collectors (in `monitoring` ns) → centralized Loki → Grafana (dev+sandbox / prod).
+→ See `~/.claude/observability.md` for Grafana URLs, session cookie log querying, and Loki auth details.
 
 ### Jira
 - `jira` CLI on PATH — prefer over REST API. Auth: `export JIRA_API_TOKEN=$(bw_get_secret "Jira API Token")`
@@ -222,16 +218,14 @@ Multi-repo workspace (6 independent git repos, not a monorepo). See the group-le
 - Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
 - `chezmoi forget` needs `--force` in non-interactive shells (no TTY for confirmation)
 - Autocommit fires on `chezmoi add`/`re-add`/`forget` — direct source edits need manual `git -C ~/.local/share/chezmoi` commit
+- **Hook scripts** in `~/.claude/hooks/` are chezmoi-managed — stored as `executable_<name>.sh` in `dot_claude/hooks/`. To add a new hook: copy with the `executable_` prefix, stage manually, commit (don't use `chezmoi add` to avoid autocommit on a partial change).
+- **Searching chezmoi source with Glob**: files use chezmoi prefixes (`dot_`, `executable_`, `.tmpl`) — search for those, not the rendered target names (e.g. `dot_claude/hooks/executable_*.sh`, not `~/.claude/hooks/*.sh`).
 - **XDG git ignore**: `~/.config/git/ignore` is git's default global excludes file. Setting `core.excludesfile` overrides it entirely (no merging) — prefer adding entries to the XDG file instead.
 - **Go template whitespace**: `{{ "{{" }}- if }}` (left-dash) trims before — preserves indentation of next line. `{{ "{{" }} if -}}` (right-dash) trims after — use for block-level conditionals. Inline for single values: `{{ "{{" }} if .x }}val1{{ "{{" }} else }}val2{{ "{{" }} end }}`
 
 {{ if eq .chezmoi.os "darwin" }}
 ### macOS Config Paths
-- lazygit/k9s use `~/Library/Application Support/` on macOS, `~/.config/` on Linux
-- lazygit follows symlinks; **k9s does NOT** (uses `lstat`) — needs real files at native path
-- k9s per-cluster skins fully override global skin (no inheritance) — per-cluster skins must include the full theme
-- Cross-platform chezmoi strategy: `.chezmoiignore` with OS conditionals for k9s; symlink script for lazygit
-- k9s startup view: per-cluster state in `~/Library/Application Support/k9s/clusters/<ctx>/<cluster>/config.yaml` overrides CLI flags (`-n`, `-c`) — lock with `chmod 444`; view format is `v1/pods <namespace>`; k9s uses direct writes so dir permissions don't help
-- Time Machine local snapshots: `/Volumes/com.apple.TimeMachine.localsnapshots/Backups.backupdb/`
+- lazygit follows symlinks; **k9s does NOT** (uses `lstat`) — needs real files at `~/Library/Application Support/k9s/`
+→ See `~/.claude/macos-config.md` for k9s skin inheritance, startup view locking, chezmoi cross-platform strategy, and Time Machine paths.
 {{ end }}
 {{ end }}
