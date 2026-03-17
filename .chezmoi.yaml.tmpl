@@ -13,6 +13,10 @@ git:
   autoCommit: true
   autoPush: false
 
+bitwarden:
+  command: bash
+  args: ["-c", 'BW_SESSION=$(cat ~/.bw_session 2>/dev/null) exec bw "$@"', "--"]
+
 data:
   email: {{ $email | quote }}
   name: {{ $name | quote }}
