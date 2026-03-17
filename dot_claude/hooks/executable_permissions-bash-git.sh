@@ -11,7 +11,8 @@ INPUT=$(cat)
 [[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Bash" ]] && exit 0
 
 COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
-CMD_NAME=$(basename "${COMMAND%% *}" 2>/dev/null || echo "${COMMAND%% *}")
+_raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
+CMD_NAME=$(basename "$_raw" 2>/dev/null)
 [[ "$CMD_NAME" != "git" ]] && exit 0
 
 # Strip 'git' prefix and flags that take a value (-C path, -c key=val)
