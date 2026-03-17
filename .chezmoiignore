@@ -12,6 +12,7 @@ bootstrap.sh
 .config/kn-tools/**
 .oh-my-zsh/custom/aws.zsh
 .oh-my-zsh/custom/k8s.zsh
+.claude/bin/gitlab-post-review-note.sh
 .claude/mcp-atlassian-wrapper.sh
 .claude/.mcp.json
 .claude/commands/check-pipeline.md
