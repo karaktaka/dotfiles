@@ -36,6 +36,13 @@ _python_scan() {
     'urllib|requests\.|httpx|aiohttp|socket\.|subprocess\.|os\.system|os\.popen|os\.exec[lv]?e?|shutil\.rmtree|os\.remove|os\.unlink|eval\(|exec\(|__import__'
 }
 
+# Scans shell script content for high-risk patterns (network calls, bulk deletion, dynamic eval).
+# Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
+_bash_scan() {
+  printf '%s\n' "$1" | grep -qE \
+    'curl[[:space:]]|wget[[:space:]]|nc[[:space:]]|eval[[:space:]]|rm[[:space:]]+-[rRf]|dd[[:space:]]+if='
+}
+
 case "$CMD_NAME" in
   # --- Commands with dangerous variants: deny/ask those first, then allow the rest ---
   find)
@@ -136,6 +143,30 @@ case "$CMD_NAME" in
       ask "Python code contains network/subprocess/file-deletion pattern — review before running"
     fi
     allow "Python execution (no dangerous patterns detected)" ;;
+
+  bash|sh|zsh)
+    _SHCODE=""
+    _SCAN_STATUS="uninspected"
+    if [[ "$COMMAND" == *" -c "* ]]; then
+      _SHCODE="${COMMAND#*-c }"
+      _SCAN_STATUS="inline"
+    else
+      # Try .sh/.bash/.zsh extension first, then any non-flag second argument
+      _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -E '\.(sh|bash|zsh)$' | head -1)
+      [[ -z "$_SHFILE" ]] && \
+        _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -v '^-' | tail -n +2 | head -1)
+      if [[ -f "$_SHFILE" ]]; then
+        _SHCODE=$(cat "$_SHFILE" 2>/dev/null)
+        _SCAN_STATUS="file"
+      fi
+    fi
+    if [[ "$_SCAN_STATUS" == "uninspected" ]]; then
+      ask "Shell execution — could not inspect content, confirm intent"
+    elif _bash_scan "$_SHCODE"; then
+      ask "Shell execution — contains network/deletion/eval patterns, review before running"
+    else
+      ask "Shell execution — no dangerous patterns detected"
+    fi ;;
 
   uv)
     case "$COMMAND" in
