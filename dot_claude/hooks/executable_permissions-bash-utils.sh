@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Permissions gate for standard POSIX / shell utilities.
 # Handles commands with dangerous variants first (find, sed, awk, yq),
-# then unconditionally allows the remaining safe utilities.
+# Python/uv with content inspection, file/permission ops (chmod, cp, mv),
+# containers (podman, docker), then unconditionally allows safe utilities.
 
 command -v jq &>/dev/null || exit 0
 
@@ -26,6 +27,13 @@ ask() {
   jq -n --arg r "$1" \
     '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":$r}}'
   exit 0
+}
+
+# Scans Python code for high-risk patterns (network, subprocess, file-deletion, dynamic eval).
+# Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
+_python_scan() {
+  printf '%s\n' "$1" | grep -qE \
+    'urllib|requests\.|httpx|aiohttp|socket\.|subprocess\.|os\.system|os\.popen|os\.exec[lv]?e?|shutil\.rmtree|os\.remove|os\.unlink|eval\(|exec\(|__import__'
 }
 
 case "$CMD_NAME" in
@@ -115,12 +123,61 @@ case "$CMD_NAME" in
   gopls)
     allow "gopls — read-only Go language server / analysis tool" ;;
 
+  # --- Python execution with content inspection ---
+  python3|python)
+    _PYCODE=""
+    if [[ "$COMMAND" == *" -c "* ]]; then
+      _PYCODE="${COMMAND#*-c }"
+    else
+      _PYFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.py$' | head -1)
+      [[ -f "$_PYFILE" ]] && _PYCODE=$(cat "$_PYFILE" 2>/dev/null)
+    fi
+    if [[ -n "$_PYCODE" ]] && _python_scan "$_PYCODE"; then
+      ask "Python code contains network/subprocess/file-deletion pattern — review before running"
+    fi
+    allow "Python execution (no dangerous patterns detected)" ;;
+
+  uv)
+    case "$COMMAND" in
+      # uv run *.py: inspect script content
+      *"uv run"*".py"*)
+        _PYFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.py' | head -1)
+        if [[ -f "$_PYFILE" ]]; then
+          _PYCODE=$(cat "$_PYFILE" 2>/dev/null)
+          if [[ -n "$_PYCODE" ]] && _python_scan "$_PYCODE"; then
+            ask "Python script contains network/subprocess/file-deletion pattern — review before running"
+          fi
+        fi
+        allow "uv run (no dangerous patterns detected)" ;;
+      # uv run without a .py file: tool invocation, not arbitrary script
+      *"uv run"*)
+        allow "uv run (tool invocation)" ;;
+      # Package mutations
+      *"uv add"*|*"uv remove"*|*"uv pip install"*|*"uv pip uninstall"*|\
+      *"uv tool install"*|*"uv tool uninstall"*)
+        ask "uv package mutation — review packages being added/removed" ;;
+    esac
+    allow "Safe uv operation" ;;
+
+  # --- File/permission operations ---
+  chmod)
+    ask "chmod — modifies file permissions" ;;
+
+  cp)
+    ask "cp — may silently overwrite files" ;;
+
+  mv)
+    ask "mv — moves or renames files (no undo without backup)" ;;
+
+  podman|docker)
+    ask "Container operation — may pull images, start containers, or modify system state" ;;
+
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
-  basename|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
-  gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|prettier|pwd|realpath|\
-  ruff|shasum|shellcheck|shfmt|sort|stat|tail|tr|uname|uniq|uv|wc|\
+  basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
+  gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|pre-commit|prettier|pwd|realpath|\
+  ruff|shasum|shellcheck|shfmt|sort|stat|tail|touch|tr|uname|uniq|uvx|wc|\
   which|whoami)
     case "$COMMAND" in
       *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") exit 0 ;;
