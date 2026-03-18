@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Permissions gate for standard POSIX / shell utilities.
 # Handles commands with dangerous variants first (find, sed, awk, yq),
-# Python/uv with content inspection, file/permission ops (chmod, cp, mv),
-# containers (podman, docker), then unconditionally allows safe utilities.
+# code execution with content inspection (python, bash, node/deno, uv),
+# then unconditionally allows safe utilities.
 
 command -v jq &>/dev/null || exit 0
 
@@ -213,19 +213,6 @@ case "$CMD_NAME" in
         ask "uv package mutation — review packages being added/removed" ;;
     esac
     allow "Safe uv operation" ;;
-
-  # --- File/permission operations ---
-  chmod)
-    ask "chmod — modifies file permissions" ;;
-
-  cp)
-    ask "cp — may silently overwrite files" ;;
-
-  mv)
-    ask "mv — moves or renames files (no undo without backup)" ;;
-
-  podman|docker)
-    ask "Container operation — may pull images, start containers, or modify system state" ;;
 
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
