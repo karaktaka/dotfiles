@@ -235,7 +235,13 @@ case "$CMD_NAME" in
 
   uv)
     case "$COMMAND" in
-      # uv run *.py: inspect script content
+      # uv run *.py: inspect script content.
+      # Guard: if a known dev tool (ruff, pytest, mypy, etc.) appears before the .py arg,
+      # it's a tool invocation (e.g. "uv run ruff check file.py"), not a script execution.
+      *"uv run"*" ruff"*|*"uv run"*" pytest"*|*"uv run"*" mypy"*|\
+      *"uv run"*" black"*|*"uv run"*" isort"*|*"uv run"*" pylint"*|\
+      *"uv run"*" pre-commit"*|*"uv run"*" coverage"*)
+        allow "uv run (known dev-tool invocation — not a script execution)" ;;
       *"uv run"*".py"*)
         _PYFILE=$(_first_file "$COMMAND" '\.py$')
         if [[ -n "$_PYFILE" && -f "$_PYFILE" ]]; then
