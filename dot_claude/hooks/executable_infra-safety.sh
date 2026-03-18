@@ -4,7 +4,7 @@
 # Claude Code PreToolUse hook — provides informational context, never blocks.
 
 INPUT=$(cat); INPUT=${INPUT:-{}}
-COMMAND=$(jq -r '.command // ""' <<< "$INPUT" 2>/dev/null || echo "")
+COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT" 2>/dev/null || echo "")
 
 # Short-circuit: skip all checks for the vast majority of non-infra commands
 [[ "$COMMAND" != *kubectl* && "$COMMAND" != *terraform* && "$COMMAND" != *terragrunt* ]] && exit 0
