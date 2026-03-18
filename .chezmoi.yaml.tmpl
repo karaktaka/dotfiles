@@ -14,8 +14,7 @@ git:
   autoPush: false
 
 bitwarden:
-  command: bash
-  args: ["-c", 'BW_SESSION=$(cat ~/.bw_session 2>/dev/null) exec bw "$@"', "--"]
+  command: ~/.local/bin/bw-session
 
 data:
   email: {{ $email | quote }}
