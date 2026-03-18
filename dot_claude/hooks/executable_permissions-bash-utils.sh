@@ -61,6 +61,31 @@ _js_scan() {
     "fetch\(|require\(['\"]http|require\(['\"]axios|require\(['\"]node-fetch|require\(['\"]net['\"]|require\(['\"]child_process|\.exec\(|\.execSync\(|\.spawn\(|fs\.unlink|fs\.rm\b|fs\.rmdir|rimraf|${_dyneval}"
 }
 
+# Extracts the first word in a command string that matches ERE pattern,
+# with ~ expanded to $HOME. Returns empty string if no match.
+_first_file() {
+  local pat="$2" word
+  local -a _words
+  read -ra _words <<< "$1"
+  for word in "${_words[@]}"; do
+    [[ "$word" =~ $pat ]] && { printf '%s' "${word/#\~/$HOME}"; return; }
+  done
+}
+
+# Extracts the first non-option argument after the command name,
+# with ~ expanded to $HOME. Returns empty string if none found.
+_first_nonopt_arg() {
+  local word _first=1
+  local -a _words
+  read -ra _words <<< "$1"
+  for word in "${_words[@]}"; do
+    [[ "$_first" -eq 1 ]] && { _first=0; continue; }
+    [[ "$word" == -* ]] && continue
+    printf '%s' "${word/#\~/$HOME}"
+    return
+  done
+}
+
 case "$CMD_NAME" in
   # --- Commands with dangerous variants: deny/ask those first, then allow the rest ---
   find)
@@ -131,10 +156,9 @@ case "$CMD_NAME" in
     case "$COMMAND" in
       # Risky: executes code or mutates dependencies
       *"go run "*)
-        _GOFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.go$' | head -1)
-        _GOFILE="${_GOFILE/#\~/$HOME}"
-        if [[ -f "$_GOFILE" ]]; then
-          _GOCODE=$(cat "$_GOFILE" 2>/dev/null)
+        _GOFILE=$(_first_file "$COMMAND" '\.go$')
+        if [[ -n "$_GOFILE" && -f "$_GOFILE" ]]; then
+          _GOCODE=$(<"$_GOFILE")
           if [[ -n "$_GOCODE" ]] && _go_scan "$_GOCODE"; then
             ask "go run — contains network/subprocess/file-deletion pattern, review before running"
           fi
@@ -164,9 +188,8 @@ case "$CMD_NAME" in
     if [[ "$COMMAND" == *" -c "* ]]; then
       _PYCODE="${COMMAND#*-c }"
     else
-      _PYFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.py$' | head -1)
-      _PYFILE="${_PYFILE/#\~/$HOME}"
-      [[ -f "$_PYFILE" ]] && _PYCODE=$(cat "$_PYFILE" 2>/dev/null)
+      _PYFILE=$(_first_file "$COMMAND" '\.py$')
+      [[ -n "$_PYFILE" && -f "$_PYFILE" ]] && _PYCODE=$(<"$_PYFILE")
     fi
     if [[ -n "$_PYCODE" ]] && _python_scan "$_PYCODE"; then
       ask "Python code contains network/subprocess/file-deletion pattern — review before running"
@@ -181,12 +204,10 @@ case "$CMD_NAME" in
       _SCAN_STATUS="inline"
     else
       # Try .sh/.bash/.zsh extension first, then any non-flag second argument
-      _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -E '\.(sh|bash|zsh)$' | head -1)
-      [[ -z "$_SHFILE" ]] && \
-        _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -v '^-' | tail -n +2 | head -1)
-      _SHFILE="${_SHFILE/#\~/$HOME}"
-      if [[ -f "$_SHFILE" ]]; then
-        _SHCODE=$(cat "$_SHFILE" 2>/dev/null)
+      _SHFILE=$(_first_file "$COMMAND" '\.(sh|bash|zsh)$')
+      [[ -z "$_SHFILE" ]] && _SHFILE=$(_first_nonopt_arg "$COMMAND")
+      if [[ -n "$_SHFILE" && -f "$_SHFILE" ]]; then
+        _SHCODE=$(<"$_SHFILE")
         _SCAN_STATUS="file"
       fi
     fi
@@ -203,9 +224,8 @@ case "$CMD_NAME" in
     if [[ "$COMMAND" == *" -e "* ]]; then
       _JSCODE="${COMMAND#*-e }"
     else
-      _JSFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -E '\.(js|ts|mjs|cjs)$' | head -1)
-      _JSFILE="${_JSFILE/#\~/$HOME}"
-      [[ -f "$_JSFILE" ]] && _JSCODE=$(cat "$_JSFILE" 2>/dev/null)
+      _JSFILE=$(_first_file "$COMMAND" '\.(js|ts|mjs|cjs)$')
+      [[ -n "$_JSFILE" && -f "$_JSFILE" ]] && _JSCODE=$(<"$_JSFILE")
     fi
     if [[ -n "$_JSCODE" ]] && _js_scan "$_JSCODE"; then
       ask "JS/TS execution — contains network/subprocess/file-deletion pattern, review before running"
@@ -216,10 +236,9 @@ case "$CMD_NAME" in
     case "$COMMAND" in
       # uv run *.py: inspect script content
       *"uv run"*".py"*)
-        _PYFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.py' | head -1)
-        _PYFILE="${_PYFILE/#\~/$HOME}"
-        if [[ -f "$_PYFILE" ]]; then
-          _PYCODE=$(cat "$_PYFILE" 2>/dev/null)
+        _PYFILE=$(_first_file "$COMMAND" '\.py$')
+        if [[ -n "$_PYFILE" && -f "$_PYFILE" ]]; then
+          _PYCODE=$(<"$_PYFILE")
           if [[ -n "$_PYCODE" ]] && _python_scan "$_PYCODE"; then
             ask "Python script contains network/subprocess/file-deletion pattern — review before running"
           fi
@@ -238,10 +257,9 @@ case "$CMD_NAME" in
   source|.)
     _SHCODE=""
     _SCAN_STATUS="uninspected"
-    _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -v '^-' | tail -n +2 | head -1)
-    _SHFILE="${_SHFILE/#\~/$HOME}"
-    if [[ -f "$_SHFILE" ]]; then
-      _SHCODE=$(cat "$_SHFILE" 2>/dev/null)
+    _SHFILE=$(_first_nonopt_arg "$COMMAND")
+    if [[ -n "$_SHFILE" && -f "$_SHFILE" ]]; then
+      _SHCODE=$(<"$_SHFILE")
       _SCAN_STATUS="file"
     fi
     if [[ "$_SCAN_STATUS" == "uninspected" ]]; then

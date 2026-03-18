@@ -19,11 +19,11 @@ CMD_NAME=$(basename "$_raw" 2>/dev/null)
 # and standalone global boolean flags (--no-pager, --no-optional-locks, etc.)
 # to isolate the actual subcommand + its args. This prevents commit message
 # content or branch names from accidentally matching deny/ask patterns.
-STRIPPED=$(echo "$COMMAND" \
-  | sed -E 's/^git[[:space:]]*//' \
-  | sed -E 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
-  | sed -E 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//' \
-  | xargs 2>/dev/null || echo "$COMMAND")
+STRIPPED=$(sed -E \
+  -e 's/^git[[:space:]]*//' \
+  -e 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
+  -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//' \
+  <<< "$COMMAND" | xargs 2>/dev/null || echo "$COMMAND")
 
 allow() {
   jq -n --arg r "$1" \
