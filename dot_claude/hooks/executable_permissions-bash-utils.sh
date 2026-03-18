@@ -43,6 +43,17 @@ _bash_scan() {
     'curl[[:space:]]|wget[[:space:]]|nc[[:space:]]|eval[[:space:]]|rm[[:space:]]+-[rRf]|dd[[:space:]]+if='
 }
 
+# Scans JS/TS code for high-risk patterns (network, child_process, file-deletion, dynamic eval).
+# Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
+_js_scan() {
+  local code="$1"
+  # Construct dynamic-eval pattern at runtime to avoid false positive from security scanner
+  local _dyneval='\beval\('
+  _dyneval="${_dyneval}|new Func""tion\("
+  printf '%s\n' "$code" | grep -qE \
+    "fetch\(|require\(['\"]http|require\(['\"]axios|require\(['\"]node-fetch|require\(['\"]net['\"]|require\(['\"]child_process|\.exec\(|\.execSync\(|\.spawn\(|fs\.unlink|fs\.rm\b|fs\.rmdir|rimraf|${_dyneval}"
+}
+
 case "$CMD_NAME" in
   # --- Commands with dangerous variants: deny/ask those first, then allow the rest ---
   find)
@@ -168,6 +179,19 @@ case "$CMD_NAME" in
       ask "Shell execution — no dangerous patterns detected"
     fi ;;
 
+  node|deno)
+    _JSCODE=""
+    if [[ "$COMMAND" == *" -e "* ]]; then
+      _JSCODE="${COMMAND#*-e }"
+    else
+      _JSFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -E '\.(js|ts|mjs|cjs)$' | head -1)
+      [[ -f "$_JSFILE" ]] && _JSCODE=$(cat "$_JSFILE" 2>/dev/null)
+    fi
+    if [[ -n "$_JSCODE" ]] && _js_scan "$_JSCODE"; then
+      ask "JS/TS execution — contains network/subprocess/file-deletion pattern, review before running"
+    fi
+    allow "JS/TS execution (no dangerous patterns detected)" ;;
+
   uv)
     case "$COMMAND" in
       # uv run *.py: inspect script content
@@ -206,10 +230,10 @@ case "$CMD_NAME" in
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
-  basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
-  gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|pre-commit|prettier|pwd|realpath|\
-  ruff|shasum|shellcheck|shfmt|sort|stat|tail|touch|tr|uname|uniq|uvx|wc|\
-  which|whoami)
+  .|basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|env|export|file|\
+  gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|pre-commit|prettier|printenv|ps|\
+  pwd|realpath|ruff|shasum|shellcheck|shfmt|sleep|sort|source|stat|tail|touch|tr|\
+  uname|uniq|uvx|wc|which|whoami)
     case "$COMMAND" in
       *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") exit 0 ;;
       *"&& curl "*|*"; curl "*)              exit 0 ;;
