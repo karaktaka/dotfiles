@@ -40,7 +40,14 @@ _python_scan() {
 # Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
 _bash_scan() {
   printf '%s\n' "$1" | grep -qE \
-    'curl[[:space:]]|wget[[:space:]]|nc[[:space:]]|eval[[:space:]]|rm[[:space:]]+-[rRf]|dd[[:space:]]+if='
+    'curl[[:space:]]|wget[[:space:]]|nc[[:space:]]|ncat[[:space:]]|netcat[[:space:]]|eval[[:space:]]|rm[[:space:]]+-[rRf]|dd[[:space:]]+if='
+}
+
+# Scans Go code for high-risk patterns (network, subprocess, file-deletion).
+# Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
+_go_scan() {
+  printf '%s\n' "$1" | grep -qE \
+    'net/http|net\.Dial|http\.(Get|Post|NewRequest)|os\.(Remove\b|RemoveAll)|exec\.Command|syscall\.Exec|plugin\.Open'
 }
 
 # Scans JS/TS code for high-risk patterns (network, child_process, file-deletion, dynamic eval).
@@ -123,7 +130,16 @@ case "$CMD_NAME" in
   go)
     case "$COMMAND" in
       # Risky: executes code or mutates dependencies
-      *"go run "*)       ask "go run — executes arbitrary Go code" ;;
+      *"go run "*)
+        _GOFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.go$' | head -1)
+        if [[ -f "$_GOFILE" ]]; then
+          _GOCODE=$(cat "$_GOFILE" 2>/dev/null)
+          if [[ -n "$_GOCODE" ]] && _go_scan "$_GOCODE"; then
+            ask "go run — contains network/subprocess/file-deletion pattern, review before running"
+          fi
+          allow "go run (no dangerous patterns detected)"
+        fi
+        ask "go run — could not inspect source, confirm intent" ;;
       *"go generate"*)   ask "go generate — runs arbitrary //go:generate directives" ;;
       *"go install"*)    ask "go install — installs a binary (may download code)" ;;
       *"go get"*)        ask "go get — adds or updates module dependencies" ;;
@@ -214,12 +230,28 @@ case "$CMD_NAME" in
     esac
     allow "Safe uv operation" ;;
 
+  source|.)
+    _SHCODE=""
+    _SCAN_STATUS="uninspected"
+    _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -v '^-' | tail -n +2 | head -1)
+    if [[ -f "$_SHFILE" ]]; then
+      _SHCODE=$(cat "$_SHFILE" 2>/dev/null)
+      _SCAN_STATUS="file"
+    fi
+    if [[ "$_SCAN_STATUS" == "uninspected" ]]; then
+      ask "Source execution — could not inspect content, confirm intent"
+    elif _bash_scan "$_SHCODE"; then
+      ask "Source execution — contains network/deletion/eval patterns, review before running"
+    else
+      ask "Source execution — no dangerous patterns detected"
+    fi ;;
+
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
-  .|basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|env|export|file|\
+  basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|env|export|file|\
   gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|pre-commit|prettier|printenv|ps|\
-  pwd|realpath|ruff|shasum|shellcheck|shfmt|sleep|sort|source|stat|tail|touch|tr|\
+  pwd|realpath|ruff|shasum|shellcheck|shfmt|sleep|sort|stat|tail|touch|tr|\
   uname|uniq|uvx|wc|which|whoami)
     case "$COMMAND" in
       *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") exit 0 ;;
