@@ -26,6 +26,17 @@ GIT_ROOT=$(git -C "$FILE_DIR" rev-parse --show-toplevel 2>/dev/null)
 # Only enforce in repos that have opted in via marker file
 [[ -f "$GIT_ROOT/.claude-require-branch" ]] || exit 0
 
+# Allow edits during in-progress git operations (rebase, cherry-pick, merge)
+# These put git in detached HEAD state but legitimately require file edits for conflict resolution
+GIT_DIR=$(git -C "$GIT_ROOT" rev-parse --git-dir 2>/dev/null)
+if [[ -n "$GIT_DIR" ]]; then
+  for marker in REBASE_HEAD CHERRY_PICK_HEAD MERGE_HEAD; do
+    [[ -f "$GIT_DIR/$marker" ]] && exit 0
+  done
+  [[ -d "$GIT_DIR/rebase-merge" ]] && exit 0
+  [[ -d "$GIT_DIR/rebase-apply" ]] && exit 0
+fi
+
 # Get current branch (empty in detached HEAD)
 BRANCH=$(git -C "$GIT_ROOT" branch --show-current 2>/dev/null)
 
