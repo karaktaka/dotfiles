@@ -49,6 +49,16 @@ case "$CMD_NAME" in
     [[ "$COMMAND" == *" -i"* ]] && ask "In-place yq edit — modifies files directly"
     allow "Safe yq (read-only)" ;;
 
+  chezmoi)
+    case "$COMMAND" in
+      chezmoi\ destroy*)
+        deny "Destructive chezmoi destroy — removes managed files from disk" ;;
+      chezmoi\ add*|chezmoi\ re-add*|chezmoi\ edit*|chezmoi\ forget*|\
+      chezmoi\ apply*|chezmoi\ update*)
+        ask "chezmoi write operation — modifies source or deploys managed files" ;;
+    esac
+    allow "Safe chezmoi read operation" ;;
+
   get-flair.sh)
     allow "Claude flair generator (read-only)" ;;
 
