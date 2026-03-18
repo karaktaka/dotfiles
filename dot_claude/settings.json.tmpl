@@ -103,7 +103,11 @@
       {
         "matcher": "Bash",
         "hooks": [
-          {
+          {{ if .isWork }}{
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/infra-safety.sh"
+          },
+          {{ end }}{
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-git.sh"
           },
@@ -126,11 +130,7 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-command-chaining.sh"
-          }{{ if .isWork }},
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/infra-safety.sh"
-          }{{ end }}
+          }
         ]
       }
     ]
