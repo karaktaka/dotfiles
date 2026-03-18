@@ -8,7 +8,10 @@
 # that subsequent commands genuinely depend on.
 # Note: prefer tool-native dir flags where they exist (git -C, go -C, uv --directory)
 # over cd &&. Use cd && only for tools that truly have no directory flag (e.g. glab).
-# Allowed leading commands: cd, pushd, export, source, ., mkdir, eval, unset
+# Allowed leading patterns:
+#   - cd, pushd, export, source, ., mkdir, eval, unset  (explicit state modifiers)
+#   - (cd ...) / (pushd ...)  subshell form, e.g. (cd worktree && glab ...)
+#   - VAR=...  bare variable assignment (functionally equivalent to export for same-shell use)
 
 command -v jq &>/dev/null || exit 0
 
@@ -24,14 +27,17 @@ COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
 FIRST_LINE=$(printf '%s\n' "$COMMAND" | head -1)
 CONTINUATION=$(printf '%s\n' "$COMMAND" | tail -n +2 | grep -E '^\s*&&')
 
-# Allow && when the leading command is a shell-state-modifier
-STATE_MODIFIER_RE='^\s*(cd|pushd|export|source|\.|mkdir|eval|unset)\s'
+# Allow && when the leading command is a shell-state-modifier.
+# Covers both bare form (cd /x && cmd) and subshell form ((cd /x && cmd)).
+# Also covers bare variable assignments (VAR=$(cmd) && cmd2) — same-shell
+# state setup, functionally equivalent to export for the chained command.
+STATE_MODIFIER_RE='^\s*\(?(cd|pushd|export|source|\.|mkdir|eval|unset)\s|^\s*[A-Za-z_][A-Za-z0-9_]*='
 if printf '%s\n' "$FIRST_LINE" | grep -qE "$STATE_MODIFIER_RE"; then
   exit 0
 fi
 
 if printf '%s\n' "$FIRST_LINE" | grep -qF ' && ' || [ -n "$CONTINUATION" ]; then
-  jq -n --arg r "Command chaining with && is not allowed. Use separate Bash tool calls — each command gets its own call. Pipes (|) and fallback (||) are fine. Exception: leading state-modifiers (cd, pushd, export, source, mkdir, eval, unset) may use &&." \
+  jq -n --arg r "Command chaining with && is not allowed. Use separate Bash tool calls — each command gets its own call. Pipes (|) and fallback (||) are fine. Exception: leading state-modifiers (cd, pushd, export, source, mkdir, eval, unset), subshell (cd ...), and bare variable assignments (VAR=...) may use &&." \
     '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
   exit 0
 fi
