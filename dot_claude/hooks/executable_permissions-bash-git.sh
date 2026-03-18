@@ -15,12 +15,14 @@ _raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; ex
 CMD_NAME=$(basename "$_raw" 2>/dev/null)
 [[ "$CMD_NAME" != "git" ]] && exit 0
 
-# Strip 'git' prefix and flags that take a value (-C path, -c key=val)
+# Strip 'git' prefix, flags that take a value (-C path, -c key=val),
+# and standalone global boolean flags (--no-pager, --no-optional-locks, etc.)
 # to isolate the actual subcommand + its args. This prevents commit message
 # content or branch names from accidentally matching deny/ask patterns.
 STRIPPED=$(echo "$COMMAND" \
   | sed -E 's/^git[[:space:]]*//' \
   | sed -E 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
+  | sed -E 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//' \
   | xargs 2>/dev/null || echo "$COMMAND")
 
 allow() {

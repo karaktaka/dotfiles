@@ -132,6 +132,7 @@ case "$CMD_NAME" in
       # Risky: executes code or mutates dependencies
       *"go run "*)
         _GOFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.go$' | head -1)
+        _GOFILE="${_GOFILE/#\~/$HOME}"
         if [[ -f "$_GOFILE" ]]; then
           _GOCODE=$(cat "$_GOFILE" 2>/dev/null)
           if [[ -n "$_GOCODE" ]] && _go_scan "$_GOCODE"; then
@@ -164,6 +165,7 @@ case "$CMD_NAME" in
       _PYCODE="${COMMAND#*-c }"
     else
       _PYFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.py$' | head -1)
+      _PYFILE="${_PYFILE/#\~/$HOME}"
       [[ -f "$_PYFILE" ]] && _PYCODE=$(cat "$_PYFILE" 2>/dev/null)
     fi
     if [[ -n "$_PYCODE" ]] && _python_scan "$_PYCODE"; then
@@ -182,6 +184,7 @@ case "$CMD_NAME" in
       _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -E '\.(sh|bash|zsh)$' | head -1)
       [[ -z "$_SHFILE" ]] && \
         _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -v '^-' | tail -n +2 | head -1)
+      _SHFILE="${_SHFILE/#\~/$HOME}"
       if [[ -f "$_SHFILE" ]]; then
         _SHCODE=$(cat "$_SHFILE" 2>/dev/null)
         _SCAN_STATUS="file"
@@ -192,7 +195,7 @@ case "$CMD_NAME" in
     elif _bash_scan "$_SHCODE"; then
       ask "Shell execution — contains network/deletion/eval patterns, review before running"
     else
-      ask "Shell execution — no dangerous patterns detected"
+      allow "Shell execution (no dangerous patterns detected)"
     fi ;;
 
   node|deno)
@@ -201,6 +204,7 @@ case "$CMD_NAME" in
       _JSCODE="${COMMAND#*-e }"
     else
       _JSFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -E '\.(js|ts|mjs|cjs)$' | head -1)
+      _JSFILE="${_JSFILE/#\~/$HOME}"
       [[ -f "$_JSFILE" ]] && _JSCODE=$(cat "$_JSFILE" 2>/dev/null)
     fi
     if [[ -n "$_JSCODE" ]] && _js_scan "$_JSCODE"; then
@@ -213,6 +217,7 @@ case "$CMD_NAME" in
       # uv run *.py: inspect script content
       *"uv run"*".py"*)
         _PYFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep '\.py' | head -1)
+        _PYFILE="${_PYFILE/#\~/$HOME}"
         if [[ -f "$_PYFILE" ]]; then
           _PYCODE=$(cat "$_PYFILE" 2>/dev/null)
           if [[ -n "$_PYCODE" ]] && _python_scan "$_PYCODE"; then
@@ -234,6 +239,7 @@ case "$CMD_NAME" in
     _SHCODE=""
     _SCAN_STATUS="uninspected"
     _SHFILE=$(printf '%s' "$COMMAND" | tr ' ' '\n' | grep -v '^-' | tail -n +2 | head -1)
+    _SHFILE="${_SHFILE/#\~/$HOME}"
     if [[ -f "$_SHFILE" ]]; then
       _SHCODE=$(cat "$_SHFILE" 2>/dev/null)
       _SCAN_STATUS="file"
@@ -243,7 +249,7 @@ case "$CMD_NAME" in
     elif _bash_scan "$_SHCODE"; then
       ask "Source execution — contains network/deletion/eval patterns, review before running"
     else
-      ask "Source execution — no dangerous patterns detected"
+      allow "Source execution (no dangerous patterns detected)"
     fi ;;
 
   # --- Unconditionally safe utilities ---
