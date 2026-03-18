@@ -40,7 +40,7 @@ _python_scan() {
 # Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
 _bash_scan() {
   printf '%s\n' "$1" | grep -qE \
-    'curl[[:space:]]|wget[[:space:]]|nc[[:space:]]|ncat[[:space:]]|netcat[[:space:]]|eval[[:space:]]|rm[[:space:]]+-[rRf]|dd[[:space:]]+if='
+    'curl[[:space:]]|wget[[:space:]]|nc[[:space:]]|ncat[[:space:]]|netcat[[:space:]]|eval[[:space:]]|rm[[:space:]]+(-[rRf]|--recursive|--force)|dd[[:space:]]+if='
 }
 
 # Scans Go code for high-risk patterns (network, subprocess, file-deletion).
@@ -90,8 +90,9 @@ case "$CMD_NAME" in
   # --- Commands with dangerous variants: deny/ask those first, then allow the rest ---
   find)
     case "$COMMAND" in
-      *" -delete"*)          deny "Destructive find — removes matched files" ;;
-      *" -exec"*" rm"*)      deny "Destructive find — executes rm on matched files" ;;
+      *" -delete"*)                              deny "Destructive find — removes matched files" ;;
+      *" -exec"*" rm"*)                          deny "Destructive find — executes rm on matched files" ;;
+      *"| xargs"*" rm"*|*"|xargs"*" rm"*)        deny "Destructive find — pipes output to xargs rm" ;;
     esac
     allow "Safe find" ;;
 
@@ -270,10 +271,18 @@ case "$CMD_NAME" in
       allow "Source execution (no dangerous patterns detected)"
     fi ;;
 
+  # --- env: safe for variable inspection / pass-through, but can wrap dangerous commands ---
+  env)
+    case "$COMMAND" in
+      *" rm "*|*" rm"|*" curl "*|*" curl"|*" wget "*|*" wget"*)
+        ask "env wraps a dangerous subcommand — confirm intent" ;;
+    esac
+    allow "env (no dangerous subcommand detected)" ;;
+
   # --- Unconditionally safe utilities ---
   # Yield first if a dangerous command appears after a chain operator so that
   # permissions-bash-dangerous.sh can make the call without conflicting.
-  basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|env|export|file|\
+  basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
   gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|pre-commit|prettier|printenv|ps|\
   pwd|realpath|ruff|shasum|shellcheck|shfmt|sleep|sort|stat|tail|touch|tr|\
   uname|uniq|uvx|wc|which|whoami)

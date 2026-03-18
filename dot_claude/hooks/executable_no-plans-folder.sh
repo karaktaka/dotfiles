@@ -28,7 +28,6 @@ IMPLEMENTATIONS_PATH="$HOME/workspace/git/Implementations"
 # Allow Claude Code's own internal plans directory (~/.claude/plans/)
 [[ "$FILE_PATH" == "$HOME/.claude/plans/"* ]] && exit 0
 
-REASON="Plans folder blocked: write plans to $IMPLEMENTATIONS_PATH/<repo>/plans/ instead. Tried to write: $FILE_PATH"
-jq -n --arg r "$REASON" \
-  '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
+jq -n --arg ip "$IMPLEMENTATIONS_PATH" --arg fp "$FILE_PATH" \
+  '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":("Plans folder blocked: write plans to " + $ip + "/<repo>/plans/ instead. Tried to write: " + $fp)}}'
 exit 0

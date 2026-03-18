@@ -21,6 +21,6 @@ SOURCE_PATH=$(chezmoi source-path "$FILE_PATH" 2>/dev/null)
 [[ -z "$SOURCE_PATH" ]] && exit 0
 [[ "$SOURCE_PATH" != *.tmpl ]] && exit 0
 
-jq -n --arg r "Chezmoi template target — edits will be overwritten on next apply. Edit the source instead: chezmoi edit $FILE_PATH (source: $SOURCE_PATH)" \
-  '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
+jq -n --arg fp "$FILE_PATH" --arg sp "$SOURCE_PATH" \
+  '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":("Chezmoi template target — edits will be overwritten on next apply. Edit the source instead: chezmoi edit " + $fp + " (source: " + $sp + ")")}}'
 exit 0

@@ -28,10 +28,13 @@ case "$TOOL" in
     [[ "$CMD" =~ ^/tmp/ ]] \
       && allow "/tmp direct execution is safe"
 
-    # Allow: rm when ALL non-flag args target /tmp (no collateral damage)
+    # Allow: rm when ALL non-flag args target /tmp (no collateral damage).
+    # Reject paths containing .. to prevent traversal like /tmp/../home/user/file.
     if [[ "$CMD" =~ ^rm[[:space:]] ]]; then
       non_flag_args=$(awk '{for(i=2;i<=NF;i++) if($i!~/^-/) print $i}' <<< "$CMD")
-      if [[ -n "$non_flag_args" ]] && ! grep -qv '^/tmp/' <<< "$non_flag_args"; then
+      if [[ -n "$non_flag_args" ]] && \
+         ! grep -qv '^/tmp/' <<< "$non_flag_args" && \
+         ! grep -q '\.\.' <<< "$non_flag_args"; then
         allow "/tmp cleanup is safe"
       fi
     fi
