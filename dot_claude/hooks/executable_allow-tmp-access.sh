@@ -20,12 +20,14 @@ case "$TOOL" in
     # Allow: rm when ALL non-flag args target /tmp (no collateral damage).
     # Reject paths containing .. to prevent traversal like /tmp/../home/user/file.
     if [[ "$COMMAND" =~ ^rm[[:space:]] ]]; then
-      non_flag_args=$(awk '{for(i=2;i<=NF;i++) if($i!~/^-/) print $i}' <<< "$COMMAND")
-      if [[ -n "$non_flag_args" ]] && \
-         ! grep -qv '^/tmp/' <<< "$non_flag_args" && \
-         ! grep -q '\.\.' <<< "$non_flag_args"; then
-        allow "/tmp cleanup is safe"
-      fi
+      read -ra _rm_words <<< "$COMMAND"
+      _all_tmp=true _has_args=false
+      for _arg in "${_rm_words[@]:1}"; do
+        [[ "$_arg" == -* ]] && continue
+        _has_args=true
+        [[ "$_arg" != /tmp/* || "$_arg" == *..* ]] && { _all_tmp=false; break; }
+      done
+      [[ "$_has_args" == true && "$_all_tmp" == true ]] && allow "/tmp cleanup is safe"
     fi
     ;;
 esac

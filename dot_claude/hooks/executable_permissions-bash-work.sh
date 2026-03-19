@@ -53,7 +53,7 @@ case "$CMD_NAME" in
 
     # ── Tier: sandbox → allow all; prod → strict; dev/other → standard ──
     [[ "$kube_ctx" == *sandbox* ]] && allow "Sandbox cluster ($kube_ctx)"
-    [[ "$kube_ctx" == *prod* ]] && _KTIER="prod" || _KTIER="dev"
+    if [[ "$kube_ctx" == *prod* ]]; then _KTIER="prod"; else _KTIER="dev"; fi
 
     # ── Secrets: sensitive on all non-sandbox clusters ───────────────────
     case "$COMMAND" in
