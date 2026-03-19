@@ -143,8 +143,11 @@ For each **fixable** finding:
 4. Note which thread IDs correspond to which fixes (for resolution in Step 7)
 
 For **not fixable** findings on AI reviews:
-- Compose a brief reply explaining why the finding doesn't apply (e.g., "This is intentional — the value is validated upstream at [location]")
-- Mark for resolution
+- Post a brief reply **on the thread** explaining why the finding doesn't apply (e.g., "This is intentional — the value is validated upstream at [location]")
+- Resolve the thread after posting the reply
+
+For **not fixable** findings on human reviews where the user chose to leave the thread open:
+- Do **not** post any PR-level comment — Step 8 handles surfacing these if needed
 
 ## Step 6 — Out-of-Scope Findings
 
@@ -222,22 +225,25 @@ glab api -X POST "projects/$PROJECT_ID/merge_requests/$MR_IID/discussions/$DISCU
 
 ## Step 8 — Final Status
 
-After all threads are processed, use the `AskUserQuestion` tool to ask: "Post a summary comment on the PR/MR?" with options: "Yes, post summary", "No, skip" — then post if confirmed:
+**Do not post a PR/MR-level summary comment if all open threads were addressed** (fixed, resolved, or replied to with a reason). Simply report the outcome to the user in the CLI.
+
+Only post a PR/MR-level comment if there are threads that could **not** be addressed and were left open — and only to explain those specific cases. Use `AskUserQuestion` first: "Some threads were left open. Post a comment explaining why?" with options: "Yes, post comment", "No, skip".
+
+If posting, limit the comment to the unresolved threads only:
 
 ```
-## Review addressed ✓
+## Review partially addressed
 
-All open review threads have been processed:
+The following threads were left open and require author attention:
 
-- **Fixed**: N findings — [brief list]
-- **Acknowledged / false positive**: N findings — [brief list]
-- **Deferred to issue**: N findings — [issue links]
-- **Awaiting author decision**: N findings (human reviewer threads)
+- **[file:line or description]** — [reason it wasn't addressed, e.g. "out of scope — tracked in #123", "needs design decision", "awaiting clarification"]
+
+All other threads have been resolved.
 
 🤖 Addressed with [Claude Code](https://claude.ai/code)
 ```
 
-If there are still human-reviewer threads pending user decisions, do **not** post this summary yet — wait until the user has responded to all outstanding questions.
+If there are still human-reviewer threads pending user decisions, do **not** post this comment yet — wait until the user has responded to all outstanding questions.
 
 ## Edge Cases
 
