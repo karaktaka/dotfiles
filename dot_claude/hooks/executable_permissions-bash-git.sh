@@ -42,7 +42,7 @@ esac
 # git checkout <branch>  →  git switch <branch>
 case "$COMMAND" in
   git*checkout*)
-    new_cmd=$(sed 's/\bcheckout\b/switch/' <<< "$COMMAND")
+    new_cmd=$(perl -pe 's/\bcheckout\b/switch/' <<< "$COMMAND")
     rewrite_and_allow "$new_cmd" "Rewritten: use 'git switch' instead of 'git checkout'"
     ;;
 esac
