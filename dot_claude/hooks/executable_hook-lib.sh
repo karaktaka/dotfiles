@@ -28,8 +28,8 @@ INPUT=$(cat)
   (.tool_input.file_path // "") + "\u0000" +
   (.tool_input.path     // "") + "\u0000"' <<< "$INPUT")
 
-# CMD_NAME: first non-assignment token of COMMAND (used by Bash hooks).
-if [[ -n "$COMMAND" ]]; then
+# CMD_NAME: first non-assignment token of COMMAND (used by Bash hooks only).
+if [[ "$TOOL" == "Bash" && -n "$COMMAND" ]]; then
   _raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
   CMD_NAME=$(basename "$_raw" 2>/dev/null)
 fi
@@ -56,9 +56,8 @@ ask() {
 }
 
 rewrite_and_allow() {
-  local new_cmd="$1" reason="$2" updated_input
-  updated_input=$(jq --arg cmd "$new_cmd" '.tool_input | .command = $cmd' <<< "$INPUT")
-  jq -n --arg e "$_HOOK_EVENT" --arg r "$reason" --argjson ui "$updated_input" \
-    '{"hookSpecificOutput":{"hookEventName":$e,"permissionDecision":"allow","permissionDecisionReason":$r,"updatedInput":$ui}}'
+  local new_cmd="$1" reason="$2"
+  jq -n --arg e "$_HOOK_EVENT" --arg r "$reason" --arg cmd "$new_cmd" --argjson inp "$INPUT" \
+    '{"hookSpecificOutput":{"hookEventName":$e,"permissionDecision":"allow","permissionDecisionReason":$r,"updatedInput":($inp.tool_input | .command = $cmd)}}'
   exit 0
 }

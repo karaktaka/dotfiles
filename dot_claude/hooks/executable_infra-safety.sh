@@ -4,6 +4,7 @@
 # Claude Code PreToolUse hook — provides informational context, never blocks.
 
 source ~/.claude/hooks/hook-lib.sh || exit 0
+[[ "$TOOL" == "Bash" ]] || exit 0
 
 # Short-circuit: skip all checks for the vast majority of non-infra commands
 [[ "$COMMAND" != *kubectl* && "$COMMAND" != *terraform* && "$COMMAND" != *terragrunt* ]] && exit 0
