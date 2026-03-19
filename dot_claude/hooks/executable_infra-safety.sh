@@ -11,7 +11,10 @@ source ~/.claude/hooks/hook-lib.sh || exit 0
 
 if [[ "$COMMAND" == *kubectl* ]]; then
   ctx=$(kubectl config current-context 2>/dev/null || echo "unknown")
-  echo "⚠️  kubectl context: $ctx"
+  if   [[ "$ctx" == *sandbox* ]]; then echo "✅  kubectl context: $ctx"
+  elif [[ "$ctx" == *prod* ]];    then echo "🔴  kubectl context: $ctx"
+  else                                 echo "⚠️  kubectl context: $ctx"
+  fi
 fi
 
 if [[ "$COMMAND" == *terraform* ]] || [[ "$COMMAND" == *terragrunt* ]]; then

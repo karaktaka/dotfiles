@@ -39,6 +39,7 @@ case "$CMD_NAME" in
     if [[ "$COMMAND" =~ kubectl.*config[[:space:]]+use-context[[:space:]]+([^[:space:]]+) ]]; then
       new_ctx="${BASH_REMATCH[1]}"
       [[ "$new_ctx" == *sandbox* ]] && allow "Switching to sandbox context"
+      [[ "$new_ctx" == *prod* ]] && ask "Switching to PROD context '$new_ctx' — all subsequent commands target production"
       ask "Switching kubectl context to '$new_ctx' — subsequent commands target this cluster"
     fi
 
@@ -50,26 +51,39 @@ case "$CMD_NAME" in
       kube_ctx=$(kubectl config current-context 2>/dev/null || echo "unknown")
     fi
 
-    # ── Sandbox cluster: all operations permitted ───────────────────────
+    # ── Tier: sandbox → allow all; prod → strict; dev/other → standard ──
     [[ "$kube_ctx" == *sandbox* ]] && allow "Sandbox cluster ($kube_ctx)"
+    [[ "$kube_ctx" == *prod* ]] && _KTIER="prod" || _KTIER="dev"
 
-    # ── Non-sandbox: restricted rules ──────────────────────────────────
-
-    # Secrets are sensitive on any non-sandbox cluster
+    # ── Secrets: sensitive on all non-sandbox clusters ───────────────────
     case "$COMMAND" in
       kubectl*" secret "*|kubectl*" secrets "*|\
       kubectl*" secret"|kubectl*" secrets")
-        ask "Reading Kubernetes secrets on '$kube_ctx' — may contain sensitive data" ;;
+        ask "[$_KTIER] Kubernetes secrets on '$kube_ctx' — may contain sensitive data" ;;
     esac
 
-    # Destructive operations: ask
+    # ── Destructive operations ───────────────────────────────────────────
     case "$COMMAND" in
       kubectl*cordon*|kubectl*delete*|kubectl*drain*|\
       kubectl*remove*|kubectl*scale*)
-        ask "Destructive kubectl on '$kube_ctx' — confirm intent" ;;
+        ask "[$_KTIER] Destructive kubectl on '$kube_ctx' — confirm intent" ;;
     esac
 
-    # Extract kubectl verb (first positional arg, skipping flags and their values).
+    # ── Prod-only: write operations require confirmation ─────────────────
+    if [[ "$_KTIER" == "prod" ]]; then
+      case "$COMMAND" in
+        kubectl*exec*)
+          ask "PROD '$kube_ctx' — exec grants interactive shell on a production pod" ;;
+        kubectl*apply*|kubectl*patch*|kubectl*edit*|kubectl*create*|kubectl*replace*)
+          ask "PROD '$kube_ctx' — direct mutations bypass Terraform state and are hard to revert" ;;
+        kubectl*annotate*|kubectl*label*|kubectl*" set "*)
+          ask "PROD '$kube_ctx' — metadata mutation on live resources" ;;
+        *"rollout restart"*|*"rollout undo"*)
+          ask "PROD '$kube_ctx' — rollout mutation will restart production pods" ;;
+      esac
+    fi
+
+    # ── Extract kubectl verb (first positional arg, skipping flags) ──────
     # Uses read -ra to avoid glob expansion on custom-columns or field-selector values.
     kubectl_verb=""
     _skip_val=false
@@ -90,7 +104,7 @@ case "$CMD_NAME" in
       break
     done
 
-    # Read-only operations: allow by verb
+    # ── Read-only operations: allow by verb ──────────────────────────────
     case "$kubectl_verb" in
       get|describe|logs|top|version|explain|api-resources|api-versions)
         allow "kubectl read-only on '$kube_ctx'" ;;
