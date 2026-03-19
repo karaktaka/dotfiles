@@ -2,20 +2,8 @@
 # Permissions gate for explicitly dangerous shell operations: rm, curl, wget.
 # All require explicit user confirmation.
 
-command -v jq &>/dev/null || exit 0
-
-INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Bash" ]] && exit 0
-
-COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
-_raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
-CMD_NAME=$(basename "$_raw" 2>/dev/null)
-
-ask() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":$r}}'
-  exit 0
-}
+source ~/.claude/hooks/hook-lib.sh || exit 0
+[[ "$TOOL" != "Bash" ]] && exit 0
 
 # Direct invocation (command starts with the dangerous tool)
 case "$CMD_NAME" in

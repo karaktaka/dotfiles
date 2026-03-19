@@ -5,37 +5,16 @@
 # Covered tools: aws, az, kubectl, helm, glab, jira, mark,
 #                make (terraform targets), terraform, actionlint, act.
 
+# Early exit before reading stdin — avoids consuming hook input on non-work machines.
 [[ "${CLAUDE_CODE_USE_BEDROCK:-false}" != "true" ]] && exit 0
 
-command -v jq &>/dev/null || exit 0
-
-INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Bash" ]] && exit 0
-
-COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
-_raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
-CMD_NAME=$(basename "$_raw" 2>/dev/null)
-
-allow() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r}}'
-  exit 0
-}
-deny() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
-  exit 0
-}
-ask() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":$r}}'
-  exit 0
-}
+source ~/.claude/hooks/hook-lib.sh || exit 0
+[[ "$TOOL" != "Bash" ]] && exit 0
 
 case "$CMD_NAME" in
   aws)
     case "$COMMAND" in
-      aws*delete*|aws*terminate*) deny "Destructive AWS operation" ;;
+      aws*delete*|aws*terminate*) deny "Destructive AWS operation" "Do not perform AWS deletions or terminations autonomously. Show the user the planned operation and wait for explicit confirmation before proceeding." ;;
     esac
     case "$COMMAND" in
       aws*create*|aws*modify*|aws*put*|aws*run*|\
@@ -47,7 +26,7 @@ case "$CMD_NAME" in
 
   az)
     case "$COMMAND" in
-      az*delete*|az*remove*|az*purge*) deny "Destructive Azure operation" ;;
+      az*delete*|az*remove*|az*purge*) deny "Destructive Azure operation" "Do not perform Azure deletions or removals autonomously. Show the user the planned operation and wait for explicit confirmation before proceeding." ;;
     esac
     case "$COMMAND" in
       az*create*|az*update*|az*set*|az*add*|az*assign*|\

@@ -5,14 +5,8 @@
 # Ask:     push, checkout -- <file> (file restore), remote config changes, stash drop.
 # Allow:   all other git subcommands.
 
-command -v jq &>/dev/null || exit 0
-
-INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Bash" ]] && exit 0
-
-COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
-_raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
-CMD_NAME=$(basename "$_raw" 2>/dev/null)
+source ~/.claude/hooks/hook-lib.sh || exit 0
+[[ "$TOOL" != "Bash" ]] && exit 0
 [[ "$CMD_NAME" != "git" ]] && exit 0
 
 # Strip 'git' prefix, flags that take a value (-C path, -c key=val),
@@ -25,34 +19,10 @@ STRIPPED=$(sed -E \
   -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//' \
   <<< "$COMMAND" | xargs 2>/dev/null || echo "$COMMAND")
 
-allow() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r}}'
-  exit 0
-}
-deny() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
-  exit 0
-}
-ask() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":$r}}'
-  exit 0
-}
-rewrite_and_allow() {
-  local new_cmd="$1" reason="$2"
-  local updated_input
-  updated_input=$(jq --arg cmd "$new_cmd" '.tool_input | .command = $cmd' <<< "$INPUT")
-  jq -n --arg r "$reason" --argjson ui "$updated_input" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r,"updatedInput":$ui}}'
-  exit 0
-}
-
 # DENY (match against STRIPPED subcommand to avoid false positives from message bodies)
 case "$STRIPPED" in
-  branch*\ -D\ *|branch*\ -D) deny "Force branch deletion — use 'git branch -d' for merged branches" ;;
-  stash\ clear*)               deny "Destructive stash clear — all stash entries would be lost" ;;
+  branch*\ -D\ *|branch*\ -D) deny "Force branch deletion — use 'git branch -d' for merged branches" "Use 'git branch -d <branch>' (safe delete, requires merged). To inspect unique commits: git log <branch> --not --remotes. Ask the user before force-deleting." ;;
+  stash\ clear*)               deny "Destructive stash clear — all stash entries would be lost" "Use 'git stash drop stash@{N}' to remove individual entries. List stashes first: git stash list. Never clear all stashes without explicit user instruction." ;;
 esac
 
 # REWRITE: git checkout → git switch / git restore
@@ -116,11 +86,11 @@ fi
 case "$STRIPPED" in
   commit*)
     if echo "$COMMAND" | grep -Eqi "Claude[[:space:]]+[A-Za-z][^<]*<noreply@anthropic\.com"; then
-      deny "Claude model name as co-author — run ~/.claude/get-flair.sh --dir <repo-path> <type> instead"
+      deny "Claude model name as co-author — run ~/.claude/get-flair.sh --dir <repo-path> <type> instead" "Run: ~/.claude/get-flair.sh --dir <repo-path> <type> | Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo | Use the output as the sole Co-Authored-By line. Never include both flair and the default Claude co-author."
     fi
     REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
     if [[ "$REMOTE" == *"gitlab.example.com"* ]] && echo "$COMMAND" | grep -qi "noreply@anthropic\.com"; then
-      deny "KN repo: use ~/.claude/get-flair.sh --dir <repo-path> <type> for a character co-author"
+      deny "KN repo: use ~/.claude/get-flair.sh --dir <repo-path> <type> for a character co-author" "KN GitLab repos require a character flair co-author. Run: ~/.claude/get-flair.sh --dir <repo-path> <type> | Replace the noreply@anthropic.com line with the flair output."
     fi
     ;;
 esac

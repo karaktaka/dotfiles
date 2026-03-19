@@ -4,30 +4,8 @@
 # code execution with content inspection (python, bash, node/deno, uv),
 # then unconditionally allows safe utilities.
 
-command -v jq &>/dev/null || exit 0
-
-INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Bash" ]] && exit 0
-
-COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
-_raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
-CMD_NAME=$(basename "$_raw" 2>/dev/null)
-
-allow() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r}}'
-  exit 0
-}
-deny() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$r}}'
-  exit 0
-}
-ask() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":$r}}'
-  exit 0
-}
+source ~/.claude/hooks/hook-lib.sh || exit 0
+[[ "$TOOL" != "Bash" ]] && exit 0
 
 # Scans Python code for high-risk patterns (network, subprocess, file-deletion, dynamic eval).
 # Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
@@ -89,10 +67,11 @@ _first_nonopt_arg() {
 case "$CMD_NAME" in
   # --- Commands with dangerous variants: deny/ask those first, then allow the rest ---
   find)
+    _FIND_CTX="Run 'find ... -print' first to show which files would be matched. Ask the user for confirmation before deleting."
     case "$COMMAND" in
-      *" -delete"*)                              deny "Destructive find — removes matched files" ;;
-      *" -exec"*" rm"*)                          deny "Destructive find — executes rm on matched files" ;;
-      *"| xargs"*" rm"*|*"|xargs"*" rm"*)        deny "Destructive find — pipes output to xargs rm" ;;
+      *" -delete"*)                              deny "Destructive find — removes matched files" "$_FIND_CTX" ;;
+      *" -exec"*" rm"*)                          deny "Destructive find — executes rm on matched files" "$_FIND_CTX" ;;
+      *"| xargs"*" rm"*|*"|xargs"*" rm"*)        deny "Destructive find — pipes output to xargs rm" "$_FIND_CTX" ;;
     esac
     allow "Safe find" ;;
 
@@ -111,7 +90,7 @@ case "$CMD_NAME" in
   chezmoi)
     case "$COMMAND" in
       chezmoi\ destroy*)
-        deny "Destructive chezmoi destroy — removes managed files from disk" ;;
+        deny "Destructive chezmoi destroy — removes managed files from disk" "chezmoi destroy permanently removes managed files from disk. Use 'chezmoi managed' to list files and ask the user which specific ones to remove. Never destroy without explicit instruction." ;;
       chezmoi\ add*|chezmoi\ re-add*|chezmoi\ edit*|chezmoi\ forget*|\
       chezmoi\ apply*|chezmoi\ update*)
         ask "chezmoi write operation — modifies source or deploys managed files" ;;

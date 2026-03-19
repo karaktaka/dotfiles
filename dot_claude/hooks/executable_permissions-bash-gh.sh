@@ -3,26 +3,9 @@
 # Safe read operations are allowed; mutations require confirmation.
 # Works on all machines (not gated by IS_WORK).
 
-command -v jq &>/dev/null || exit 0
-
-INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "Bash" ]] && exit 0
-
-COMMAND=$(jq -r '.tool_input.command // ""' <<< "$INPUT")
-_raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
-CMD_NAME=$(basename "$_raw" 2>/dev/null)
+source ~/.claude/hooks/hook-lib.sh || exit 0
+[[ "$TOOL" != "Bash" ]] && exit 0
 [[ "$CMD_NAME" != "gh" ]] && exit 0
-
-allow() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r}}'
-  exit 0
-}
-ask() {
-  jq -n --arg r "$1" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":$r}}'
-  exit 0
-}
 
 # ── gh api ──────────────────────────────────────────────────────────────────
 # Default HTTP method is GET; ask only when an explicit write method is set.

@@ -3,12 +3,9 @@
 # Default: no decision (Claude Code default applies).
 # Work: allow internal GitLab domain.
 
-command -v jq &>/dev/null || exit 0
+source ~/.claude/hooks/hook-lib.sh || exit 0
 
-INPUT=$(cat)
-[[ "$(jq -r '.tool_name // ""' <<< "$INPUT")" != "WebFetch" ]] && exit 0
-
-allow() { jq -n --arg r "$1" '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":$r}}'; exit 0; }
+[[ "$TOOL" != "WebFetch" ]] && exit 0
 
 [[ "${CLAUDE_CODE_USE_BEDROCK:-false}" == "true" ]] && {
   URL=$(jq -r '.tool_input.url // ""' <<< "$INPUT")
