@@ -38,8 +38,8 @@ Also note:
 
 | Condition | Action |
 |-----------|--------|
-| Small + clear | Proceed directly, no plan mode needed |
-| Medium or uncertain | Present a brief plan inline before acting |
+| Small + clear | Present a brief inline plan, then wait for approval |
+| Medium or uncertain | Present a detailed inline plan, then wait for approval |
 | Large or high-impact | Enter plan mode (`EnterPlanMode`), present full plan, wait for approval |
 
 When entering plan mode, label the scope clearly at the top of the plan:
@@ -56,8 +56,8 @@ Structure (scale detail to scope):
 5. **Out of scope** — what we're explicitly NOT doing (prevents scope creep)
 6. **Open questions** (if any remain) — list them before presenting the plan
 
-For Small tasks, steps 1–3 are enough. For Large tasks, all steps are required.
+All steps apply regardless of scope. Scale the depth of detail to the task size, but never skip open questions if any exist.
 
-## Step 5 — Wait for Approval (Large only)
+## Step 5 — Wait for Approval (always)
 
-For Large/plan-mode tasks: use the `AskUserQuestion` tool to ask: "Ready to proceed with this plan?" with options: "Yes, proceed", "Modify the plan first", "Cancel" — do not begin implementation until the user explicitly approves. For Small/Medium: proceed after presenting the plan summary.
+For **all** tasks regardless of scope: use the `AskUserQuestion` tool to ask: "Ready to proceed with this plan?" with options: "Yes, proceed", "Modify the plan first", "Cancel" — do not begin implementation until the user explicitly approves.
