@@ -116,8 +116,14 @@ case "$CMD_NAME" in
       *"npm info "*|*"npm show "*|*"npm view "*)
         allow "npm registry read (no mutations)" ;;
       # Safe local operations: run scripts, build, test, lint, audit, list
+      # Also handles 'npm --prefix <path> <subcmd>' form used with worktrees
       *"npm run "*|*"npm test"*|*"npm start"*|*"npm build"*|*"npm ci"*|\
-      *"npm ls"*|*"npm list"*|*"npm audit"*|*"npm outdated"*|*"npm pack"*)
+      *"npm ls"*|*"npm list"*|*"npm audit"*|*"npm outdated"*|*"npm pack"*|\
+      *"npm --prefix"*" run "*|*"npm --prefix"*" test"*|\
+      *"npm --prefix"*" start"*|*"npm --prefix"*" build"*|\
+      *"npm --prefix"*" ci"*|*"npm --prefix"*" ls"*|\
+      *"npm --prefix"*" list"*|*"npm --prefix"*" audit"*|\
+      *"npm --prefix"*" outdated"*|*"npm --prefix"*" pack"*)
         allow "Safe npm local operation (no package mutations)" ;;
     esac
     ask "Unknown npm command — confirm intent" ;;
