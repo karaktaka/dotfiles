@@ -19,8 +19,6 @@ workspace/**
 .ssh/config.d/**
 .gitconfig.d/**
 .claude/bin/gitlab-post-review-note.sh
-.claude/mcp-atlassian-wrapper.sh
-.claude/.mcp.json
 .claude/commands/check-pipeline.md
 .claude/commands/check-ticket-coverage.md
 .claude/observability.md

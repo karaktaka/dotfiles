@@ -82,7 +82,6 @@ git -C ~/.local/share/work-dotfiles push
 |--------|---------------|------|
 | `~/.claude/CLAUDE.md` | `CLAUDE.md.tmpl` | Template |
 | `~/.claude/settings.json` | `dot_claude/settings.json.tmpl` | Template (file-split) |
-| `~/.claude/mcp.json` | `dot_claude/dot_mcp.json.tmpl` | Template |
 | `~/.claude/commands/` | `dot_claude/commands/` | Regular (some work wrappers) |
 | `~/.claude/skills/` | `dot_claude/skills/` | Regular |
 | `~/.claude/observability.md` | `dot_claude/observability.md.tmpl` → work repo | Work wrapper |
