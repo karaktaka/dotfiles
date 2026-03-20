@@ -1,7 +1,6 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
 {{- $name := promptStringOnce . "name" "Name" -}}
-{{- $workDomain := "example.com" -}}
-{{- $isWork := hasSuffix (printf "@%s" $workDomain) $email -}}
+{{- $isWork := promptBoolOnce . "isWork" "Is this a work machine?" -}}
 
 git:
   autoCommit: true
@@ -14,7 +13,7 @@ data:
   email: {{ $email | quote }}
   name: {{ $name | quote }}
   isWork: {{ $isWork }}
-  workDomain: {{ $workDomain | quote }}
+  signingKey: "91597F0387C6CED47F4CDAE0C43BCF28FD53157D"
 {{- if $isWork }}
 {{- $workRepoUrl := promptStringOnce . "workRepoUrl" "Work dotfiles repo URL" }}
   workRepoUrl: {{ $workRepoUrl | quote }}
