@@ -1,0 +1,7 @@
+{{- if .isWork }}
+".local/share/work-dotfiles":
+  type: "git-repo"
+  url: {{ .workRepoUrl | quote }}
+  pull:
+    args: ["--ff-only"]
+{{- end }}

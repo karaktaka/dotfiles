@@ -89,8 +89,8 @@ case "$STRIPPED" in
       deny "Claude model name as co-author — run ~/.claude/get-flair.sh --dir <repo-path> <type> instead" "Run: ~/.claude/get-flair.sh --dir <repo-path> <type> | Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo | Use the output as the sole Co-Authored-By line. Never include both flair and the default Claude co-author."
     fi
     REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
-    if [[ "$REMOTE" == *"gitlab.example.com"* ]] && echo "$COMMAND" | grep -qi "noreply@anthropic\.com"; then
-      deny "KN repo: use ~/.claude/get-flair.sh --dir <repo-path> <type> for a character co-author" "KN GitLab repos require a character flair co-author. Run: ~/.claude/get-flair.sh --dir <repo-path> <type> | Replace the noreply@anthropic.com line with the flair output."
+    if [[ "$REMOTE" != *"github.com"* ]] && [[ -n "$REMOTE" ]] && echo "$COMMAND" | grep -qi "noreply@anthropic\.com"; then
+      deny "Non-GitHub repo: use ~/.claude/get-flair.sh --dir <repo-path> <type> for a character co-author" "Non-GitHub repos require a character flair co-author. Run: ~/.claude/get-flair.sh --dir <repo-path> <type> | Replace the noreply@anthropic.com line with the flair output."
     fi
     ;;
 esac

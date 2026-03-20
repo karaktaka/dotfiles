@@ -1,18 +1,10 @@
+{{- if .isWork -}}
+{{ output "cat" (joinPath .workRepoPath "claude/settings.json") | replace "__HOME__" .chezmoi.homeDir -}}
+{{ else -}}
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-{{- if .isWork }}
-  "env": {
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "eu.anthropic.claude-opus-4-6-v1",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "eu.anthropic.claude-sonnet-4-6",
-    "AWS_PROFILE": "claude_code",
-    "AWS_REGION": "eu-central-1",
-    "CLAUDE_CODE_PROXY_RESOLVES_HOSTS": "false",
-    "CLAUDE_CODE_USE_BEDROCK": "true"
-  },
-{{- end }}
   "permissions": {},
-  "model": {{ if .isWork }}"opus"{{ else }}"opusplan"{{ end }},
+  "model": "opusplan",
   "hooks": {
     "PermissionRequest": [
       {
@@ -48,11 +40,11 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-chezmoi-template-edit.sh"
-          }{{ if not .isWork }},
+          },
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-plans-folder.sh"
-          }{{ end }}
+          }
         ]
       },
       {
@@ -92,22 +84,9 @@
         ]
       },
       {
-        "matcher": "WebFetch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-webfetch.sh"
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
-          {{ if .isWork }}{
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/infra-safety.sh"
-          },
-          {{ end }}{
+          {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-git.sh"
           },
@@ -122,10 +101,6 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-gh.sh"
-          },
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-work.sh"
           },
           {
             "type": "command",
@@ -146,17 +121,12 @@
     "commit-commands@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-{{- if .isWork }}
-    "glab-mr@kn-claude-plugins": true,
-    "kn-internal-tools@kn-claude-plugins": true,
-    "update-docs@kn-claude-plugins": true,
-{{- end }}
     "pr-review-toolkit@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "hookify@claude-plugins-official": true
   },
   "outputStyle": "Explanatory",
-  "spinnerTipsEnabled": false{{ if .isWork }},
-  "effortLevel": "high"{{ end }}
+  "spinnerTipsEnabled": false
 }
+{{ end -}}

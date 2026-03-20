@@ -1,0 +1,3 @@
+{{- if .isWork -}}
+{{ output "cat" (joinPath .workRepoPath "claude/commands/check-ticket-coverage.md") -}}
+{{ end -}}

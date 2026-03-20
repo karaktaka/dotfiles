@@ -5,10 +5,12 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ## Features
 
 - **Work/Personal detection** — automatically configures based on email domain
+- **Two-repo architecture** — generic dotfiles here (public), work-specific in a private companion repo
 - **Claude Code configs** — settings, commands, and reference files
 - **Shell enhancements** — modern CLI aliases with tool fallbacks
 - **Bitwarden integration** — secrets fetched on-demand, never stored in files
 - **Conditional deployment** — work-only files excluded on personal machines
+- **Native includes** — SSH `Include`, git `[include]`, zsh `source` for mixed-content files
 
 ## Quick Start
 
@@ -33,16 +35,13 @@ wget -qO- https://raw.githubusercontent.com/karaktaka/dotfiles/main/bootstrap.sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install required tools
-brew install chezmoi age bitwarden-cli
+brew install chezmoi bitwarden-cli
 ```
 
 **Linux (Debian/Ubuntu):**
 ```bash
 # Install chezmoi
 sh -c "$(curl -fsLS get.chezmoi.io)"
-
-# Install age
-sudo apt install age
 
 # Install Bitwarden CLI
 sudo snap install bw
@@ -57,32 +56,9 @@ chezmoi init karaktaka/dotfiles
 You'll be prompted for:
 - **Email address** — determines work/personal mode (`@example.com` = work)
 - **Name** — used in git config
+- **Work dotfiles repo URL** — (work mode only) SSH URL for the private companion repo
 
-#### 3. Set Up Age Key
-
-The repo uses age encryption for sensitive files. The key is stored in Bitwarden.
-
-**Option A: Fetch from Bitwarden (Recommended)**
-```bash
-# Login and unlock Bitwarden
-bw login
-export BW_SESSION=$(bw unlock --raw)
-
-# Fetch the key
-mkdir -p ~/.config/chezmoi
-bw get notes "Chezmoi Age Encryption Key" > ~/.config/chezmoi/key.txt
-chmod 600 ~/.config/chezmoi/key.txt
-```
-
-**Option B: Copy from another machine**
-```bash
-scp other-machine:~/.config/chezmoi/key.txt ~/.config/chezmoi/key.txt
-chmod 600 ~/.config/chezmoi/key.txt
-```
-
-> **Note:** The bootstrap script will attempt to fetch from Bitwarden automatically.
-
-#### 4. Preview and Apply
+#### 3. Preview and Apply
 
 ```bash
 # Preview what will be changed
@@ -95,7 +71,9 @@ chezmoi apply --dry-run --verbose
 chezmoi apply
 ```
 
-#### 5. Set Up Bitwarden (for work machines)
+For work machines, chezmoi automatically clones the private work-dotfiles repo via `.chezmoiexternal.yaml.tmpl` during apply.
+
+#### 4. Set Up Bitwarden (for work machines)
 
 ```bash
 # Login to Bitwarden
@@ -103,6 +81,23 @@ bw login
 
 # The shell functions will auto-unlock when needed
 ```
+
+## Architecture
+
+### Two-Repo Split
+
+| Repo | Host | Visibility | Purpose |
+|------|------|------------|---------|
+| `karaktaka/dotfiles` | GitHub | Public | Generic dotfiles + wrapper templates |
+| Private companion | GitLab | Private | Work-specific files (plaintext) |
+
+**Data flow:**
+1. `chezmoi init` prompts for email, name, and (if work) the companion repo URL
+2. `.chezmoiexternal.yaml.tmpl` clones the companion repo (externals apply before other entries)
+3. Wrapper templates `cat` files from the companion repo into target locations
+4. Mixed-content files use native includes (SSH `Include`, git `[include]`, zsh `source`)
+
+On personal machines: no companion repo, wrapper templates excluded via `.chezmoiignore`, native includes silently ignore missing files.
 
 ## Work vs Personal Mode
 
@@ -112,11 +107,6 @@ The setup automatically detects work/personal based on your email:
 |--------------|------|-----------------|
 | `@example.com` | Work | Full config: AWS, K8s, GitLab, Jira integration |
 | Any other | Personal | Base config: shell aliases, git, Claude basics |
-
-**Work-only files** (excluded on personal machines):
-- `~/.oh-my-zsh/custom/aws.zsh`
-- `~/.oh-my-zsh/custom/k8s.zsh`
-- AWS/Bedrock environment variables in Claude settings
 
 ## Directory Structure
 
@@ -141,12 +131,6 @@ The setup automatically detects work/personal based on your email:
 ```
 
 ## Bitwarden Items Required
-
-### Universal (All Machines)
-
-| Item Name | Type | Used By |
-|-----------|------|---------|
-| `Chezmoi Age Encryption Key` | Secure Note | Bootstrap script, age decryption |
 
 ### Work Mode Only
 
@@ -201,13 +185,6 @@ chezmoi cd            # CD into source directory
 Run `chezmoi init` to regenerate config with new variables:
 ```bash
 chezmoi init
-```
-
-### Age decryption fails
-
-Ensure your key is in place:
-```bash
-ls -la ~/.config/chezmoi/key.txt
 ```
 
 ### Bitwarden unlock prompts

@@ -1,0 +1,3 @@
+{{- if .isWork -}}
+{{ output "cat" (joinPath .workRepoPath "zshrc.d/pre.zsh") -}}
+{{ end -}}

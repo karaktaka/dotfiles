@@ -27,11 +27,11 @@ fi
 
 # --- Detect remote ---
 REMOTE_URL=$(git -C "$DIR" remote get-url origin 2>/dev/null || echo "")
-IS_KN=false
-[[ "$REMOTE_URL" == *"gitlab.example.com"* ]] && IS_KN=true
+IS_GITHUB=false
+[[ "$REMOTE_URL" == *"github.com"* ]] && IS_GITHUB=true
 
-# Non-KN: standard attribution
-if [[ "$IS_KN" == false ]]; then
+# GitHub: standard attribution
+if [[ "$IS_GITHUB" == true ]]; then
   if [[ "$MR_MODE" == true ]]; then
     echo "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
   else
@@ -40,7 +40,7 @@ if [[ "$IS_KN" == false ]]; then
   exit 0
 fi
 
-# --- Character data (KN GitLab only) ---
+# --- Character data (non-GitHub repos) ---
 declare -A NAME EMAIL QUOTES
 
 NAME[john_wick]="John Wick";            EMAIL[john_wick]="baba@yaga.dog"

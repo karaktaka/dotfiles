@@ -1,4 +1,3 @@
-key.txt.age
 README.md
 bootstrap.sh
 
@@ -9,12 +8,16 @@ bootstrap.sh
 
 # Work-only files - ignore on personal machines
 {{ if not .isWork }}
-.local/bin/kn-workspace-init
+.local/bin/workspace-init
 workspace/**
 .config/kn-tools/**
 .oh-my-zsh/custom/aws.zsh
 .oh-my-zsh/custom/k8s.zsh
 .oh-my-zsh/custom/confluence.zsh
+.oh-my-zsh/custom/sso.zsh
+.zshrc.d/**
+.ssh/config.d/**
+.gitconfig.d/**
 .claude/bin/gitlab-post-review-note.sh
 .claude/mcp-atlassian-wrapper.sh
 .claude/.mcp.json
@@ -22,11 +25,14 @@ workspace/**
 .claude/commands/check-ticket-coverage.md
 .claude/observability.md
 .claude/kubernetes.md
+.claude/work-environment.md
 .claude/hooks/permissions-bash-work.sh
 .claude/hooks/infra-safety.sh
+.claude/hooks/permissions-webfetch.sh
 Library/Application Support/mark.toml
 Library/Application Support/k9s/hotkeys.yaml
 Library/Application Support/k9s/clusters/**
+.config/lazygit/config.yml
 {{ end }}
 
 # Plugin state managed by Claude Code - don't track versions

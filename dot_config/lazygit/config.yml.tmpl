@@ -1,3 +1,6 @@
+{{- if .isWork -}}
+{{ output "cat" (joinPath .workRepoPath "lazygit/config.yml") -}}
+{{ else -}}
 gui:
   theme:
     activeBorderColor:
@@ -22,7 +25,4 @@ gui:
 
 git:
   parseEmoji: true
-
-services:
-  'gitlab.example.com': 'gitlab:gitlab.example.com'
-
+{{ end -}}

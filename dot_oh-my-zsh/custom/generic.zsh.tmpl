@@ -1,6 +1,6 @@
 {{- $isDarwin := eq .chezmoi.os "darwin" -}}
 #!/usr/bin/env zsh
-# Generic shell functions - mixed universal and work-specific
+# Generic shell functions — universal
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Universal Functions
@@ -8,9 +8,7 @@
 
 # Update system packages and tools
 function update_system() {
-{{ if .isWork -}}
-  update_kubectl && \
-{{ end -}}
+  (( $+functions[update_kubectl] )) && update_kubectl
 {{ if $isDarwin -}}
   brew update && \
   brew upgrade && \
@@ -21,115 +19,5 @@ function update_system() {
 # Run Ollama with optimized settings
 function ollama_run() {
   OLLAMA_FLASH_ATTENTION="1" OLLAMA_KV_CACHE_TYPE="q8_0" ollama serve
-}
-{{ end -}}
-{{ if .isWork }}
-# ─────────────────────────────────────────────────────────────────────────────
-# Work Functions - SSO Admin API
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Authenticate with SSO Admin API
-# Credentials are retrieved from Bitwarden
-function sso_admin_auth() {
-  local _env=$1
-
-  if [[ -z $_env ]]; then
-    echo "Usage: sso_admin_auth <env>"
-    return 1
-  fi
-
-  local _base_url
-  local _client_id
-  local _client_secret
-
-  if [[ $_env == "test" ]]; then
-    _base_url="https://sso-test.example.com"
-    _client_id=$(bw_get_secret "SSO Admin Credentials Test" "client_id")
-    _client_secret=$(bw_get_secret "SSO Admin Credentials Test" "client_secret")
-  elif [[ $_env == "prod" ]]; then
-    _base_url="https://sso.example.com"
-    _client_id=$(bw_get_secret "SSO Admin Credentials Prod" "client_id")
-    _client_secret=$(bw_get_secret "SSO Admin Credentials Prod" "client_secret")
-  else
-    echo "❌ Invalid environment: $_env. Use 'test' or 'prod'."
-    return 1
-  fi
-
-  if [[ -z "$_client_id" || -z "$_client_secret" ]]; then
-    echo "❌ Failed to retrieve SSO credentials from Bitwarden"
-    echo "   Ensure item 'SSO Admin Credentials ${_env^}' exists with fields 'client_id' and 'client_secret'"
-    return 1
-  fi
-
-  curl -sSL --request POST \
-    --url "${_base_url}/authorization/oauth2/token" \
-    --header 'Content-Type: application/x-www-form-urlencoded' \
-    --data "grant_type=client_credentials" \
-    --data "client_id=${_client_id}" \
-    --data "client_secret=${_client_secret}" \
-    --data "audience=${_base_url}/admin-api" | jq -r '.access_token' > ~/.sso_admin_token_${_env}
-
-  echo "✅ SSO Admin token saved to ~/.sso_admin_token_${_env}"
-}
-
-# Query SSO Admin API
-function sso_admin() {
-  local _env=$1
-  local _kind=$2
-  local _app_code=$3
-  local _path=$4
-
-  if [[ -z $_env || -z $_kind || -z $_app_code || -z $_path ]]; then
-    echo "Usage: sso_admin <env> <kind> <app_code> <path>"
-    return 1
-  fi
-
-  local _base_url
-  if [[ $_env == "test" ]]; then
-    _base_url="https://sso-test.example.com"
-  elif [[ $_env == "prod" ]]; then
-    _base_url="https://sso.example.com"
-  else
-    echo "❌ Invalid environment: $_env. Use 'test' or 'prod'."
-    return 1
-  fi
-
-  if [[ ! -f ~/.sso_admin_token_${_env} ]]; then
-    sso_admin_auth ${_env} || return 1
-  fi
-  local _token=$(cat ~/.sso_admin_token_${_env})
-
-  curl -sSL --request GET \
-    --url "${_base_url}/admin-api/${_kind}/${_app_code}/${_path}" \
-    --header "Authorization: Bearer ${_token}" | jq .
-}
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Work Functions - Token Management
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Set GitLab token from Bitwarden
-function set_gitlab_token() {
-  if [[ -z $GITLAB_TOKEN ]]; then
-    export GITLAB_TOKEN=$(bw_get_secret "Gitlab Personal Token")
-    if [[ -z "$GITLAB_TOKEN" ]]; then
-      echo "❌ Failed to get GitLab token from Bitwarden"
-      return 1
-    fi
-    echo "✅ GITLAB_TOKEN set from Bitwarden"
-  fi
-}
-
-# Set Jira token from Bitwarden
-function set_jira_token() {
-  if [[ -z $JIRA_API_TOKEN ]]; then
-    export JIRA_API_TOKEN=$(bw_get_secret "Jira API Token")
-    if [[ -z "$JIRA_API_TOKEN" ]]; then
-      echo "❌ Failed to get Jira token from Bitwarden"
-      return 1
-    fi
-    export JIRA_AUTH_TYPE="bearer"
-    echo "✅ JIRA_API_TOKEN set from Bitwarden"
-  fi
 }
 {{ end -}}

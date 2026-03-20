@@ -1,7 +1,7 @@
 [user]
 	name = {{ .name }}
 	email = {{ .email }}
-	signingkey = {{ if .isWork }}REDACTED_WORK_GPG_KEY{{ else }}91597F0387C6CED47F4CDAE0C43BCF28FD53157D{{ end }}
+	signingkey = 91597F0387C6CED47F4CDAE0C43BCF28FD53157D
 [commit]
 	gpgsign = true
 [pull]
@@ -17,9 +17,6 @@
 	enabled = true
 [branch]
 	autosetuprebase = always
-{{ if .isWork -}}
-[includeIf "gitdir:~/personal/"]
-	path = ~/.gitconfig-personal
-[includeIf "gitdir:~/.local/share/chezmoi/"]
-	path = ~/.gitconfig-personal
-{{ end -}}
+[include]
+	path = ~/.gitconfig.d/work
+

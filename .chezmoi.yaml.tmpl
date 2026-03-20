@@ -3,12 +3,6 @@
 {{- $workDomain := "example.com" -}}
 {{- $isWork := hasSuffix (printf "@%s" $workDomain) $email -}}
 
-encryption: "age"
-
-age:
-  identity: "~/.config/chezmoi/key.txt"
-  recipient: "age15j2c7ydy27fe32yku96aj7f2pse6zve4kdzhhw2pf7kzjjvj090shhafuv"
-
 git:
   autoCommit: true
   autoPush: false
@@ -21,3 +15,8 @@ data:
   name: {{ $name | quote }}
   isWork: {{ $isWork }}
   workDomain: {{ $workDomain | quote }}
+{{- if $isWork }}
+{{- $workRepoUrl := promptStringOnce . "workRepoUrl" "Work dotfiles repo URL" }}
+  workRepoUrl: {{ $workRepoUrl | quote }}
+  workRepoPath: {{ joinPath .chezmoi.homeDir ".local/share/work-dotfiles" | quote }}
+{{- end }}
