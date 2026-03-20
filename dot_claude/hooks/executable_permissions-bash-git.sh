@@ -15,8 +15,8 @@ source ~/.claude/hooks/hook-lib.sh || exit 0
 # content or branch names from accidentally matching deny/ask patterns.
 STRIPPED=$(sed -E \
   -e 's/^git[[:space:]]*//' \
-  -e 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
-  -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//' \
+  -e 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//g' \
+  -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//g' \
   <<< "$COMMAND" | xargs 2>/dev/null || echo "$COMMAND")
 
 # DENY (match against STRIPPED subcommand to avoid false positives from message bodies)
