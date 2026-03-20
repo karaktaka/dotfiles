@@ -26,8 +26,6 @@ workspace/**
 .claude/hooks/infra-safety.sh
 .claude/hooks/permissions-webfetch.sh
 Library/Application Support/mark.toml
-Library/Application Support/k9s/hotkeys.yaml
-Library/Application Support/k9s/clusters/**
 {{ end }}
 
 # Plugin state managed by Claude Code - don't track versions
@@ -49,12 +47,15 @@ Library/Application Support/k9s/clusters/**
 .config/fastfetch/**
 {{ end }}
 
-# k9s: work machines only, OS-specific paths
-{{ if not .isWork }}
-.config/k9s/**
-Library/Application Support/k9s/**
-{{ else if eq .chezmoi.os "darwin" }}
+# macOS-only paths - ignore entirely on other OS
+{{ if ne .chezmoi.os "darwin" }}
+Library/**
+{{ end }}
+
+# k9s: work macOS only - on work macOS use Library path, everywhere else ignore all
+{{ if and .isWork (eq .chezmoi.os "darwin") }}
 .config/k9s/**
 {{ else }}
+.config/k9s/**
 Library/Application Support/k9s/**
 {{ end }}
