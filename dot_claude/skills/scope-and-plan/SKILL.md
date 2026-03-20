@@ -62,3 +62,25 @@ All steps apply regardless of scope. Scale the depth of detail to the task size,
 ## Step 5 — Wait for Approval (always)
 
 For **all** tasks regardless of scope: use the `AskUserQuestion` tool to ask: "Ready to proceed with this plan?" with options: "Yes, proceed", "Modify the plan first", "Cancel" — do not begin implementation until the user explicitly approves.
+
+## Step 6 — Post-Implementation Verification (always)
+
+After implementation is complete, **always** run a structured verification pass before declaring done. Use the `Explore` or `code-reviewer` subagent (via the Agent tool) to deeply scan the written code.
+
+Check against each point in the approved plan:
+
+| Check | What to verify |
+|-------|----------------|
+| **Plan compliance** | Every item in "Files to change" and "Approach" was actually implemented — nothing skipped or half-done |
+| **Completeness** | No features, cases, or requirements from the plan are missing |
+| **Correctness** | Logic is sound; no obvious bugs, off-by-ones, or broken edge cases |
+| **Code reuse** | No duplication of existing utilities, helpers, or patterns already in the codebase |
+| **Error handling** | Failures surface correctly; no silent swallows or missing boundary checks |
+| **Out-of-scope drift** | Nothing outside the agreed plan was changed unilaterally |
+
+Present a brief **Verification Report** summarising:
+- What was verified ✓
+- Any gaps or issues found, with severity (blocking / minor / note)
+- Whether the implementation matches the plan exactly, or if deviations need the user's attention
+
+If blocking issues are found, fix them before marking the task done. Surface minor issues and notes to the user and let them decide.
