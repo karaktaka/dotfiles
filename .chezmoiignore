@@ -19,8 +19,6 @@ workspace/**
 .ssh/config.d/**
 .gitconfig.d/**
 .claude/bin/gitlab-post-review-note.sh
-.claude/commands/check-pipeline.md
-.claude/commands/check-ticket-coverage.md
 .claude/observability.md
 .claude/kubernetes.md
 .claude/work-environment.md
