@@ -9,15 +9,21 @@ bootstrap.sh
 
 # Work-only files - ignore on personal machines
 {{ if not .isWork }}
+.local/bin/kn-workspace-init
+workspace/**
 .config/kn-tools/**
 .oh-my-zsh/custom/aws.zsh
 .oh-my-zsh/custom/k8s.zsh
+.oh-my-zsh/custom/confluence.zsh
 .claude/bin/gitlab-post-review-note.sh
 .claude/mcp-atlassian-wrapper.sh
 .claude/.mcp.json
 .claude/commands/check-pipeline.md
 .claude/commands/check-ticket-coverage.md
-.oh-my-zsh/custom/confluence.zsh
+.claude/observability.md
+.claude/kubernetes.md
+.claude/hooks/permissions-bash-work.sh
+.claude/hooks/infra-safety.sh
 Library/Application Support/mark.toml
 Library/Application Support/k9s/hotkeys.yaml
 Library/Application Support/k9s/clusters/**

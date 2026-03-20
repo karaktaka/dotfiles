@@ -314,6 +314,7 @@ show_post_install() {
         echo "  2. Login to AWS:        login_aws"
         echo "  3. Set GitLab token:    set_gitlab_token"
         echo "  4. Set Jira token:      set_jira_token"
+        echo "  5. Init workspace:      kn-workspace-init"
     else
         echo -e "${BLUE}Mode:${NC} Personal"
     fi
