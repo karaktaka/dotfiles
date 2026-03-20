@@ -19,9 +19,15 @@ Before assessing scope, surface any blockers:
 
 Only proceed to scope assessment once the goal is clear.
 
-## Step 2 — Assess Scope & Complexity
+## Step 2 — Discover & Assess Scope
 
-Classify the task:
+Before classifying scope, **actively explore the codebase** using Agents and tools:
+
+- Use the `Explore` or `Plan` subagent (via the Agent tool) to discover relevant files, understand architecture, trace dependencies, and surface non-obvious impacts — especially for unfamiliar areas.
+- Use Agents in parallel where independent discovery tasks exist (e.g. "find all callers of X" + "find related tests" simultaneously).
+- Do not rely solely on the user's description — verify against actual code.
+
+Then classify the task:
 
 | Level | Signals |
 |-------|---------|
@@ -34,16 +40,11 @@ Also note:
 - **Blast radius**: How many systems/people are affected?
 - **Ambiguity**: Are there design or tradeoff decisions Claude shouldn't make unilaterally?
 
-## Step 3 — Decide: Plan Mode or Not?
+## Step 3 — Enter Plan Mode
 
-| Condition | Action |
-|-----------|--------|
-| Small + clear | Present a brief inline plan, then wait for approval |
-| Medium or uncertain | Present a detailed inline plan, then wait for approval |
-| Large or high-impact | Enter plan mode (`EnterPlanMode`), present full plan, wait for approval |
+**Always call `EnterPlanMode`** before presenting the plan, regardless of scope size. Label the scope clearly at the top of the plan:
 
-When entering plan mode, label the scope clearly at the top of the plan:
-> **Scope: Large / High-impact** — requires approval before proceeding
+> **Scope: Small / Medium / Large** — waiting for approval before proceeding
 
 ## Step 4 — Present the Plan
 
