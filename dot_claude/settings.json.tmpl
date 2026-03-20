@@ -12,7 +12,7 @@
   },
 {{- end }}
   "permissions": {},
-  "model": "opusplan",
+  "model": {{ if .isWork }}"opus"{{ else }}"opusplan"{{ end }},
   "hooks": {
     "PermissionRequest": [
       {

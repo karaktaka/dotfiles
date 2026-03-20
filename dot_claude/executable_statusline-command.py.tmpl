@@ -14,6 +14,7 @@ style        = data.get('output_style', {}).get('name', '')
 cost         = data.get('cost', {}).get('total_cost_usd', 0) or 0
 pct          = int(data.get('context_window', {}).get('used_percentage', 0) or 0)
 duration_ms  = data.get('cost', {}).get('total_duration_ms', 0) or 0
+rate_limits  = data.get('rate_limits', {})
 
 CYAN, GREEN, YELLOW, RED, GREY, WHITE, RESET = (
     '\033[36m', '\033[32m', '\033[33m', '\033[31m', '\033[90m', '\033[37m', '\033[0m'
@@ -152,5 +153,15 @@ cost_str = ''  # Bedrock — no per-token billing
 cost_str = f'  {YELLOW}${cost:.2f}{RESET}' if cost > 0 else ''
 {{ end -}}
 
+# ── Rate limits (Claude Max only) ────────────────────────────────────────────
+rl_parts = []
+for key, label in [('five_hour', '5h'), ('seven_day', '7d')]:
+    window = rate_limits.get(key)
+    if window and window.get('used_percentage') is not None:
+        rp = window['used_percentage']
+        rc = RED if rp >= 80 else YELLOW if rp >= 60 else GREEN
+        rl_parts.append(f'{rc}{label}:{rp:.0f}%{RESET}')
+rl_str = f'  {"  ".join(rl_parts)}' if rl_parts else ''
+
 print(f"{repo_str}{branch_str}{mr_str}{model_str}{style_str}")
-print(f"{bar_color}{bar}{RESET} {pct}%  ⏱️ {duration_str}{cost_str}{lines_str}")
+print(f"{bar_color}{bar}{RESET} {pct}%  ⏱️ {duration_str}{cost_str}{rl_str}{lines_str}")
