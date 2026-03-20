@@ -118,7 +118,7 @@ The setup automatically detects work/personal based on your email:
 │   ├── commands/                # Custom slash commands
 │   ├── get-flair.sh             # Randomised commit/MR flair generator
 │   ├── formatter-reference.md   # Linter/formatter commands
-│   └── statusline-command.sh    # Custom status line script
+│   └── statusline-command.py    # Custom status line script
 ├── .oh-my-zsh/custom/
 │   ├── aliases.zsh              # Modern CLI aliases
 │   ├── bitwarden.zsh            # Bitwarden helper functions
