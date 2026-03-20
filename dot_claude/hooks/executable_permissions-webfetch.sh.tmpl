@@ -1,3 +1,3 @@
 {{- if .isWork -}}
-{{ output "cat" (joinPath .workRepoPath "claude/hooks/permissions-webfetch.sh") -}}
+{{ include (joinPath .workRepoPath "claude/hooks/permissions-webfetch.sh") -}}
 {{ end -}}

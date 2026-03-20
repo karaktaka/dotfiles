@@ -1,3 +1,3 @@
 {{- if .isWork -}}
-{{ output "cat" (joinPath .workRepoPath "local/bin/workspace-init") -}}
+{{ include (joinPath .workRepoPath "local/bin/workspace-init") -}}
 {{ end -}}

@@ -1,3 +1,3 @@
 {{- if .isWork -}}
-{{ output "cat" (joinPath .workRepoPath "ssh/config.d/work") -}}
+{{ include (joinPath .workRepoPath "ssh/config.d/work") -}}
 {{ end -}}

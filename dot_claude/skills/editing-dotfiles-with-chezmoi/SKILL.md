@@ -71,7 +71,7 @@ git -C ~/.local/share/work-dotfiles push
 2. Create a wrapper template in the public chezmoi repo:
    ```
    {{- if .isWork -}}
-   {{ output "cat" (joinPath .workRepoPath "path/in/work/repo") -}}
+   {{ include (joinPath .workRepoPath "path/in/work/repo") -}}
    {{ end -}}
    ```
 3. Add the target path to `.chezmoiignore` under the `{{ if not .isWork }}` block

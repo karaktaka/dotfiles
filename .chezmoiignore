@@ -28,7 +28,6 @@ workspace/**
 Library/Application Support/mark.toml
 Library/Application Support/k9s/hotkeys.yaml
 Library/Application Support/k9s/clusters/**
-.config/lazygit/config.yml
 {{ end }}
 
 # Plugin state managed by Claude Code - don't track versions

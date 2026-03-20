@@ -70,8 +70,10 @@ if [[ "$COMMAND" == *"&&"* || "$COMMAND" == *";"* ]]; then
   _last_name=$(basename "${_last_trimmed%% *}" 2>/dev/null)
   if [[ "$_last_name" == "git" ]]; then
     _last_stripped=$(printf '%s' "$_last_trimmed" \
-      | sed -E 's/^git[[:space:]]*//' \
-      | sed -E 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//' \
+      | sed -E \
+        -e 's/^git[[:space:]]*//' \
+        -e 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//g' \
+        -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//g' \
       | xargs 2>/dev/null || echo "")
     case "$_last_stripped" in
       push*)     ask "Chained git push — confirm intent" ;;
@@ -82,7 +84,7 @@ fi
 
 # COMMIT: reject wrong co-author formats before allowing
 # Catches model-name variants (e.g. "Claude Sonnet 4.6") on all repos,
-# and plain Claude attribution on KN GitLab repos where a character is required.
+# and plain Claude attribution on non-GitHub repos where a character flair is required.
 case "$STRIPPED" in
   commit*)
     if echo "$COMMAND" | grep -Eqi "Claude[[:space:]]+[A-Za-z][^<]*<noreply@anthropic\.com"; then
