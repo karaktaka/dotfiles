@@ -49,32 +49,22 @@ git diff <default_branch>...HEAD --stat
 
 ## Step 5: Run the Review
 
-Use the `pr-review-toolkit:review-pr` agent with the following context:
+Launch the following agents **in parallel**, passing each one the full diff, stat summary, commit history, and plan content (if found):
 
-- The full diff and stat summary from Step 4
-- The plan content from Step 3 (if found)
-- The commit history from Step 1
+### Agent 1 — `pr-review-toolkit:code-reviewer`
+Focus: bugs, logic errors, security vulnerabilities, code quality, and project conventions.
+If a plan was found, also check plan compliance: were all items implemented? Anything missing or done differently than specified?
 
-Instruct the agent to produce a structured report covering:
+### Agent 2 — `pr-review-toolkit:pr-test-analyzer`
+Focus: test coverage. Are new features and edge cases tested? Are there critical paths with no tests? Do tests actually exercise the code or just mock everything?
 
-### a. Plan Compliance *(skip if no plan was found)*
-- Were all items in the plan implemented?
-- Anything promised but missing?
-- Anything implemented differently than specified — intentional or accidental?
+### Agent 3 — `pr-review-toolkit:silent-failure-hunter`
+Focus: silent failures — swallowed errors, empty catch blocks, inappropriate fallbacks, missing error propagation.
 
-### b. Code Quality
-- Bugs, logic errors, off-by-one errors
-- Security vulnerabilities (injection, auth issues, secrets in code, etc.)
-- Silent failures — swallowed errors, empty catch blocks, inappropriate fallbacks
-- Type design issues — poor encapsulation, weak invariants
+### Agent 4 — `pr-review-toolkit:type-design-analyzer`
+Focus: type design — poor encapsulation, weak invariants, types that fail to express their constraints.
 
-### c. Test Coverage
-- Are new features and edge cases tested?
-- Are there critical paths with no tests?
-- Do tests actually exercise the code or just mock everything?
-
-### d. Verdict
-A short overall summary: **Pass**, **Pass with notes**, or **Needs work** — with the top 1–3 action items if any.
+Wait for all agents to complete, then consolidate their findings.
 
 ## Output Format
 
