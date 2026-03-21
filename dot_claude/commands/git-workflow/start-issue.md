@@ -57,3 +57,5 @@ Do **not** start proposing a solution yet. Wait for the user's answers before fo
 ## Step 5: Invoke scope-and-plan
 
 Once clarifying questions are answered (or if none were needed), invoke the `scope-and-plan` skill to assess scope, decide whether plan mode is needed, and present the implementation plan.
+
+**Note for scope-and-plan:** Clarifying questions have already been asked in Step 4 above. Skip Step 1 (identify missing information) and proceed directly to codebase exploration.

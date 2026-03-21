@@ -32,7 +32,11 @@ DEFAULT_BRANCH=$(git remote show origin | sed -n 's/.*HEAD branch: //p')
 ```
 
 ```bash
-git log --oneline ${DEFAULT_BRANCH}..HEAD
+git log --format="%H %s%n%b" ${DEFAULT_BRANCH}..HEAD
+```
+
+```bash
+git diff ${DEFAULT_BRANCH}...HEAD
 ```
 
 ```bash
@@ -44,6 +48,16 @@ Check if an MR/PR already exists:
 - GitLab: `glab mr list --source-branch "${BRANCH}"`
 - GitHub: `gh pr list --head "${BRANCH}"`
 
+If updating, also fetch the existing description:
+
+- GitHub: `gh pr view --json title,body`
+- GitLab: `glab mr view --output json`
+
+Try to detect a linked issue from the branch name (e.g. `AI-123/feature-name` or `42-feature-name`). If found, fetch it:
+
+- GitHub: `gh issue view <number> --json title,body`
+- GitLab: `glab issue view <number>`
+
 ## Step 2: Determine Action
 
 | Condition | Action |
@@ -53,27 +67,69 @@ Check if an MR/PR already exists:
 | User says "close" | Close without merging |
 | User says "merge" | Merge (ask for squash preference) |
 
-## Step 3: Write the Description
+For **Create** and **Update**: proceed to Step 3. For **Merge** and **Close**: skip to Step 4.
 
-### Title
+## Step 3: Description agent
 
-- Under 70 characters
-- Conventional commit prefix: `feat:`, `fix:`, `refactor:`, `chore:`, etc.
-- Describe the **what**, not the **how**
+Spawn a **description agent** (subagent_type: `general-purpose`) passing the diff, commit log, linked issue (if found), and existing description (if updating).
 
-### Description Philosophy
+### Description agent prompt
 
-**The code is the source of truth. The description is a reading guide, not a transcript.**
+```
+You are a pull/merge request description writer. Your job is to write a title and description that help reviewers understand the change — not summarise the code, which they can read themselves.
+
+## Philosophy
+
+The code is the source of truth. The description is a reading guide, not a transcript.
 
 Reviewers will read the code. The description should help them understand:
-
 1. **Why** — motivation in 1-2 sentences
 2. **Non-obvious things** — what a reviewer would miss or misunderstand from the diff alone
 3. **Caveats** — breaking changes, migration steps, ordering dependencies, things that look wrong but are intentional
 
-### Template
+## What NOT to include
+- File-by-file changelogs — the diff shows this
+- Obvious descriptions of what the code does
+- Restating commit messages — reviewers can read `git log`
+- Implementation details clear from reading the code
+- Architecture diagrams or long explanations
+- Excessive formatting, headers, or emoji
 
-```markdown
+## Sizing guide
+| Branch size | Description length |
+|-------------|-------------------|
+| 1-3 commits, single concern | 2-3 bullets, skip "Notes" section |
+| 4-10 commits, one theme | 3-5 bullets + notes if non-obvious |
+| 10+ commits or mixed themes | Short summary + notes + test plan |
+
+## Context
+
+Branch: <BRANCH>
+Action: <create|update>
+
+### Commit log
+<paste full git log output>
+
+### Diff stat
+<paste git diff --stat output>
+
+### Full diff
+<paste git diff output>
+
+### Linked issue (if available)
+<paste issue title + body, or "None">
+
+### Existing description (for updates only)
+<paste current title + body, or "N/A">
+
+## Output format
+
+Return exactly two sections:
+
+### TITLE
+<Under 70 chars. Conventional commit prefix (feat:, fix:, refactor:, chore:, etc.). Describe the what, not the how.>
+
+### DESCRIPTION
 ## Summary
 
 - <bullet 1: big picture change>
@@ -81,34 +137,16 @@ Reviewers will read the code. The description should help them understand:
 
 ## Notes for reviewers
 
-<Only include this section if there are genuinely non-obvious things.>
+<Only include if there are genuinely non-obvious things. Omit this section entirely otherwise.>
 
-- <e.g., "The `moved` block avoids a destroy/recreate — not a no-op">
-- <e.g., "Import blocks adopt existing resources — IDs found via API">
-- <e.g., "`!var.x` derivation is intentional to prevent invalid state">
+- <non-obvious thing>
 
 ## Test plan
 
-- [ ] <verification step 1>
-- [ ] <verification step 2>
+- [ ] <verification step>
 ```
 
-### What NOT to include
-
-- File-by-file changelogs — the diff shows this
-- Obvious descriptions of what the code does
-- Restating commit messages — reviewers can read `git log`
-- Implementation details clear from reading the code
-- Architecture diagrams or long explanations — those belong in README/docs
-- Excessive formatting, headers, or emoji
-
-### Sizing guide
-
-| Branch size | Description length |
-|-------------|-------------------|
-| 1-3 commits, single concern | 2-3 bullets, skip "Notes" section |
-| 4-10 commits, one theme | 3-5 bullets + notes if non-obvious |
-| 10+ commits or mixed themes | Short summary + notes + test plan |
+Wait for the agent to return `TITLE` and `DESCRIPTION` before proceeding.
 
 ## Step 4: Execute
 
@@ -119,9 +157,9 @@ Reviewers will read the code. The description should help them understand:
 glab mr create \
   --source-branch "${BRANCH}" \
   --target-branch "${DEFAULT_BRANCH}" \
-  --title "<title>" \
+  --title "<TITLE from agent>" \
   --description "$(cat <<'EOF'
-<description>
+<DESCRIPTION from agent>
 EOF
 )"
 ```
@@ -131,9 +169,9 @@ EOF
 gh pr create \
   --head "${BRANCH}" \
   --base "${DEFAULT_BRANCH}" \
-  --title "<title>" \
+  --title "<TITLE from agent>" \
   --body "$(cat <<'EOF'
-<description>
+<DESCRIPTION from agent>
 EOF
 )"
 ```
@@ -150,14 +188,12 @@ Optional flags (ask user if relevant):
 
 ### Update
 
-Re-read ALL commits on the branch, not just new ones. The description should reflect the branch as it stands now.
-
 **GitLab:**
 ```bash
 glab mr update ${MR_ID} \
-  --title "<title>" \
+  --title "<TITLE from agent>" \
   --description "$(cat <<'EOF'
-<description>
+<DESCRIPTION from agent>
 EOF
 )"
 ```
@@ -165,9 +201,9 @@ EOF
 **GitHub:**
 ```bash
 gh pr edit ${PR_ID} \
-  --title "<title>" \
+  --title "<TITLE from agent>" \
   --body "$(cat <<'EOF'
-<description>
+<DESCRIPTION from agent>
 EOF
 )"
 ```
