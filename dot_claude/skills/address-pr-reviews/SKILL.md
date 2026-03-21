@@ -90,6 +90,38 @@ glab api projects/$PROJECT_ID/merge_requests/$MR_IID/discussions \
   | jq '[.[] | select(.notes[0].resolvable == true and .notes[0].resolved == false)]'
 ```
 
+## Step 2b — Fetch Outside-Diff Comments (GitHub only)
+
+GitHub cannot post inline comments on lines that fall outside the PR's changed diff. Reviewers (especially CodeRabbit) embed these as free-text findings inside the PR review body instead. They are **not** captured by the `reviewThreads` query in Step 2 and must be fetched separately.
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviews(first: 50) {
+          nodes {
+            author { login }
+            body
+            submittedAt
+          }
+        }
+      }
+    }
+  }
+' -F owner=<owner> -F repo=<repo> -F number=$PR_NUMBER
+```
+
+For each review body:
+- Look for a collapsible section matching `⚠️ Outside diff range comments` or similar.
+- Extract each finding: file path, line reference, severity, description, and any embedded AI agent prompt (in a `🤖 Prompt for AI Agents` `<details>` block).
+- Treat these findings with the **same triage rules as inline threads** (Steps 3–7), but note they have **no thread ID to resolve** — instead, acknowledge them in the final status report.
+- **Deduplicate**: CodeRabbit re-emits the same outside-diff finding in each re-review cycle. If the same finding appears in multiple review bodies, process it only once (use the most recent version).
+- **Stale check**: Before acting on any outside-diff finding, verify the referenced code still has the issue — the finding may refer to an earlier commit that has since been updated.
+
+For **CodeRabbit outside-diff findings** that are fixed: post a reply to the PR review (not possible via GitHub API — instead note the fix in the final CLI summary).
+For **false positives**: note the reason in the final CLI summary.
+
 ## Step 3 — Categorize Each Finding
 
 For each unresolved thread, classify the reviewer:
@@ -252,6 +284,7 @@ If there are still human-reviewer threads pending user decisions, do **not** pos
 - **Threads with multiple comments** (discussions): read the full thread for context before triaging
 - **CodeRabbit suggestion blocks** (`suggestion` code fences): apply them directly as code changes if they're clearly correct
 - **Threads already resolved by someone else**: skip
+- **Outside-diff findings have no resolvable thread**: they cannot be resolved via the GraphQL mutation — acknowledge them in the final CLI status report instead of attempting to resolve them
 
 ## Platform Detection Quick Reference
 
