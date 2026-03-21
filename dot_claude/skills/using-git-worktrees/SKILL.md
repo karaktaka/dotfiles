@@ -1,58 +1,37 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation — creating worktrees, switching to a worktree, running commands in a worktree, or cleaning up worktrees. Trigger when the user asks to start a feature branch, work on multiple things in parallel, or explicitly mentions worktrees.
+description: Use when starting any branch work — creating worktrees, entering a worktree, running commands in a worktree, or cleaning up worktrees. Every branch gets its own worktree, regardless of change size. Trigger when the user asks to start a feature, fix a bug, or begin any branch-based work.
 ---
 
 # Working with Git Worktrees
 
-Worktrees provide isolated working directories for each branch — no stashing, no context switching. Once inside a worktree, **stay there for the entire session** and run all commands normally without path flags.
-
-## When to Use Worktrees
-
-- **Use a worktree** for feature work, bug fixes with non-trivial scope, or parallel work
-- **Use a regular branch** (`git switch -c`) only for quick single-file fixes
+Every branch gets its own worktree — no exceptions. This guarantees that all tools (Bash, Read, Glob, Grep, Write) operate in the correct directory and can never accidentally read or modify the main checkout.
 
 ## Creating and Entering a Worktree
 
-**Using the `EnterWorktree` tool** (preferred when user explicitly says "worktree"):
+Always use the `EnterWorktree` tool. It creates a worktree under `.claude/worktrees/` inside the project and switches the **session-level CWD** for all tools — no `-C`, `--directory`, or `--prefix` flags needed anywhere.
 
-Call `EnterWorktree` with a descriptive name. This creates the worktree under `.claude/worktrees/` inside the project and **automatically switches the session's CWD** into it.
-
-**Manually with git** (when coordinating with an existing branch or using the `.worktrees/` convention):
-
-```bash
-git worktree add .worktrees/<branch-name> -b <branch-name>
+```
+EnterWorktree(name: "<descriptive-branch-name>")
 ```
 
-Then `cd` into it as the **first and only** move — stay there for the rest of the session:
+Use a name that matches the branch intent (e.g. `feat-user-auth`, `fix-null-pointer`).
 
-```bash
-cd .worktrees/<branch-name>
-```
+## Write a Context File
 
-Confirm with:
-```bash
-git worktree list
-```
-
-## Write a Context File Inside the Worktree
-
-After entering the worktree, write a `WORKTREE.md` at its root capturing what is being worked on. This file is automatically deleted when the worktree is removed — no manual cleanup needed.
+After entering the worktree, write a `WORKTREE.md` at its root. This file is automatically deleted when the worktree is removed — no manual cleanup needed.
 
 ```markdown
 # Worktree Context
 
 Branch: <branch-name>
-Goal: <one-line description of what is being built/fixed>
+Goal: <one-line description>
 Related issue/PR: <link or N/A>
-
-## Why this worktree
-<reason for isolation — parallel work, risky change, long-running feature>
 ```
 
-## Running Commands Inside the Worktree
+## Running Commands
 
-Once the CWD is the worktree (via `EnterWorktree` or `cd`), run everything normally — no `-C` or `--directory` flags needed:
+Once inside the worktree, run everything normally — the session CWD is the worktree:
 
 ```bash
 git status
@@ -64,7 +43,7 @@ go build .
 npm run build
 ```
 
-**`gh` has no `-C` flag** — always reference by branch name or PR number:
+**`gh` has no `-C` flag** — reference by branch name or PR number:
 
 ```bash
 gh pr view <branch-name> --repo owner/repo
@@ -75,24 +54,11 @@ gh pr create --head <branch-name>
 
 ## Finishing Up
 
-**Via `ExitWorktree` tool** (when entered with `EnterWorktree`):
+Use `ExitWorktree` when done:
 
-- `action: "keep"` — work in progress, come back later
-- `action: "remove"` — branch merged or work abandoned; deletes the directory and branch
+- `action: "keep"` — work in progress, return to it later
+- `action: "remove"` — branch merged or abandoned; deletes the worktree directory and branch
 
-**Manually** (when entered with `git worktree add` + `cd`):
-
-```bash
-git worktree remove .worktrees/<branch-name>
-git branch -d <branch-name>
-```
-
-Prune stale entries after manual deletion:
-
-```bash
-git worktree prune
-```
-
-In both cases, `WORKTREE.md` is deleted automatically with the worktree directory.
+`WORKTREE.md` is deleted automatically along with the worktree directory.
 
 Use `/clean_gone` to bulk-remove all branches already deleted on the remote.
