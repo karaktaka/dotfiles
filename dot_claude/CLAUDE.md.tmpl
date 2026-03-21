@@ -8,17 +8,14 @@
 2. **NEVER push without explicit permission** — always show the diff/commit, then ask "Ready to push?" and WAIT. No exceptions, no implicit permission from previous pushes.
 3. **Minimal blast radius** — Only touch files directly related to the ask. Never move, restructure, or delete files that weren't requested. Verify async operations completed before acting on their results. If the user clarifies the real problem, **immediately pivot** — do not continue the previous approach.
 
-## Investigation Rules
+## Working Principles
+
 - When the user says a solution exists in another repo/branch, check there **FIRST** before investigating from scratch
 - Limit autonomous investigation to **3 commands** — if the answer isn't found, stop and ask the user for direction
 - When the user asks multiple questions, address **ALL** of them. Re-read the original message before finishing.
-
-## General Rules
 - **Verify completeness before declaring done** — after making changes, grep/search for remaining instances of the pattern being fixed. Do not declare work complete while there are still open items.
 - **Verify before removing** — before removing code or dependencies, confirm they are truly unused. If uncertain, ask. Do not assume something is dead code.
 - **Surface all review findings** — when encountering errors, issues, or security risks during any review (your own or externally provided), evaluate whether they are important enough to fix immediately (even if out of scope). Always present your findings and recommendation to the user — never silently ignore them. Let the user make the final call. Issues deferred for later should be tracked in a Jira or GitHub issue.
-
-## Debugging
 - **Investigate before fixing** — read the code and trace the actual root cause before proposing a fix. Do not guess speculatively. Show the traced code path, then propose the fix.
 
 ## Communication Style
@@ -28,22 +25,20 @@
 - **Humor**: Welcome, keep it light
 - **Questions that need answers: BE LOUD AND CLEAR** — don't bury questions at the end of a message. Make them impossible to miss. User tends to overread subtle asks.
 
-## Versioning
+## Tooling
 
+### Versioning
 **Always use latest versions** unless constrained by version pins, compatibility issues, or project requirements.
 
-## Container Tooling
-
+### Containers
 - **Local**: Use `podman` (docker is symlinked to it)
 - **CI/Shared**: Standard Docker syntax for compatibility
 
-## Python Tooling
-
+### Python
 - **Package manager**: `uv` — use `uv run` to execute Python, pytest, ruff, etc.
 - **Linting/Formatting**: `ruff check` / `ruff format`
 
-## JSON Processing
-
+### JSON
 - **Prefer `jq` over Python** for parsing CLI JSON output — e.g., `kubectl -o json | jq '.items[].metadata.name'` instead of `python3 -c "import json,sys; ..."`
 - **`jq --arg` and newlines**: Literal newlines in bash variables passed via `jq --arg` cause parse errors. Keep strings single-line.
 
@@ -56,7 +51,6 @@
   - uv/ruff/pytest: `uv run --directory <path> ruff check file.py` or pass the full file path
   - When a `cd && cmd` is denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
 - **Always pull before pushing** — if there are no unstaged changes and everything is committed, just `git pull`. Resolve conflicts if any, then push.
-- **Prefer `--amend`** on feature branches; OK on `main`/`master` only if the commit has **not been pushed yet**
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
 
@@ -65,7 +59,33 @@
 - `branch.autosetuprebase=always` — new branches auto-configured for rebase
 - `init.defaultbranch=main` — default branch is `main`
 
-### Safe Amend
+### Worktrees
+- **Always use worktrees** — every branch gets its own worktree, regardless of change size. Never work directly in the main checkout.
+- **Always use `EnterWorktree`** to create and enter worktrees — it switches the session CWD for **all** tools (Bash, Read, Glob, Grep, Write), making it impossible to accidentally read or edit files outside the worktree. Worktrees are placed in `.claude/worktrees/` inside the project.
+- **`gh` has no `-C` directory flag** — use branch name or PR number: `gh pr view <branch> --repo owner/repo` or `gh pr view <PR-number>` from any directory.
+- **Frontend setup**: If `npm run build` fails with "command not found" in a worktree, run `npm install` first — don't fiddle with PATH.
+- Use the `using-git-worktrees` skill for the full workflow.
+
+### Branch Naming
+See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
+
+### Commits
+
+#### Pre-Commit Checks
+- **Repos with `.pre-commit-config.yaml`**: Formatting hooks run automatically on `git commit`. If a hook fails, fix the issue and re-stage. Run `pre-commit run --all-files` to check everything. Install: `uv tool install pre-commit`, then `pre-commit install` per repo.
+- **Repos without pre-commit hooks**: Lint/format manually before committing. See `~/.claude/formatter-reference.md`.
+- **Always test ALL changes before committing** — run the project's build and test suite before staging anything. Check the project `CLAUDE.md` for the exact commands. Don't commit code you haven't verified.
+- **Before committing**, run `git status` and `git diff --staged` to verify only intended files are staged
+- **Never stage untracked utility/script files** unless explicitly asked
+
+#### File Formatting
+Files end with newline, no trailing whitespace — enforced by pre-commit hooks where configured, manual elsewhere. See `~/.claude/formatter-reference.md`
+
+- **Prettier**: Use `prettier` directly if installed locally, or `npx prettier` if only Node is available. Also runs as a pre-commit hook where configured.
+- **macOS `sed -i`**: Fails with complex paths or inline expressions — use `perl -pi -e 's/old/new/g' file` instead
+- **Write tool CRLF**: Shell scripts written by the Write tool may have CRLF line endings — verify with `file <path>` before executing. Strip with `sed -i 's/\r//' <file>` if needed.
+
+#### Safe Amend
 Verify HEAD before amending: `git log --oneline -1`
 
 If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i --autosquash <sha>~1`
@@ -74,22 +94,21 @@ If target isn't HEAD, use fixup: `git commit --fixup=<sha>` then `git rebase -i 
 
 **After amending, do NOT `git pull` before pushing** — `pull.rebase=true` will try to rebase the amended commit on top of the old remote version, causing conflicts. Go straight to `git push --force-with-lease`.
 
-### Pre-Commit
-- **Repos with `.pre-commit-config.yaml`**: Formatting hooks run automatically on `git commit`. If a hook fails, fix the issue and re-stage. Run `pre-commit run --all-files` to check everything. Install: `uv tool install pre-commit`, then `pre-commit install` per repo.
-- **Repos without pre-commit hooks**: Lint/format manually before committing. See `~/.claude/formatter-reference.md`.
-- **Always test ALL changes before committing** — run the project's build and test suite before staging anything. Check the project `CLAUDE.md` for the exact commands. Don't commit code you haven't verified.
-- **Before committing**, run `git status` and `git diff --staged` to verify only intended files are staged
-- **Never stage untracked utility/script files** unless explicitly asked
+#### Grouping Changes
+- **Split**: Different features, layers, or unrelated fixes
+- **Single**: Tightly related or interdependent changes
+- Use `git add -p` for hunk-level staging
 
-### Branch Naming
-See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun names).
+#### Commit Messages
+Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 
-### Worktrees
-- **Always use worktrees** — every branch gets its own worktree, regardless of change size. Never work directly in the main checkout.
-- **Always use `EnterWorktree`** to create and enter worktrees — it switches the session CWD for **all** tools (Bash, Read, Glob, Grep, Write), making it impossible to accidentally read or edit files outside the worktree. Worktrees are placed in `.claude/worktrees/` inside the project.
-- **`gh` has no `-C` directory flag** — use branch name or PR number: `gh pr view <branch> --repo owner/repo` or `gh pr view <PR-number>` from any directory.
-- **Frontend setup**: If `npm run build` fails with "command not found" in a worktree, run `npm install` first — don't fiddle with PATH.
-- Use the `using-git-worktrees` skill for the full workflow.
+Run `~/.claude/get-flair.sh --dir <repo-path> <type>` for the Co-Authored-By line, or `~/.claude/get-flair.sh --dir <repo-path> --mr <type>` for MR/PR description footers. The script auto-detects the git remote and selects the appropriate format. **Never pick characters manually — always use the script.**
+
+The flair output is the **only** co-author line — it fully replaces the default `Co-Authored-By: Claude <noreply@anthropic.com>`. Never include both; never fall back to the default.
+
+Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo
+
+**No quotes in commits** — quotes are exclusively for MR/PR descriptions.
 
 ### Issue Linking
 When working from any issue (GitHub, GitLab, Jira):
@@ -107,34 +126,6 @@ When multiple interconnected MRs/PRs are opened in the same session:
 - **Stale agent**: If import fails with "Bad secret key", restart: `gpgconf --kill gpg-agent` then retry
 - **Set trust non-interactively**: `echo "FINGERPRINT:6:" | gpg --import-ownertrust` (`--edit-key trust` needs a TTY)
 - **Check for local overrides**: When setting up `includeIf`-based signing, remove repo-level `user.*` overrides: `git -C <repo> config --local --unset user.name` / `user.email`
-
-### Grouping Changes
-- **Split**: Different features, layers, or unrelated fixes
-- **Single**: Tightly related or interdependent changes
-- Use `git add -p` for hunk-level staging
-
-## File Formatting
-
-Files end with newline, no trailing whitespace — enforced by pre-commit hooks where configured, manual elsewhere. See `~/.claude/formatter-reference.md`
-
-- **pre-commit**: Repos with `.pre-commit-config.yaml` enforce formatting automatically. Run `pre-commit run --all-files` to format an entire repo.
-- **Prettier**: Use `prettier` directly if installed locally, or `npx prettier` if only Node is available. Also runs as a pre-commit hook where configured.
-- **macOS `sed -i`**: Fails with complex paths or inline expressions — use `perl -pi -e 's/old/new/g' file` instead
-- **Write tool CRLF**: Shell scripts written by the Write tool may have CRLF line endings — verify with `file <path>` before executing. Strip with `sed -i 's/\r//' <file>` if needed.
-
-## Commit Messages
-
-Use conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
-
-### Co-Authored-By & Flair
-
-Run `~/.claude/get-flair.sh --dir <repo-path> <type>` for the Co-Authored-By line, or `~/.claude/get-flair.sh --dir <repo-path> --mr <type>` for MR/PR description footers. The script auto-detects the git remote and selects the appropriate format. **Never pick characters manually — always use the script.**
-
-The flair output is the **only** co-author line — it fully replaces the default `Co-Authored-By: Claude <noreply@anthropic.com>`. Never include both; never fall back to the default.
-
-Types: fix, feature, refactor, delete, security, perf, docs, test, deps, config, ui, hotfix, yolo
-
-**No quotes in commits** — quotes are exclusively for MR/PR descriptions.
 
 {{- if not .isWork }}
 ## Plans Repository
