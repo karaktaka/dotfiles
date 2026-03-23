@@ -24,7 +24,6 @@ workspace/**
 .claude/work-environment.md
 .claude/hooks/permissions-bash-work.sh
 .claude/hooks/infra-safety.sh
-.claude/gitlab-mr-api.md
 .claude/hooks/permissions-webfetch.sh
 Library/Application Support/mark.toml
 {{ end }}
