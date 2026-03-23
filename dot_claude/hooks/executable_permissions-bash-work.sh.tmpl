@@ -1,0 +1,3 @@
+{{- if .isWork -}}
+{{ include (joinPath .workRepoPath "claude/hooks/permissions-bash-work.sh") -}}
+{{ end -}}

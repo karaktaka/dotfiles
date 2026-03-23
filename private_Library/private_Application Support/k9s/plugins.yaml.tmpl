@@ -1,0 +1,3 @@
+{{- if .isWork -}}
+{{ include (joinPath .workRepoPath "macos/k9s/plugins.yaml") -}}
+{{ end -}}

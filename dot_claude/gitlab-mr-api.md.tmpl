@@ -1,0 +1,3 @@
+{{- if .isWork -}}
+{{ include (joinPath .workRepoPath "claude/gitlab-mr-api.md") -}}
+{{ end -}}
