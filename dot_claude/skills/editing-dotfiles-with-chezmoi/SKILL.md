@@ -16,8 +16,9 @@ ls ~/.local/share/chezmoi/ | grep <filename>
 ```
 
 Work-only files use a two-repo architecture:
-- **Wrapper templates** in the public repo `cat` from `~/.local/share/work-dotfiles/`
-- **Native includes** (SSH `Include`, git `[include]`, zsh `source`) reference files from subdirectories
+- **Symlink overlay** (primary): `chezmoi-overlay.map` in the work repo maps files → chezmoi source as symlinks. Git hooks auto-sync on commit.
+- **Native includes** (SSH `Include`, git `[include]`, zsh `source`) for mixed-content files
+- **Include templates** (few remaining): `.tmpl` files with `{{ include }}` for files needing template evaluation or mixed personal+work content
 
 ## Workflow: Regular Files
 
@@ -50,16 +51,14 @@ git -C ~/.local/share/chezmoi push
 
 ## Workflow: Work Files
 
-Work-sensitive files live in a private companion repo at `~/.local/share/work-dotfiles/`. The public chezmoi repo has **wrapper templates** that `cat` from this repo.
+Work-sensitive files live in a private companion repo at `~/.local/share/work-dotfiles/`. Most are served via a **symlink overlay** — the work repo's `chezmoi-overlay.map` maps files into the chezmoi source as symlinks.
 
 **Editing work-only content** — edit in the work repo, then commit:
 
 ```bash
 # 1. Edit the file in the work repo
 #    e.g. ~/.local/share/work-dotfiles/claude/kubernetes.md
-# 2. Apply to verify
-chezmoi apply --force ~/path/to/target
-# 3. Commit & push in the work repo
+# 2. Commit & push (git hook auto-deploys to $HOME)
 git -C ~/.local/share/work-dotfiles add <changed-files>
 git -C ~/.local/share/work-dotfiles commit -m "message"
 git -C ~/.local/share/work-dotfiles push
@@ -68,29 +67,24 @@ git -C ~/.local/share/work-dotfiles push
 **Adding new work-only files:**
 
 1. Add the file to the work repo under the appropriate directory
-2. Create a wrapper template in the public chezmoi repo:
-   ```
-   {{- if .isWork -}}
-   {{ include (joinPath .workRepoPath "path/in/work/repo") -}}
-   {{ end -}}
-   ```
-3. Add the target path to `.chezmoiignore` under the `{{ if not .isWork }}` block
+2. Add a line to `chezmoi-overlay.map` (tab-separated: work-repo-path, chezmoi-source-path, target-path)
+3. Commit — the post-commit hook syncs automatically
 
 ## Key Paths
 
 | Target | Chezmoi source | Type |
 |--------|---------------|------|
-| `~/.claude/CLAUDE.md` | `CLAUDE.md.tmpl` | Template |
-| `~/.claude/settings.json` | `dot_claude/settings.json.tmpl` | Template (file-split) |
-| `~/.claude/commands/` | `dot_claude/commands/` | Regular (some work wrappers) |
+| `~/.claude/CLAUDE.md` | `dot_claude/CLAUDE.md.tmpl` | Template |
+| `~/.claude/settings.json` | `dot_claude/settings.json.tmpl` | Template (mixed content) |
+| `~/.claude/commands/` | `dot_claude/commands/` | Regular |
 | `~/.claude/skills/` | `dot_claude/skills/` | Regular |
-| `~/.claude/observability.md` | `dot_claude/observability.md.tmpl` → work repo | Work wrapper |
-| `~/.claude/kubernetes.md` | `dot_claude/kubernetes.md.tmpl` → work repo | Work wrapper |
-| `~/.local/bin/workspace-init` | `dot_local/bin/executable_workspace-init.tmpl` → work repo | Work wrapper |
-| `~/.ssh/config` | `private_dot_ssh/config` | Regular (uses `Include config.d/*`) |
+| `~/.claude/kubernetes.md` | `dot_claude/kubernetes.md` → symlink | Overlay (work repo) |
+| `~/.claude/observability.md` | `dot_claude/observability.md` → symlink | Overlay (work repo) |
+| `~/.local/bin/workspace-init` | `dot_local/bin/executable_workspace-init` → symlink | Overlay (work repo) |
+| `~/.ssh/config` | `private_dot_ssh/encrypted_config.age` | Encrypted (age) |
 | `~/.gitconfig` | `dot_gitconfig.tmpl` | Template (uses `[include]`) |
 
-All source paths are relative to `~/.local/share/chezmoi/`.
+All source paths are relative to `~/.local/share/chezmoi/`. Overlay symlinks are auto-managed — don't edit them directly.
 
 ## Adding New Files
 
