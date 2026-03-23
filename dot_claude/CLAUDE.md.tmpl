@@ -168,7 +168,7 @@ Detailed reference material is split into separate files to keep this file conci
 - **NEVER patch live Kubernetes resources directly** (`kubectl apply/patch/edit`) without explicit user permission. Make code/Terraform changes → show plan → wait for user to apply. Direct kubectl changes bypass Terraform state and cause `resourceVersion` conflicts requiring `terraform state rm` to recover.
 - **ALWAYS verify kubectl context first**: `kubectl config current-context`. Pass `--context=<name>` to every command. Confirm target cluster (sandbox/dev/prod) before any mutating operation.
 → See `~/.claude/kubernetes.md` for SSO, profiles (`_op` preferred), context ARNs, and kubectl commands.
-
+{{ end }}
 ### Chezmoi (Dotfiles)
 - Home dir files managed by chezmoi. **Never edit template targets directly** (`~/.claude/CLAUDE.md`, `~/.claude/settings.json`)
 - Full workflow in `editing-dotfiles-with-chezmoi` skill (`~/.claude/skills/`)
@@ -178,10 +178,10 @@ Detailed reference material is split into separate files to keep this file conci
 - **Searching chezmoi source with Glob**: files use chezmoi prefixes (`dot_`, `executable_`, `.tmpl`) — search for those, not the rendered target names (e.g. `dot_claude/hooks/executable_*.sh`, not `~/.claude/hooks/*.sh`).
 - **XDG git ignore**: `~/.config/git/ignore` is git's default global excludes file. Setting `core.excludesfile` overrides it entirely (no merging) — prefer adding entries to the XDG file instead.
 - **Go template whitespace**: `{{ "{{" }}- if }}` (left-dash) trims before — preserves indentation of next line. `{{ "{{" }} if -}}` (right-dash) trims after — use for block-level conditionals. Inline for single values: `{{ "{{" }} if .x }}val1{{ "{{" }} else }}val2{{ "{{" }} end }}`
-
 {{ if eq .chezmoi.os "darwin" }}
+
 ### macOS Config Paths
 - lazygit follows symlinks; **k9s does NOT** (uses `lstat`) — needs real files at `~/Library/Application Support/k9s/`
 → See `~/.claude/macos-config.md` for k9s skin inheritance, startup view locking, chezmoi cross-platform strategy, and Time Machine paths.
 {{ end }}
-{{ end }}
+
