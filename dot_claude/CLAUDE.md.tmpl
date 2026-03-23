@@ -123,6 +123,13 @@ When multiple interconnected MRs/PRs are opened in the same session:
 - Open the base MR first, then the dependent one, and immediately wire the dependency before continuing.
 - On platforms without native dependency support, note the dependency explicitly in the MR/PR description (e.g. "Depends on !123 / #456").
 
+### MR/PR Descriptions
+- **Explain the *why*, not the *what*** — the diff already shows the changes; don't list or summarize them
+- **No chit-chat** — no filler, preamble, or information a human reviewer doesn't need
+- **Keep it lean** — a few sentences explaining the problem and motivation is enough
+- **Footer**: `--mr` flair quote (from `get-flair.sh --dir <repo> --mr <type>`) — no `Co-Authored-By` in the body
+- **Cross-references**: link companion MRs, related issues, or dependencies
+
 ### GPG Signing
 - **Stale agent**: If import fails with "Bad secret key", restart: `gpgconf --kill gpg-agent` then retry
 - **Set trust non-interactively**: `echo "FINGERPRINT:6:" | gpg --import-ownertrust` (`--edit-key trust` needs a TTY)
@@ -150,7 +157,7 @@ Detailed reference material is split into separate files to keep this file conci
 | `~/.claude/formatter-reference.md` | Linting/formatting commands per language |
 | `~/.claude/chezmoi.md` | Dotfiles workflow, chezmoi gotchas, template whitespace |{{ if eq .chezmoi.os "darwin" }}
 | `~/.claude/macos-config.md` | macOS paths, k9s config quirks, Time Machine |{{ end }}{{ if .isWork }}
-| `~/.claude/work-environment.md` | Jira, Confluence, GitLab CLI, datascience workspace |
+| `~/.claude/work-environment.md` | Jira, Confluence, GitLab CLI (**MR creation flags**), datascience workspace |
 | `~/.claude/gitlab-mr-api.md` | GitLab MR review API, draft notes, inline suggestions |
 | `~/.claude/observability.md` | Grafana URLs, Loki log querying, Alloy auth |
 | `~/.claude/kubernetes.md` | AWS SSO, `_op` profiles, kubectl contexts and safety rules |{{ end }}
