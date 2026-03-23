@@ -2,6 +2,12 @@
 {{- $name := promptStringOnce . "name" "Name" -}}
 {{- $isWork := promptBoolOnce . "isWork" "Is this a work machine?" -}}
 
+encryption: "age"
+
+age:
+  identity: {{ joinPath .chezmoi.homeDir ".config/chezmoi/key.txt" | quote }}
+  recipient: "age15j2c7ydy27fe32yku96aj7f2pse6zve4kdzhhw2pf7kzjjvj090shhafuv"
+
 git:
   autoCommit: true
   autoPush: false
