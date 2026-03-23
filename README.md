@@ -54,8 +54,9 @@ chezmoi init karaktaka/dotfiles
 ```
 
 You'll be prompted for:
-- **Email address** — determines work/personal mode (`@example.com` = work)
+- **Email address** — used in git config
 - **Name** — used in git config
+- **Is this a work machine?** — determines work/personal mode
 - **Work dotfiles repo URL** — (work mode only) SSH URL for the private companion repo
 
 #### 3. Preview and Apply
@@ -101,12 +102,12 @@ On personal machines: no companion repo, wrapper templates excluded via `.chezmo
 
 ## Work vs Personal Mode
 
-The setup automatically detects work/personal based on your email:
+You're prompted during `chezmoi init` whether this is a work machine:
 
-| Email Domain | Mode | What's Included |
-|--------------|------|-----------------|
-| `@example.com` | Work | Full config: AWS, K8s, GitLab, Jira integration |
-| Any other | Personal | Base config: shell aliases, git, Claude basics |
+| Mode | What's Included |
+|------|-----------------|
+| Work | Full config: cloud tooling, GitLab, Jira integration |
+| Personal | Base config: shell aliases, git, Claude basics |
 
 ## Directory Structure
 
@@ -129,17 +130,6 @@ The setup automatically detects work/personal based on your email:
 ├── .zprofile                    # Zsh profile
 └── .zlogin                      # Zsh login
 ```
-
-## Bitwarden Items Required
-
-### Work Mode Only
-
-| Item Name | Fields | Used By |
-|-----------|--------|---------|
-| `Gitlab Personal Token` | password | `set_gitlab_token()` |
-| `Jira API Token` | password | `set_jira_token()` |
-| `SSO Admin Credentials Test` | client_id, client_secret | `sso_admin_auth test` |
-| `SSO Admin Credentials Prod` | client_id, client_secret | `sso_admin_auth prod` |
 
 ## Daily Usage
 

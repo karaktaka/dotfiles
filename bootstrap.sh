@@ -181,6 +181,85 @@ init_chezmoi() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Setup age encryption key
+# ─────────────────────────────────────────────────────────────────────────────
+setup_age_key() {
+    echo ""
+    echo -e "${BLUE}▶ Checking age encryption key...${NC}"
+
+    KEY_PATH="$HOME/.config/chezmoi/key.txt"
+
+    if [[ -f "$KEY_PATH" ]]; then
+        echo -e "${GREEN}✓ Age key already present${NC}"
+        return 0
+    fi
+
+    echo ""
+    echo -e "${YELLOW}⚠ Age key not found at $KEY_PATH${NC}"
+    echo ""
+    mkdir -p ~/.config/chezmoi
+
+    # Try Bitwarden first
+    if command_exists bw; then
+        echo -e "${BLUE}▶ Attempting to fetch key from Bitwarden...${NC}"
+
+        BW_STATUS=$(bw status | jq -r '.status')
+
+        if [[ "$BW_STATUS" == "unauthenticated" ]]; then
+            echo -e "${YELLOW}Please login to Bitwarden:${NC}"
+            bw login
+            BW_STATUS="locked"
+        fi
+
+        if [[ "$BW_STATUS" == "locked" ]]; then
+            echo -e "${YELLOW}Please unlock Bitwarden:${NC}"
+            export BW_SESSION=$(bw unlock --raw)
+            bw sync --quiet
+        fi
+
+        KEY_CONTENT=$(bw get notes "Chezmoi Age Encryption Key" 2>/dev/null)
+
+        if [[ -n "$KEY_CONTENT" ]]; then
+            echo "$KEY_CONTENT" > "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo -e "${GREEN}✓ Age key fetched from Bitwarden${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠ Key not found in Bitwarden (item: 'Chezmoi Age Encryption Key')${NC}"
+        fi
+    fi
+
+    # Fallback: manual setup
+    echo ""
+    echo "The repo uses age encryption for sensitive files."
+    echo ""
+    echo "Options:"
+    echo "  1. Copy from another machine:"
+    echo "     scp other-machine:~/.config/chezmoi/key.txt ~/.config/chezmoi/key.txt"
+    echo ""
+    echo "  2. Restore from backup:"
+    echo "     cp /path/to/backup/key.txt ~/.config/chezmoi/key.txt"
+    echo ""
+
+    read -p "Do you have the key available now? (y/n) " -n 1 -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        read -p "Enter path to key file: " key_source
+        if [[ -f "$key_source" ]]; then
+            cp "$key_source" "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo -e "${GREEN}✓ Key copied successfully${NC}"
+        else
+            echo -e "${RED}✗ File not found: $key_source${NC}"
+            echo "You can set up the key later and run: chezmoi apply"
+        fi
+    else
+        echo -e "${YELLOW}⚠ Skipping key setup. Encrypted files won't be available until the key is provisioned.${NC}"
+    fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Apply dotfiles
 # ─────────────────────────────────────────────────────────────────────────────
 apply_dotfiles() {
@@ -218,7 +297,7 @@ show_post_install() {
     IS_WORK=$(chezmoi execute-template '{{ .isWork }}' 2>/dev/null || echo "unknown")
 
     if [[ "$IS_WORK" == "true" ]]; then
-        echo -e "${BLUE}Mode:${NC} Work (Work)"
+        echo -e "${BLUE}Mode:${NC} Work"
         echo ""
         echo -e "${YELLOW}Next steps for work setup:${NC}"
         echo "  1. Login to Bitwarden:  bw login"
@@ -249,6 +328,7 @@ main() {
     install_dependencies
     install_shell_extras
     init_chezmoi
+    setup_age_key
     apply_dotfiles
     show_post_install
 }

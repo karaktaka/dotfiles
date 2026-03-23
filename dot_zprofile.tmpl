@@ -5,5 +5,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 {{ if lookPath "dotnet" -}}
 # dotnet
 export PATH="$PATH:{{ .chezmoi.homeDir }}/.dotnet/tools"
+{{ if eq .chezmoi.os "darwin" -}}
 export DOTNET_ROOT=/opt/homebrew/opt/dotnet/libexec
+{{ end -}}
 {{ end -}}

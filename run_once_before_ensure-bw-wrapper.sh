@@ -5,7 +5,7 @@
 set -e
 mkdir -p "$HOME/.local/bin"
 cat > "$HOME/.local/bin/bw-session" << 'EOF'
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 # Wrapper for bw CLI that injects BW_SESSION from the session file.
 # Used by chezmoi's bitwarden template function (command: ~/.local/bin/bw-session).
 BW_SESSION=$(cat ~/.bw_session 2>/dev/null) exec bw "$@"
