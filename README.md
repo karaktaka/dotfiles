@@ -4,12 +4,13 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 
 ## Features
 
-- **Work/Personal detection** — automatically configures based on email domain
+- **Work/Personal detection** — prompted during `chezmoi init`, conditionally deploys work-specific files
 - **Two-repo architecture** — generic dotfiles here (public), work-specific in a private companion repo
-- **Claude Code configs** — settings, commands, and reference files
-- **Shell enhancements** — modern CLI aliases with tool fallbacks
+- **Symlink overlay** — work files mapped into chezmoi source as symlinks, deployed transparently
+- **Age encryption** — sensitive files (SSH config) encrypted at rest, key bootstrapped from Bitwarden
+- **Claude Code configs** — settings, commands, skills, hooks (safety enforcement), and reference files
+- **Shell enhancements** — zsh (oh-my-zsh) and fish with modern CLI aliases and tool fallbacks
 - **Bitwarden integration** — secrets fetched on-demand, never stored in files
-- **Conditional deployment** — work-only files excluded on personal machines
 - **Native includes** — SSH `Include`, git `[include]`, zsh `source` for mixed-content files
 
 ## Quick Start
@@ -72,7 +73,7 @@ chezmoi apply --dry-run --verbose
 chezmoi apply
 ```
 
-For work machines, chezmoi automatically clones the private work-dotfiles repo via `.chezmoiexternal.yaml.tmpl` during apply.
+For work machines, chezmoi automatically clones the private work-dotfiles repo via `.chezmoiexternal.yaml.tmpl` during apply. The bootstrap script provisions the age decryption key from Bitwarden.
 
 #### 4. Set Up Bitwarden (for work machines)
 
@@ -89,16 +90,22 @@ bw login
 
 | Repo | Host | Visibility | Purpose |
 |------|------|------------|---------|
-| `karaktaka/dotfiles` | GitHub | Public | Generic dotfiles + wrapper templates |
+| `karaktaka/dotfiles` | GitHub | Public | Generic dotfiles, templates, overlay stubs |
 | Private companion | GitLab | Private | Work-specific files (plaintext) |
 
-**Data flow:**
-1. `chezmoi init` prompts for email, name, and (if work) the companion repo URL
-2. `.chezmoiexternal.yaml.tmpl` clones the companion repo (externals apply before other entries)
-3. Wrapper templates `cat` files from the companion repo into target locations
-4. Mixed-content files use native includes (SSH `Include`, git `[include]`, zsh `source`)
+### Data Flow
 
-On personal machines: no companion repo, wrapper templates excluded via `.chezmoiignore`, native includes silently ignore missing files.
+1. `chezmoi init` prompts for email, name, and (if work) the companion repo URL
+2. `.chezmoiexternal.yaml.tmpl` clones the companion repo to `~/.local/share/work-dotfiles/`
+3. **Symlink overlay** (primary): `chezmoi-overlay.map` in the work repo maps files into the chezmoi source directory as symlinks — chezmoi follows them transparently. Git hooks (`post-commit`, `post-merge`) auto-sync on every commit.
+4. **Include wrappers** (few remaining): mixed-content templates that combine personal + work content via `{{ include }}`
+5. **Native includes**: SSH `Include config.d/*`, git `[include]`, zsh `source` for files with both personal and work sections
+
+On personal machines: no companion repo, work-only targets excluded via `.chezmoiignore`, native includes silently ignore missing files.
+
+### Age Encryption
+
+Sensitive files use chezmoi's built-in age encryption (`encrypted_` prefix + `.age` extension). The decryption key lives at `~/.config/chezmoi/key.txt` and is provisioned from a Bitwarden secure note during bootstrap.
 
 ## Work vs Personal Mode
 
@@ -106,29 +113,53 @@ You're prompted during `chezmoi init` whether this is a work machine:
 
 | Mode | What's Included |
 |------|-----------------|
-| Work | Full config: cloud tooling, GitLab, Jira integration |
-| Personal | Base config: shell aliases, git, Claude basics |
+| Work | Full config: cloud tooling, GitLab, Jira, k8s, overlay-deployed work files |
+| Personal | Base config: shell aliases, git, Claude basics, fish, vim |
 
 ## Directory Structure
 
 ```
 ~/
-├── CLAUDE.md                    # Global Claude instructions
 ├── .claude/
-│   ├── settings.json            # Claude settings (work-conditional)
-│   ├── commands/                # Custom slash commands
-│   ├── get-flair.sh             # Randomised commit/MR flair generator
-│   ├── formatter-reference.md   # Linter/formatter commands
-│   └── statusline-command.py    # Custom status line script
+│   ├── CLAUDE.md               # Global Claude instructions (template)
+│   ├── settings.json           # Claude settings (template, work-conditional)
+│   ├── commands/               # Custom slash commands
+│   ├── hooks/                  # Safety enforcement hooks
+│   ├── skills/                 # Reusable skill definitions
+│   ├── keybindings.json        # Claude Code keybindings
+│   ├── get-flair.sh            # Randomised commit/MR flair generator
+│   ├── statusline-command.py   # Custom status line script (template)
+│   ├── branch-naming.md        # Branch naming conventions
+│   ├── chezmoi.md              # Chezmoi operational gotchas
+│   ├── formatter-reference.md  # Linter/formatter commands
+│   └── macos-config.md         # macOS path quirks
+├── .config/
+│   ├── fish/                   # Fish shell config + Bitwarden functions
+│   ├── fastfetch/              # Fastfetch config (Catppuccin theme)
+│   ├── git/ignore              # Global gitignore
+│   └── lazygit/config.yml      # Lazygit config (template)
 ├── .oh-my-zsh/custom/
-│   ├── aliases.zsh              # Modern CLI aliases
-│   ├── bitwarden.zsh            # Bitwarden helper functions
-│   ├── generic.zsh              # General shell functions
-│   ├── aws.zsh                  # AWS helpers (work-only)
-│   └── k8s.zsh                  # Kubernetes helpers (work-only)
-├── .gitconfig                   # Git configuration
-├── .zprofile                    # Zsh profile
-└── .zlogin                      # Zsh login
+│   ├── aliases.zsh             # Modern CLI aliases (template)
+│   └── bitwarden.zsh           # Bitwarden helper functions
+├── .ssh/config                 # SSH config (age-encrypted)
+├── .gitconfig                  # Git configuration (template)
+├── .zshrc                      # Zsh config (template)
+├── .zprofile                   # Zsh profile (template)
+├── .zlogin                     # Zsh login (fortune | cowsay)
+└── .vimrc                      # Vim config + Catppuccin theme
+```
+
+Work-only files (deployed via symlink overlay on work machines):
+```
+├── .claude/{kubernetes,observability,work-environment,gitlab-mr-api}.md
+├── .claude/hooks/{infra-safety,permissions-bash-work,permissions-webfetch}.sh
+├── .claude/bin/gitlab-post-review-note.sh
+├── .oh-my-zsh/custom/{aws,k8s,sso,confluence}.zsh
+├── .zshrc.d/{pre,post}.zsh
+├── .ssh/config.d/work
+├── .gitconfig.d/work
+├── .local/bin/workspace-init
+└── Library/Application Support/{mark.toml, k9s/}
 ```
 
 ## Daily Usage
@@ -150,6 +181,9 @@ chezmoi apply
 ```bash
 # Add a file to chezmoi management
 chezmoi add ~/.some-config
+
+# Add a sensitive file with encryption
+chezmoi add --encrypt ~/.some-secret
 
 # Edit the source directly
 chezmoi edit ~/.some-config
@@ -175,6 +209,15 @@ chezmoi cd            # CD into source directory
 Run `chezmoi init` to regenerate config with new variables:
 ```bash
 chezmoi init
+```
+
+### Age decryption fails
+
+The age key must be at `~/.config/chezmoi/key.txt`. If missing, re-run the bootstrap or manually copy from Bitwarden (`Chezmoi Age Encryption Key` secure note):
+```bash
+mkdir -p ~/.config/chezmoi
+bw get notes "Chezmoi Age Encryption Key" > ~/.config/chezmoi/key.txt
+chmod 600 ~/.config/chezmoi/key.txt
 ```
 
 ### Bitwarden unlock prompts
