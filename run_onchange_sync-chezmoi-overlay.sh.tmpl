@@ -1,8 +1,7 @@
 #!/bin/bash
 {{ if not .isWork -}}
 exit 0
-{{ end -}}
-
+{{ else -}}
 # Re-runs whenever the overlay manifest changes (hash embedded below).
 # On fresh install: deploys overlay files directly so a second chezmoi apply isn't needed.
 # On manifest change: creates/removes symlinks and deploys new files.
@@ -11,3 +10,4 @@ exit 0
 set -euo pipefail
 script="${HOME}/.local/share/work-dotfiles/bin/sync-chezmoi-overlay.sh"
 [[ -x "$script" ]] && exec "$script"
+{{ end -}}
