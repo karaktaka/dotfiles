@@ -25,6 +25,7 @@
 - **Emojis**: OK in status/headers, not in code/commits/docs
 - **Humor**: Welcome, keep it light
 - **Questions that need answers: BE LOUD AND CLEAR** — don't bury questions at the end of a message. Make them impossible to miss. User tends to overread subtle asks.
+- **No em dashes** (—) in generated text — use commas, regular dashes, or "or" instead
 
 ## Tooling
 
@@ -46,11 +47,8 @@
 ## Git Workflow
 
 ### Core Rules
-- **Never use `cd /path && <command>`** — use absolute paths or tool-native directory flags instead. This applies to ALL tools, not just git:
-  - git: `git -C <path> commit` (not `cd /path && git commit`)
-  - go: `go -C <path> build .` (not `cd /path && go build .`) — `-C` must be the first flag
-  - uv/ruff/pytest: `uv run --directory <path> ruff check file.py` or pass the full file path
-  - When a `cd && cmd` is denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
+- **Never use `cd /path && <command>`** — use tool-native directory flags (`git -C`, `go -C`, `uv --directory`, etc.). The hook will deny and suggest the correct flag for each tool.
+  - When denied, **do not retry by dropping the `cd`** — that runs the command in the wrong directory. Fix the path properly.
 - **Always pull before pushing** — if there are no unstaged changes and everything is committed, just `git pull`. Resolve conflicts if any, then push.
 - **Check branch first**: `git branch --show-current`
 - **Auto-detect repo type**: Check `git remote -v` for `github.com` vs `gitlab` (incl. self-hosted like `gitlab.example.com`) — don't ask
@@ -83,7 +81,6 @@ See `~/.claude/branch-naming.md` for naming conventions (change-based vs fun nam
 Files end with newline, no trailing whitespace — enforced by pre-commit hooks where configured, manual elsewhere. See `~/.claude/formatter-reference.md`
 
 - **Prettier**: Use `prettier` directly if installed locally, or `npx prettier` if only Node is available. Also runs as a pre-commit hook where configured.
-- **macOS `sed -i`**: Fails with complex paths or inline expressions — use `perl -pi -e 's/old/new/g' file` instead
 - **Write tool CRLF**: Shell scripts written by the Write tool may have CRLF line endings — verify with `file <path>` before executing. Strip with `sed -i 's/\r//' <file>` if needed.
 
 #### Safe Amend
@@ -146,21 +143,22 @@ Design docs and implementation plans are stored centrally in `~/workspace/git/Im
 
 When creating a new plan, always write it to the Implementations repo, not to `docs/plans/` or any local plans folder inside the project repo.
 
-{{ end -}}
+{{ end }}
+
 ## Reference Files
 
-Detailed reference material is split into separate files to keep this file concise. Read them on demand when working on the relevant area.
-
-| File | Contents |
-|------|----------|
-| `~/.claude/branch-naming.md` | Branch naming conventions (issue-based, KN prefix, fun names) |
-| `~/.claude/formatter-reference.md` | Linting/formatting commands per language |
-| `~/.claude/chezmoi.md` | Dotfiles workflow, chezmoi gotchas, template whitespace |{{ if eq .chezmoi.os "darwin" }}
-| `~/.claude/macos-config.md` | macOS paths, k9s config quirks, Time Machine |{{ end }}{{ if .isWork }}
-| `~/.claude/work-environment.md` | Jira, Confluence, GitLab CLI (**MR creation flags**), datascience workspace |
-| `~/.claude/gitlab-mr-api.md` | GitLab MR review API, draft notes, inline suggestions |
-| `~/.claude/observability.md` | Grafana URLs, Loki log querying, Alloy auth |
-| `~/.claude/kubernetes.md` | AWS SSO, `_op` profiles, kubectl contexts and safety rules |{{ end }}
+**STOP - before working in these areas, read the matching file first:**
+- **Dotfiles / chezmoi** → `~/.claude/chezmoi.md` (workflow, gotchas, template whitespace)
+- **Branch naming** → `~/.claude/branch-naming.md` (issue-based, KN prefix, fun names)
+- **Linting / formatting** → `~/.claude/formatter-reference.md` (commands per language)
+{{- if eq .chezmoi.os "darwin" }}
+- **k9s / lazygit paths, `sed -i`, Time Machine** → `~/.claude/macos-config.md`
+{{- end }}
+{{- if .isWork }}
+- **kubectl / Helm / AWS / Terraform** → `~/.claude/kubernetes.md` (SSO, `_op` profiles, contexts, safety rules)
+- **GitLab MRs / glab CLI** → `~/.claude/work-environment.md` (Jira, Confluence, **MR creation flags**), then `~/.claude/gitlab-mr-api.md` for reviews
+- **Grafana / Loki / logs** → `~/.claude/observability.md` (URLs, Loki queries, Alloy auth)
+{{- end }}
 
 ## Secrets (Bitwarden)
 - `bw_get_secret "Item Name"` — auto-unlocks via `ensure_bw_session`
