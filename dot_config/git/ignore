@@ -62,4 +62,6 @@ ENV/
 
 # --- Claude Code ---
 **/.claude/settings.local.json
+**/.claude/worktrees/
 .claude-require-branch
+WORKTREE.md
