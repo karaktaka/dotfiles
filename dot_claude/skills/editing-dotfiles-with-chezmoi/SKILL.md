@@ -75,7 +75,7 @@ git -C ~/.local/share/work-dotfiles push
 | Target | Chezmoi source | Type |
 |--------|---------------|------|
 | `~/.claude/CLAUDE.md` | `dot_claude/CLAUDE.md.tmpl` | Template |
-| `~/.claude/settings.json` | `dot_claude/settings.json.tmpl` | Template (mixed content) |
+| `~/.claude/settings.json` | `dot_claude/settings.json.tmpl` | Template: `isWork` branch includes `work-dotfiles/claude/settings.json` (edit there on work machines); `else` branch has standalone personal config |
 | `~/.claude/commands/` | `dot_claude/commands/` | Regular |
 | `~/.claude/skills/` | `dot_claude/skills/` | Regular |
 | `~/.claude/kubernetes.md` | `dot_claude/kubernetes.md` → symlink | Overlay (work repo) |
@@ -97,5 +97,6 @@ chezmoi add ~/path/to/new/file
 - **Editing a template target directly** (`~/.claude/CLAUDE.md`, `~/.claude/settings.json`): Gets overwritten on next apply. Edit the `.tmpl` source.
 - **`chezmoi add --force` on a template**: Destroys template conditionals. Edit `.tmpl` directly.
 - **Editing work content in the public repo**: Work-only content belongs in `~/.local/share/work-dotfiles/`, not in the chezmoi source.
+- **Editing the personal branch of a template on a work machine**: Some templates (e.g. `settings.json.tmpl`) have separate `isWork`/`else` branches. On a work machine, the `isWork` branch is active - its content comes from the work repo. Editing the `else` (personal) branch has no effect here. Check which branch applies before editing.
 - **Forgetting `.chezmoiignore`**: Work-only files still deploy everywhere unless excluded. Add work-only files to the `{{ if not .isWork }}` block.
 - **Forgetting to push both repos**: Work content changes need pushing in the work repo. Template changes need pushing in the chezmoi repo.
