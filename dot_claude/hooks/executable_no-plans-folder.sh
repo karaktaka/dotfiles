@@ -1,28 +1,34 @@
 #!/usr/bin/env bash
-# no-plans-folder.sh: Block writes to plans/ folders in non-Implementations repos.
-# Plans belong in ~/workspace/git/Implementations/<repo>/plans/ — not in per-repo docs/plans/.
+# no-plans-folder.sh: Block writes/mkdir to planning artifact dirs in non-Implementations repos.
+# Plans and specs belong in ~/workspace/git/Implementations/<repo>/plans/ — not in per-repo subdirs.
 
 source ~/.claude/hooks/hook-lib.sh || exit 0
 
-case "$TOOL" in
-  Edit|Write|NotebookEdit) ;;
-  *) exit 0 ;;
-esac
-
-[[ -z "$FILE_PATH" ]] && exit 0
-
-# Check if path contains a /plans/ component
-if [[ ! "$FILE_PATH" =~ (^|/)plans(/|$) ]]; then
-  exit 0
-fi
-
 IMPLEMENTATIONS_PATH="$HOME/workspace/git/Implementations"
 
-# Allow writes inside the Implementations repo
-[[ "$FILE_PATH" == "$IMPLEMENTATIONS_PATH"* ]] && exit 0
+# Matches /plans/ /specs/ /spec/ as a path component, or at end of path
+_is_planning_path() {
+  [[ "$1" =~ (^|/)(plans|specs?)(\/|$) ]]
+}
 
-# Allow Claude Code's own internal plans directory (~/.claude/plans/)
-[[ "$FILE_PATH" == "$HOME/.claude/plans/"* ]] && exit 0
+_is_allowed_path() {
+  [[ "$1" == "$IMPLEMENTATIONS_PATH"* ]] || [[ "$1" == "$HOME/.claude/plans/"* ]]
+}
 
-deny "Plans folder blocked — write plans to $IMPLEMENTATIONS_PATH/<repo>/plans/ instead" \
-     "Create the plans file at: $IMPLEMENTATIONS_PATH/<repo>/plans/<name>.md | If the plans/ directory does not exist, create it first. | Blocked path was: $FILE_PATH"
+case "$TOOL" in
+  Edit|Write|NotebookEdit)
+    [[ -z "$FILE_PATH" ]] && exit 0
+    _is_planning_path "$FILE_PATH" || exit 0
+    _is_allowed_path  "$FILE_PATH" && exit 0
+    deny "Plans/specs folder blocked — write plans to $IMPLEMENTATIONS_PATH/<repo>/plans/ instead" \
+         "Create the plans file at: $IMPLEMENTATIONS_PATH/<repo>/plans/<name>.md | If the plans/ directory does not exist, create it first. | Blocked path was: $FILE_PATH"
+    ;;
+
+  Bash)
+    [[ "$CMD_NAME" == "mkdir" ]] || exit 0
+    _is_planning_path "$COMMAND" || exit 0
+    _is_allowed_path  "$COMMAND"  && exit 0
+    deny "Plans/specs folder blocked — create directories under $IMPLEMENTATIONS_PATH/<repo>/plans/ instead" \
+         "Run: mkdir -p $IMPLEMENTATIONS_PATH/<repo>/plans/ | Blocked command was: $COMMAND"
+    ;;
+esac
