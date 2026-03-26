@@ -3,7 +3,7 @@
 # Source at the top of each hook (after the shebang):
 #   source ~/.claude/hooks/hook-lib.sh || exit 0
 #
-# Provides variables: $TOOL, $COMMAND, $FILE_PATH, $TOOL_INPUT_PATH, $CMD_NAME, $INPUT
+# Provides variables: $TOOL, $COMMAND, $FILE_PATH, $TOOL_INPUT_PATH, $CMD_NAME, $AGENT_ID, $INPUT
 # Provides functions:  allow(), deny(), ask(), rewrite_and_allow()
 #
 # For PermissionRequest hooks, set _HOOK_EVENT before sourcing:
@@ -22,11 +22,13 @@ INPUT=$(cat)
   IFS= read -r -d '' COMMAND
   IFS= read -r -d '' FILE_PATH
   IFS= read -r -d '' TOOL_INPUT_PATH
+  IFS= read -r -d '' AGENT_ID
 } < <(jq -rj '
   (.tool_name           // "") + "\u0000" +
   (.tool_input.command  // "") + "\u0000" +
   (.tool_input.file_path // "") + "\u0000" +
-  (.tool_input.path     // "") + "\u0000"' <<< "$INPUT")
+  (.tool_input.path     // "") + "\u0000" +
+  (.agent_id            // "") + "\u0000"' <<< "$INPUT")
 
 # CMD_NAME: first non-assignment token of COMMAND (used by Bash hooks only).
 if [[ "$TOOL" == "Bash" && -n "$COMMAND" ]]; then
