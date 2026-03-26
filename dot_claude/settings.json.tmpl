@@ -12,6 +12,10 @@
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/allow-tmp-access.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/subagent-allow-edits.sh"
           }
         ]
       }
