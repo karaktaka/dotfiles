@@ -29,6 +29,10 @@
 
 ## Tooling
 
+### Bash Commands
+- **No bare newlines in commands** — keep Bash tool calls on a single line, or use `\` continuation. Bare newlines trigger Claude Code's "command contains newlines" permission prompt, creating unnecessary friction.
+- **No comments in commands** — inline `# comments` add no value (the `description` parameter already explains intent) and introduce newlines that trigger the same permission prompt.
+
 ### Versioning
 **Always use latest versions** unless constrained by version pins, compatibility issues, or project requirements.
 
