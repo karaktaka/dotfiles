@@ -123,8 +123,9 @@ You're prompted during `chezmoi init` whether this is a work machine:
 ├── .claude/
 │   ├── CLAUDE.md               # Global Claude instructions (template)
 │   ├── settings.json           # Claude settings (template, work-conditional)
-│   ├── commands/               # Custom slash commands
+│   ├── agents/                 # Custom agent definitions (helm-reviewer, etc.)
 │   ├── hooks/                  # Safety enforcement hooks
+│   ├── rules/                  # Path-scoped rule files (chezmoi, k8s, GitLab, etc.)
 │   ├── skills/                 # Reusable skill definitions
 │   ├── keybindings.json        # Claude Code keybindings
 │   ├── get-flair.sh            # Randomised commit/MR flair generator
@@ -152,7 +153,7 @@ You're prompted during `chezmoi init` whether this is a work machine:
 Work-only files (deployed via symlink overlay on work machines):
 ```
 ├── .claude/{kubernetes,observability,work-environment,gitlab-mr-api}.md
-├── .claude/hooks/{infra-safety,permissions-bash-work,permissions-webfetch}.sh
+├── .claude/hooks/{infra-safety,permissions-bash-{k8s,cloud,glab,infra,collab},permissions-webfetch}.sh
 ├── .claude/bin/gitlab-post-review-note.sh
 ├── .oh-my-zsh/custom/{aws,k8s,sso,confluence}.zsh
 ├── .zshrc.d/{pre,post}.zsh
