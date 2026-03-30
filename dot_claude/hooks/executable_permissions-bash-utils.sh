@@ -7,6 +7,28 @@
 source ~/.claude/hooks/hook-lib.sh || exit 0
 [[ "$TOOL" != "Bash" ]] && exit 0
 
+# cd/pushd && <tool-with-C-flag> denial - enforce native directory flags.
+# Tools that support -C or equivalent should use it instead of cd chaining.
+if [[ "$CMD_NAME" == "cd" || "$CMD_NAME" == "pushd" ]]; then
+  FIRST_LINE="${COMMAND%%$'\n'*}"
+  if [[ "$FIRST_LINE" == *" && "* ]]; then
+    AFTER_CMD=$(sed 's/.*&&[[:space:]]*//' <<< "$FIRST_LINE" | awk '{print $1}')
+    AFTER_CMD_BASE=$(basename "$AFTER_CMD" 2>/dev/null)
+    case "$AFTER_CMD_BASE" in
+      git)    deny "Use 'git -C <path>' instead of 'cd && git'" ;;
+      go)     deny "Use 'go -C <path>' instead of 'cd && go'" ;;
+      make)   deny "Use 'make -C <dir>' instead of 'cd && make'" ;;
+      uv)     deny "Use 'uv --directory <path>' instead of 'cd && uv'" ;;
+      npm)    deny "Use 'npm --prefix <path>' instead of 'cd && npm'" ;;
+      yarn)   deny "Use 'yarn --cwd <path>' instead of 'cd && yarn'" ;;
+      pnpm)   deny "Use 'pnpm --dir <path>' instead of 'cd && pnpm'" ;;
+      poetry) deny "Use 'poetry --directory <path>' instead of 'cd && poetry'" ;;
+      ninja)  deny "Use 'ninja -C <dir>' instead of 'cd && ninja'" ;;
+    esac
+  fi
+  exit 0
+fi
+
 # Scans Python code for high-risk patterns (network, subprocess, file-deletion, dynamic eval).
 # Returns 0 (true) if dangerous patterns are found, 1 (false) if clean.
 _python_scan() {
@@ -271,17 +293,10 @@ case "$CMD_NAME" in
     allow "env (no dangerous subcommand detected)" ;;
 
   # --- Unconditionally safe utilities ---
-  # Yield first if a dangerous command appears after a chain operator so that
-  # permissions-bash-dangerous.sh can make the call without conflicting.
-  basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
+  act|actionlint|basename|bw|cat|column|cut|date|diff|dig|dirname|du|echo|export|file|\
   gofmt|grep|head|hostname|id|jq|less|ls|md5|more|ping|pre-commit|prettier|printenv|ps|\
   pwd|realpath|ruff|shasum|shellcheck|shfmt|sleep|sort|stat|tail|touch|tr|\
   uname|uniq|uvx|wc|which|whoami)
-    case "$COMMAND" in
-      *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") exit 0 ;;
-      *"&& curl "*|*"; curl "*)              exit 0 ;;
-      *"&& wget "*|*"; wget "*)              exit 0 ;;
-    esac
     allow "Safe utility" ;;
 esac
 

@@ -148,16 +148,18 @@ When creating a new plan, always write it to the Implementations repo, not to `d
 ## Reference Files
 
 **STOP - before working in these areas, read the matching file first:**
-- **Dotfiles / chezmoi** → `~/.claude/chezmoi.md` (workflow, gotchas, template whitespace)
 - **Branch naming** → `~/.claude/branch-naming.md` (issue-based, KN prefix, fun names)
 - **Linting / formatting** → `~/.claude/formatter-reference.md` (commands per language)
 {{- if eq .chezmoi.os "darwin" }}
 - **k9s / lazygit paths, `sed -i`, Time Machine** → `~/.claude/macos-config.md`
 {{- end }}
+
+**Auto-loaded by path-scoped rules** (no need to read manually - triggers when you touch matching files):
+- **Dotfiles / chezmoi** → `~/.claude/rules/chezmoi.md` (triggers on `dot_*`, `.tmpl`, `chezmoi*`)
 {{- if .isWork }}
-- **kubectl / Helm / AWS / Terraform** → `~/.claude/kubernetes.md` (SSO, `_op` profiles, contexts, safety rules)
-- **GitLab MRs / glab CLI** → `~/.claude/work-environment.md` (Jira, Confluence, **MR creation flags**), then `~/.claude/gitlab-mr-api.md` for reviews
-- **Grafana / Loki / logs** → `~/.claude/observability.md` (URLs, Loki queries, Alloy auth)
+- **kubectl / Helm / AWS / Terraform** → `~/.claude/rules/kubernetes.md` (triggers on `helm*`, `terraform*`, `*.tf`)
+- **GitLab CI** → `~/.claude/rules/gitlab.md` (triggers on `.gitlab-ci*`)
+- **Grafana / Loki / logs** → `~/.claude/rules/observability.md` (triggers on `grafana*`, `loki*`, `alloy*`)
 {{- end }}
 
 ## Secrets (Bitwarden)

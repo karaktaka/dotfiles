@@ -3,16 +3,27 @@
 {{ else -}}
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "permissions": {},
+  "permissions": {
+    "allow": [
+      "Read(/tmp/*)",
+      "Edit(/tmp/*)",
+      "Write(/tmp/*)",
+      "Bash(/tmp/*)",
+      "Bash(bash /tmp/*)",
+      "Bash(sh /tmp/*)",
+      "Bash(python3 /tmp/*)",
+      "Bash(node /tmp/*)",
+      "Bash(chmod /tmp/*)",
+      "Bash(rm /tmp/*)"
+    ]
+  },
   "model": "opusplan",
+  "attribution": {"commit": "", "pr": ""},
+  "worktree": {"symlinkDirectories": ["node_modules", ".venv"]},
   "hooks": {
     "PermissionRequest": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/allow-tmp-access.sh"
-          },
           {
             "type": "command",
             "command": "{{ .chezmoi.homeDir }}/.claude/hooks/subagent-allow-edits.sh"
@@ -90,26 +101,25 @@
       {
         "matcher": "Bash",
         "hooks": [
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-git.sh"
-          },
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-utils.sh"
-          },
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-dangerous.sh"
-          },
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-gh.sh"
-          },
-          {
-            "type": "command",
-            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/no-command-chaining.sh"
-          }
+          {"type": "command", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-utils.sh"},
+          {"type": "command", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-dangerous.sh"},
+          {"type": "command", "if": "Bash(git *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-git.sh"},
+          {"type": "command", "if": "Bash(gh *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-gh.sh"}
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {"type": "command", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/worktree-setup.sh"}
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {"type": "command", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/post-write-crlf-fix.sh"}
         ]
       }
     ]

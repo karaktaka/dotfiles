@@ -1,3 +1,1 @@
-{{- if .isWork }}
-no-plans-folder.sh
-{{- end }}
+{{- /* no-plans-folder.sh now deploys everywhere */ -}}

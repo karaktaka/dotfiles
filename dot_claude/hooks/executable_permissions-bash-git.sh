@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Permissions gate for git commands.
-# Deny:    force branch delete, stash clear.
+# Permissions gate for git commands (only fires when `if: "Bash(git *)"` matches).
+# Deny:    force branch delete, stash clear, wrong co-author format.
 # Rewrite: git checkout → git switch (preferred modern equivalent).
 # Ask:     push, checkout -- <file> (file restore), remote config changes, stash drop.
 # Allow:   all other git subcommands.
+# Chain safety handled by permissions-bash-dangerous.sh (runs on every command).
 
 source ~/.claude/hooks/hook-lib.sh || exit 0
 [[ "$TOOL" != "Bash" ]] && exit 0
@@ -57,31 +58,6 @@ case "$STRIPPED" in
     ask "Stash drop" ;;
 esac
 
-# Also check the last segment of a && / ; chain for ask-worthy operations.
-# String-pattern matching on "&&" is unreliable when && is followed by a
-# line-continuation backslash + newline, so we extract the last segment
-# by stripping everything up to the last && or ; instead.
-if [[ "$COMMAND" == *"&&"* || "$COMMAND" == *";"* ]]; then
-  _last="${COMMAND##*&&}"
-  # If ; produces a later segment, prefer that
-  [[ "${COMMAND##*;}" != "$COMMAND" && "${#COMMAND##*;}" -lt "${#_last}" ]] && _last="${COMMAND##*;}"
-  # Strip leading whitespace and backslash continuations, then normalise
-  _last_trimmed=$(printf '%s' "$_last" | sed -E 's/^[[:space:]\\]*//' | xargs 2>/dev/null || printf '%s' "$_last")
-  _last_name=$(basename "${_last_trimmed%% *}" 2>/dev/null)
-  if [[ "$_last_name" == "git" ]]; then
-    _last_stripped=$(printf '%s' "$_last_trimmed" \
-      | sed -E \
-        -e 's/^git[[:space:]]*//' \
-        -e 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//g' \
-        -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//g' \
-      | xargs 2>/dev/null || echo "")
-    case "$_last_stripped" in
-      push*)     ask "Chained git push — confirm intent" ;;
-      checkout*) ask "Chained git checkout — confirm intent" ;;
-    esac
-  fi
-fi
-
 # COMMIT: reject wrong co-author formats before allowing
 # Catches model-name variants (e.g. "Claude Sonnet 4.6") on all repos,
 # and plain Claude attribution on non-GitHub repos where a character flair is required.
@@ -97,14 +73,18 @@ case "$STRIPPED" in
     ;;
 esac
 
-# ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
-# Yield if a dangerous command appears after a chain operator — let
-# permissions-bash-dangerous.sh make the call so we don't conflict with it.
-case "$COMMAND" in
-  *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") exit 0 ;;
-  *"&& curl "*|*"; curl "*)              exit 0 ;;
-  *"&& wget "*|*"; wget "*)              exit 0 ;;
+# PLANS/SPECS: warn when staging planning artifacts (should stay local until implemented)
+case "$STRIPPED" in
+  add*)
+    if echo "$COMMAND" | grep -Eq '(^|/)(plans|specs?)(\/|$)'; then
+      if ! echo "$COMMAND" | grep -q "Implementations"; then
+        ask "Staging planning artifacts - plans/specs should stay local until the feature is implemented"
+      fi
+    fi
+    ;;
 esac
+
+# ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
 case "$STRIPPED" in
   add*|blame*|branch*|check-ignore*|commit*|describe*|diff*|fetch*|log*|ls*|pull*|\
   reflog*|remote*|rev-parse*|shortlog*|show*|stash*|status*|switch*|tag*|worktree*)

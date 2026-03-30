@@ -1,13 +1,14 @@
 README.md
 bootstrap.sh
 
-# Personal-only files - ignore on work machines
-{{ if .isWork }}
-.claude/hooks/no-plans-folder.sh
-{{ end }}
+# (no-plans-folder.sh now deploys everywhere)
 
 # Work-only files - ignore on personal machines
 {{ if not .isWork }}
+.claude/rules/kubernetes.md
+.claude/rules/observability.md
+.claude/rules/gitlab.md
+.claude/agents/helm-reviewer/**
 .local/bin/workspace-init
 workspace/**
 .config/kn-tools/**

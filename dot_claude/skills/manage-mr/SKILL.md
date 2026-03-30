@@ -1,10 +1,17 @@
+---
+name: manage-mr
+description: Create, update, or manage merge requests (GitLab) and pull requests (GitHub)
+user-invocable: true
+argument-hint: "[create|update|merge|close]"
+---
+
 # Manage Merge/Pull Request
 
 Create, update, or manage merge requests (GitLab) and pull requests (GitHub).
 
 ## Prerequisites
 
-Detect the platform from the remote URL — do NOT ask the user:
+Detect the platform from the remote URL - do NOT ask the user:
 
 ```bash
 git remote get-url origin
@@ -76,21 +83,21 @@ Spawn a **description agent** (subagent_type: `general-purpose`) passing the dif
 ### Description agent prompt
 
 ```
-You are a pull/merge request description writer. Your job is to write a title and description that help reviewers understand the change — not summarise the code, which they can read themselves.
+You are a pull/merge request description writer. Your job is to write a title and description that help reviewers understand the change - not summarise the code, which they can read themselves.
 
 ## Philosophy
 
 The code is the source of truth. The description is a reading guide, not a transcript.
 
 Reviewers will read the code. The description should help them understand:
-1. **Why** — motivation in 1-2 sentences
-2. **Non-obvious things** — what a reviewer would miss or misunderstand from the diff alone
-3. **Caveats** — breaking changes, migration steps, ordering dependencies, things that look wrong but are intentional
+1. **Why** - motivation in 1-2 sentences
+2. **Non-obvious things** - what a reviewer would miss or misunderstand from the diff alone
+3. **Caveats** - breaking changes, migration steps, ordering dependencies, things that look wrong but are intentional
 
 ## What NOT to include
-- File-by-file changelogs — the diff shows this
+- File-by-file changelogs - the diff shows this
 - Obvious descriptions of what the code does
-- Restating commit messages — reviewers can read `git log`
+- Restating commit messages - reviewers can read `git log`
 - Implementation details clear from reading the code
 - Architecture diagrams or long explanations
 - Excessive formatting, headers, or emoji
