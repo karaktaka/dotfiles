@@ -86,8 +86,13 @@ esac
 
 # ALLOW: safe subcommands (stash clear/drop caught above, rest is safe)
 case "$STRIPPED" in
-  add*|blame*|branch*|check-ignore*|commit*|describe*|diff*|fetch*|log*|ls*|pull*|\
-  reflog*|remote*|rev-parse*|shortlog*|show*|stash*|status*|switch*|tag*|worktree*)
+  add*|annotate*|bisect*|blame*|branch*|cat-file*|check-attr*|check-ignore*|\
+  check-mailmap*|cherry*|commit*|count-objects*|describe*|diff*|fetch*|\
+  for-each-ref*|format-patch*|fsck*|gc*|grep*|log*|ls*|merge-base*|name-rev*|\
+  notes*|pack-refs*|pull*|range-diff*|reflog*|remote*|rerere*|rev-list*|\
+  rev-parse*|revert*|shortlog*|show*|sparse-checkout*|stash*|status*|submodule*|\
+  switch*|tag*|var*|verify-commit*|verify-pack*|verify-tag*|version*|\
+  whatchanged*|worktree*)
     allow "Safe git command" ;;
 esac
 
