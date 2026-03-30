@@ -16,11 +16,18 @@ esac
 
 # Chained invocation: dangerous tool appears after && or ; in a longer command.
 case "$COMMAND" in
-  *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm")        ask "Chained rm - confirm intent" ;;
-  *"&& curl "*|*"; curl "*)                      ask "Chained curl - confirm URL" ;;
-  *"&& wget "*|*"; wget "*)                      ask "Chained wget - confirm URL" ;;
-  *"&& git push"*|*"; git push"*)                ask "Chained git push - confirm intent" ;;
-  *"&& git checkout -- "*|*"; git checkout -- "*) ask "Chained file discard - confirm intent" ;;
+  *"&& rm "*|*"&& rm"|*"; rm "*|*"; rm") ask "Chained rm - confirm intent" ;;
+  *"&& curl "*|*"; curl "*)              ask "Chained curl - confirm URL" ;;
+  *"&& wget "*|*"; wget "*)              ask "Chained wget - confirm URL" ;;
 esac
+
+# Chained git push/checkout: regex handles git global flags (-C <path>, -c key=val,
+# --no-pager, etc.) between 'git' and the subcommand, which glob patterns miss.
+GIT_F='((-[A-Za-z][[:space:]]+[^[:space:]]+|--[a-z][-a-z]*)[[:space:]]+)*'
+SEP='(&&|;|\|\|)'
+RE_PUSH="${SEP}[[:space:]]*git[[:space:]]+${GIT_F}push([[:space:]]|$)"
+RE_DISC="${SEP}[[:space:]]*git[[:space:]]+${GIT_F}checkout[[:space:]]+--[[:space:]]"
+[[ "$COMMAND" =~ $RE_PUSH ]] && ask "Chained git push - confirm intent"
+[[ "$COMMAND" =~ $RE_DISC ]] && ask "Chained file discard - confirm intent"
 
 exit 0
