@@ -24,4 +24,5 @@ if [[ -f "$WORKTREE_PATH/.pre-commit-config.yaml" ]] && command -v pre-commit >/
   (cd "$WORKTREE_PATH" && pre-commit install) >/dev/null 2>&1 &
 fi
 
+echo "worktree-setup: done"
 exit 0
