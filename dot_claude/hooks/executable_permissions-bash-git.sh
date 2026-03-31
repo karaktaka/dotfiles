@@ -18,7 +18,9 @@ STRIPPED=$(sed -E \
   -e 's/^git[[:space:]]*//' \
   -e 's/(-C|-c)[[:space:]]+[^[:space:]]+[[:space:]]*//g' \
   -e 's/--(no-pager|no-optional-locks|paginate|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs)[[:space:]]*//g' \
-  <<< "$COMMAND" | xargs 2>/dev/null || echo "$COMMAND")
+  -e 's/[[:space:]]+/ /g' \
+  -e 's/^ //;s/ $//' \
+  <<< "${COMMAND%%$'\n'*}")
 
 # DENY (match against STRIPPED subcommand to avoid false positives from message bodies)
 case "$STRIPPED" in
@@ -27,22 +29,17 @@ case "$STRIPPED" in
 esac
 
 # REWRITE: git checkout → git switch / git restore
-# git checkout -b <branch>  →  git switch -c <branch>
-case "$COMMAND" in
-  git*checkout*-b*)
+# Match against STRIPPED (not $COMMAND) so commit messages or file paths
+# containing "checkout" don't accidentally trigger these rewrites.
+case "$STRIPPED" in
+  checkout" -b"*)
     new_cmd=$(perl -pe 's/\bcheckout\b\s*-b/switch -c/' <<< "$COMMAND")
     rewrite_and_allow "$new_cmd" "Rewritten: use 'git switch -c' instead of 'git checkout -b'"
     ;;
-esac
-# git checkout -- <file>  →  ask, hint to use git restore
-case "$COMMAND" in
-  *checkout*" -- "*)
+  checkout*" -- "*)
     ask "Discards file changes — use 'git restore <file>' instead of 'git checkout -- <file>'"
     ;;
-esac
-# git checkout <branch>  →  git switch <branch>
-case "$COMMAND" in
-  git*checkout*)
+  checkout*)
     new_cmd=$(perl -pe 's/\bcheckout\b/switch/' <<< "$COMMAND")
     rewrite_and_allow "$new_cmd" "Rewritten: use 'git switch' instead of 'git checkout'"
     ;;
