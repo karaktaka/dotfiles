@@ -4,7 +4,7 @@
 
 # WorktreeCreate provides worktree path via hook input
 INPUT=$(cat)
-WORKTREE_PATH=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('cwd',''))" 2>/dev/null)
+WORKTREE_PATH=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('worktree_path',''))" 2>/dev/null)
 [[ -z "$WORKTREE_PATH" ]] && exit 0
 [[ ! -d "$WORKTREE_PATH" ]] && exit 0
 
@@ -24,5 +24,5 @@ if [[ -f "$WORKTREE_PATH/.pre-commit-config.yaml" ]] && command -v pre-commit >/
   (cd "$WORKTREE_PATH" && pre-commit install) >/dev/null 2>&1 &
 fi
 
-echo "worktree-setup: done"
+echo "$WORKTREE_PATH"
 exit 0
