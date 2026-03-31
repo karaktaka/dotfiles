@@ -1,7 +1,7 @@
 ---
 name: address-pr-reviews
 description: Use this skill when the user wants to address, fix, or work through PR/MR review comments. Triggers on phrases like "address review comments", "fix review findings", "work through PR comments", "resolve review", "handle MR feedback", or when a PR/MR number is mentioned alongside requests to fix reviewer feedback.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Address PR/MR Review Comments
@@ -91,10 +91,11 @@ glab api projects/$PROJECT_ID/merge_requests/$MR_IID/discussions \
   | jq '[.[] | select(.notes[0].resolvable == true and .notes[0].resolved == false)]'
 ```
 
-### Fetch B — Outside-diff comments (GitHub only)
+### Fetch B — Review body comments (all platforms)
 
-GitHub cannot post inline comments on lines outside the PR's changed diff. Reviewers (especially CodeRabbit) embed these as free-text findings inside the PR review body instead.
+Reviewers and AI bots often post findings as free-text comments on the PR/MR rather than as inline code threads - either because the referenced lines are outside the diff, or because the tool posts at the review level. Always fetch these regardless of platform.
 
+**GitHub:**
 ```bash
 gh api graphql -f query='
   query($owner: String!, $repo: String!, $number: Int!) {
@@ -111,6 +112,12 @@ gh api graphql -f query='
     }
   }
 ' -F owner=<owner> -F repo=<repo> -F number=$PR_NUMBER
+```
+
+**GitLab:**
+```bash
+glab api "projects/$PROJECT_ID/merge_requests/$MR_IID/notes" \
+  | jq '[.[] | select(.system == false and .type != "DiffNote")]'
 ```
 
 Also fetch the current diff for context:
@@ -154,8 +161,7 @@ PR/MR: <number>
 ### 1. Categorize each reviewer
 | Category | Signals |
 |----------|---------|
-| CodeRabbit AI | login contains `coderabbit`/`coderabbitai`, or body contains `<!-- by coderabbit -->` |
-| Other AI bot | login ends in `[bot]` or `_bot` |
+| AI bot | login ends in `[bot]` or `_bot`, login contains common AI review tool names (e.g. `coderabbit`, `copilot`, `sonar`), or body contains AI-generated markers (e.g. `<!-- by coderabbit -->`, `<!-- generated -->`) |
 | Human | everything else |
 
 ### 2. Classify each finding
@@ -165,8 +171,8 @@ PR/MR: <number>
 | Not fixable | False positive, stale/outdated, or code is correct as-is |
 | Out of scope | Requires architectural change, touches many files, or is a larger initiative |
 
-### 3. For CodeRabbit findings: extract the AI agent prompt if present
-It appears in a `<details>` block with heading "🤖 Prompt for AI Agents" or similar. Return it verbatim.
+### 3. For AI bot findings: extract the AI agent prompt if present
+Some AI review tools embed a structured fix prompt in the comment body (e.g. inside a `<details>` block with heading "🤖 Prompt for AI Agents" or similar). Extract it verbatim if present.
 
 ### 4. For outside-diff findings: deduplicate and stale-check
 - If the same finding appears in multiple review bodies, use only the most recent.
@@ -338,7 +344,7 @@ If human-reviewer threads are still pending user decisions, do **not** post yet 
 - **Outdated threads** (`isOutdated: true` on GitHub): skip unless the user explicitly asks to address them
 - **Draft PRs**: proceed normally unless the user says otherwise
 - **Threads with multiple comments** (discussions): pass the full thread to the triage agent — context matters
-- **CodeRabbit suggestion blocks** (`suggestion` code fences): the fixer agent should apply them directly if clearly correct
+- **AI suggestion blocks** (`suggestion` code fences): the fixer agent should apply them directly if clearly correct
 - **Threads already resolved by someone else**: skip
 - **Outside-diff findings**: no resolvable thread ID — acknowledge in the final CLI status report only
 
