@@ -32,7 +32,9 @@ INPUT=$(cat)
 
 # CMD_NAME: first non-assignment token of COMMAND (used by Bash hooks only).
 if [[ "$TOOL" == "Bash" && -n "$COMMAND" ]]; then
-  _raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$COMMAND")
+  # Strip leading subshell/brace-group syntax so CMD_NAME reflects the actual command
+  _cmd_for_parse=$(sed 's/^[({[:space:]]*//' <<< "$COMMAND")
+  _raw=$(awk '{for(i=1;i<=NF;i++) if($i!~/^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}' <<< "$_cmd_for_parse")
   CMD_NAME=$(basename "$_raw" 2>/dev/null)
 fi
 
