@@ -19,3 +19,5 @@
 	autosetuprebase = always
 [include]
 	path = ~/.gitconfig.d/work
+[includeIf "hasconfig:remote.*.url:*github.com*"]
+	path = ~/.gitconfig.d/github.gitconfig
