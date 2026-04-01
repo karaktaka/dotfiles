@@ -1,4 +1,5 @@
 > **Note:** This project has moved to [Codeberg](https://codeberg.org/karaktaka/dotfiles).
+> This GitHub repository is no longer actively maintained.> **Note:** This project has moved to [Codeberg](https://codeberg.org/karaktaka/dotfiles).
 > This GitHub repository is no longer actively maintained.# Dotfiles
 
 Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
