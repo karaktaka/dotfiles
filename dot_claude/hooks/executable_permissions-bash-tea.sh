@@ -61,15 +61,24 @@ case "$STRIPPED" in
   "releases"|"releases list"*|"releases ls"*|\
   "release"|"release list"*|"release ls"*|\
   "r list"*|"r ls"*|\
-  "repos"|"repos list"*|"repos ls"*|\
-  "repo"|"repo list"*|"repo ls"*|\
+  "repos"|"repos list"*|"repos ls"*|"repos search"*|"repos s"*|\
+  "repo"|"repo list"*|"repo ls"*|"repo search"*|"repo s"*|\
   "branches"|"branches list"*|"branches ls"*|\
   "branch"|"branch list"*|"branch ls"*|\
   "b"|"b list"*|"b ls"*|\
+  "organizations"|"organizations list"*|"organizations ls"*|\
+  "organization"|"organization list"*|"organization ls"*|\
+  "org"|"org list"*|"org ls"*|\
+  "webhooks list"*|"webhooks ls"*|\
+  "webhook list"*|"webhook ls"*|\
+  "hooks list"*|"hooks ls"*|\
+  "hook list"*|"hook ls"*|\
   "notifications"|"notifications list"*|\
   "notification"|"notification list"*|\
   "n"|"n list"*|\
   "times list"*|"time list"*|"t list"*|\
+  "clone"*|"C"*|\
+  "whoami"*|\
   "open"*|"o"*|\
   "help"*|"h"*)
     allow "Gitea CLI read-only" ;;

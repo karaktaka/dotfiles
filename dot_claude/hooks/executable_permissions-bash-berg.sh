@@ -36,12 +36,12 @@ case "$STRIPPED" in
   "pull list"*|"pull view"*|\
   "label list"*|\
   "release list"*|\
-  "repo info"*|\
-  "milestone list"*|\
-  "notification list"*|\
-  "keys list"*|\
-  "user"*|\
-  "config show"*|\
+  "repo info"*|"repo branch list"*|\
+  "milestone list"*|"milestone view"*|\
+  "notification list"*|"notification view"*|\
+  "keys list"*|"keys ssh list"*|"keys gpg list"*|\
+  "user info"*|"user"*|\
+  "config show"*|"config info"*|\
   "completion"*)
     allow "Codeberg/Forgejo CLI read-only" ;;
 esac
