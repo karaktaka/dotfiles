@@ -26,11 +26,13 @@ Detect the platform and PR/MR automatically:
 git branch --show-current
 
 # Detect platform from remote
-git remote -v
+git remote get-url origin
 ```
 
-- **GitHub** (`github.com` in remote): use `gh`
-- **GitLab** (any other host, incl. `gitlab.*`): use `glab`
+- **GitHub** (`github.com`): use `gh`
+- **Codeberg** (`codeberg.org`): use `berg`
+- **GitLab** (any host with `gitlab` in URL, incl. self-hosted): use `glab`
+- **Anything else** (Gitea self-hosted): use `tea`
 
 If the user provided a PR/MR number or URL, use that directly. Otherwise, find the open PR/MR for the current branch.
 
@@ -40,6 +42,12 @@ gh pr view --json number,title,url,reviewDecision
 
 # GitLab
 glab mr view --output json
+
+# Codeberg
+berg pull view <number> --output-mode json
+
+# Gitea
+tea pulls <number> --output json
 ```
 
 Save: `PLATFORM`, `PR_NUMBER` (or `MR_IID`), `OWNER`, `REPO`, `PROJECT_ID` (GitLab), `WORKTREE_ROOT` (`git rev-parse --show-toplevel`).
@@ -91,6 +99,18 @@ glab api projects/$PROJECT_ID/merge_requests/$MR_IID/discussions \
   | jq '[.[] | select(.notes[0].resolvable == true and .notes[0].resolved == false)]'
 ```
 
+**Codeberg / Gitea** (both use the Gitea REST API — same structure):
+```bash
+# Codeberg: get token from berg, then use the Forgejo API
+BERG_TOKEN=$(berg auth list --output-mode json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['token'])" 2>/dev/null)
+REPO=$(git remote get-url origin | sed 's|.*codeberg.org[:/]||;s|\.git$||')
+curl -s "https://codeberg.org/api/v1/repos/${REPO}/issues/${PR_NUMBER}/comments" \
+  -H "Authorization: token ${BERG_TOKEN}" | jq '[.[] | select(.pull_request_review_id != null)]'
+
+# Gitea: use tea api
+tea api "repos/{owner}/{repo}/issues/${PR_NUMBER}/comments" | jq '.'
+```
+
 ### Fetch B — Review body comments (all platforms)
 
 Reviewers and AI bots often post findings as free-text comments on the PR/MR rather than as inline code threads - either because the referenced lines are outside the diff, or because the tool posts at the review level. Always fetch these regardless of platform.
@@ -118,6 +138,16 @@ gh api graphql -f query='
 ```bash
 glab api "projects/$PROJECT_ID/merge_requests/$MR_IID/notes" \
   | jq '[.[] | select(.system == false and .type != "DiffNote")]'
+```
+
+**Codeberg / Gitea** (Gitea REST API — same structure for both):
+```bash
+# All PR comments (non-inline)
+# Codeberg:
+curl -s "https://codeberg.org/api/v1/repos/${REPO}/issues/${PR_NUMBER}/comments" \
+  -H "Authorization: token ${BERG_TOKEN}" | jq '.'
+# Gitea:
+tea api "repos/{owner}/{repo}/issues/${PR_NUMBER}/comments" | jq '.'
 ```
 
 Also fetch the current diff for context:
@@ -219,6 +249,14 @@ gh issue create --title "[Refactor] <finding summary>" \
 # GitLab
 glab issue create --title "[Refactor] <finding summary>" \
   --description "Flagged during review of MR !<iid>.\n\n## Finding\n<finding detail>\n\n## Source\n<thread URL>"
+
+# Codeberg
+berg issue create --title "[Refactor] <finding summary>" \
+  --description "Flagged during review of PR #<number>.\n\n## Finding\n<finding detail>\n\n## Source\n<thread URL>"
+
+# Gitea
+tea issues create --title "[Refactor] <finding summary>" \
+  --description "Flagged during review of PR #<number>.\n\n## Finding\n<finding detail>\n\n## Source\n<thread URL>"
 ```
 
 Then reply to the thread with the issue link and resolve it.
@@ -316,6 +354,27 @@ glab api -X POST "projects/$PROJECT_ID/merge_requests/$MR_IID/discussions/$DISCU
   -f body="<reply text>"
 ```
 
+### Codeberg — Post reply (Forgejo API)
+
+```bash
+REPO=$(git remote get-url origin | sed 's|.*codeberg.org[:/]||;s|\.git$||')
+curl -s -X POST "https://codeberg.org/api/v1/repos/${REPO}/issues/${PR_NUMBER}/comments" \
+  -H "Authorization: token ${BERG_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"body\": \"<reply text>\"}"
+```
+
+Note: Codeberg/Forgejo does not support resolving individual inline threads via API — threads are resolved by the web UI or by closing the PR. Instead, post a comment acknowledging the finding.
+
+### Gitea — Post reply
+
+```bash
+tea api -X POST "repos/{owner}/{repo}/issues/${PR_NUMBER}/comments" \
+  -f body="<reply text>"
+```
+
+Note: Gitea inline thread resolution via API follows the same pattern as GitLab discussions. Use `tea api -X PATCH "repos/{owner}/{repo}/pulls/reviews/{id}"` to update review state.
+
 ## Step 7 — Final Status
 
 **Do not post a PR/MR-level summary comment if all open threads were addressed.** Simply report the outcome to the user in the CLI.
@@ -351,7 +410,15 @@ If human-reviewer threads are still pending user decisions, do **not** post yet 
 ## Platform Detection Quick Reference
 
 ```bash
-git remote get-url origin | grep -q 'github.com' && echo github || echo gitlab
+REMOTE=$(git remote get-url origin)
+if   [[ "$REMOTE" == *"github.com"*   ]]; then PLATFORM=github
+elif [[ "$REMOTE" == *"codeberg.org"* ]]; then PLATFORM=codeberg
+elif [[ "$REMOTE" == *"gitlab"*       ]]; then PLATFORM=gitlab
+else                                            PLATFORM=gitea
+fi
+echo "$PLATFORM"
 ```
 
-For GitLab self-hosted (e.g., `gitlab.example.com`), all `glab` commands work the same — `glab` auto-detects the host from the git remote.
+- **GitLab self-hosted** (e.g., `gitlab.example.com`): `glab` auto-detects the host from the git remote.
+- **Gitea self-hosted**: `tea` uses its own login store; set up with `tea login add`.
+- **Codeberg**: `berg` targets `codeberg.org` by default; login with `berg auth login`.

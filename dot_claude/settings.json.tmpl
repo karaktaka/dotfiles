@@ -104,7 +104,9 @@
           {"type": "command", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-utils.sh"},
           {"type": "command", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-dangerous.sh"},
           {"type": "command", "if": "Bash(git *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-git.sh"},
-          {"type": "command", "if": "Bash(gh *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-gh.sh"}
+          {"type": "command", "if": "Bash(gh *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-gh.sh"},
+          {"type": "command", "if": "Bash(tea *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-tea.sh"},
+          {"type": "command", "if": "Bash(berg *)", "command": "{{ .chezmoi.homeDir }}/.claude/hooks/permissions-bash-berg.sh"}
         ]
       }
     ],

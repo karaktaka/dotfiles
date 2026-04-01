@@ -1,12 +1,25 @@
 ---
 name: release
 description: Use this skill when the user wants to cut, draft, or publish a release. Triggers on phrases like "draft a release", "cut a release", "new release", "tag a release", "create a release", or "release v<version>".
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Draft & Publish a Release
 
-Analyse commits since the last tag, suggest the next version, build a changelog, tag the commit, and create a draft GitHub release.
+Analyse commits since the last tag, suggest the next version, build a changelog, tag the commit, and create a draft release.
+
+## Platform Detection
+
+```bash
+git remote get-url origin
+```
+
+| Remote contains | Platform | CLI |
+|-----------------|----------|-----|
+| `github.com` | GitHub | `gh` |
+| `codeberg.org` | Codeberg | `berg` |
+| `gitlab` | GitLab | `glab` |
+| Anything else | Gitea | `tea` |
 
 ## Step 1 — Find the last tag and commits since it
 
@@ -50,8 +63,23 @@ Once the version is confirmed, run both tasks simultaneously:
 
 ### Task A — CI status (run directly)
 
+Check CI status using the platform CLI:
+
 ```bash
+# GitHub
 gh run list --branch main --limit 5 --json status,conclusion,name,headSha
+
+# GitLab
+glab ci list --branch main
+
+# Codeberg / Gitea — use the API (Gitea REST structure for both)
+# Codeberg:
+REPO=$(git remote get-url origin | sed 's|.*codeberg.org[:/]||;s|\.git$||')
+BERG_TOKEN=$(berg auth list --output-mode json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['token'])" 2>/dev/null)
+curl -s "https://codeberg.org/api/v1/repos/${REPO}/commits/$(git rev-parse HEAD)/statuses" \
+  -H "Authorization: token ${BERG_TOKEN}" | jq '.[0:5] | .[] | {state,context,description}'
+# Gitea:
+tea api "repos/{owner}/{repo}/commits/$(git rev-parse HEAD)/statuses" | jq '.[0:5] | .[] | {state,context,description}'
 ```
 
 Hold the result — present it after Task B completes.
@@ -129,22 +157,43 @@ git tag -a v<version> -m "Release v<version>"
 git push origin v<version>
 ```
 
-## Step 6 — Create a draft GitHub release
+## Step 6 — Create a draft release
 
-Detect the repo from the git remote:
+Use the `CHANGELOG` and `TITLE` from the changelog agent. The repo is already known from platform detection.
 
-```bash
-git remote get-url origin
-```
-
-Use the `CHANGELOG` and `TITLE` from the changelog agent:
-
+**GitHub:**
 ```bash
 gh release create v<version> \
   --repo <owner>/<repo> \
   --title "v<version> — <TITLE from agent>" \
   --draft \
   --notes "<CHANGELOG from agent>"
+```
+
+**GitLab:**
+```bash
+glab release create v<version> \
+  --name "v<version> — <TITLE from agent>" \
+  --notes "<CHANGELOG from agent>"
+```
+
+**Codeberg** (Forgejo API — `berg release create` is interactive only):
+```bash
+REPO=$(git remote get-url origin | sed 's|.*codeberg.org[:/]||;s|\.git$||')
+BERG_TOKEN=$(berg auth list --output-mode json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['token'])" 2>/dev/null)
+curl -s -X POST "https://codeberg.org/api/v1/repos/${REPO}/releases" \
+  -H "Authorization: token ${BERG_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"tag_name\":\"v<version>\",\"name\":\"v<version> — <TITLE>\",\"body\":\"<CHANGELOG>\",\"draft\":true}"
+```
+
+**Gitea:**
+```bash
+tea releases create \
+  --tag "v<version>" \
+  --title "v<version> — <TITLE from agent>" \
+  --note "<CHANGELOG from agent>" \
+  --draft
 ```
 
 ## Step 7 — Report back

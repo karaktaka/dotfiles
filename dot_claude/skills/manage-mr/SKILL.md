@@ -1,13 +1,13 @@
 ---
 name: manage-mr
-description: Create, update, or manage merge requests (GitLab) and pull requests (GitHub)
+description: Create, update, or manage merge/pull requests (GitHub, GitLab, Codeberg, Gitea)
 user-invocable: true
 argument-hint: "[create|update|merge|close]"
 ---
 
 # Manage Merge/Pull Request
 
-Create, update, or manage merge requests (GitLab) and pull requests (GitHub).
+Create, update, or manage merge requests (GitLab) and pull requests (GitHub, Codeberg, Gitea).
 
 ## Prerequisites
 
@@ -20,14 +20,18 @@ git remote get-url origin
 | Remote contains | Platform | CLI | Term |
 |-----------------|----------|-----|------|
 | `github.com` | GitHub | `gh` | PR |
-| Anything else | GitLab (self-hosted or `.com`) | `glab` | MR |
+| `codeberg.org` | Codeberg | `berg` | PR |
+| `gitlab` (incl. self-hosted) | GitLab | `glab` | MR |
+| Anything else | Gitea (self-hosted) | `tea` | PR |
 
 Verify the CLI is authenticated:
 
 - GitHub: `gh auth status`
+- Codeberg: `berg auth list`
 - GitLab: `glab auth status`
+- Gitea: `tea logins list`
 
-If the token is expired, ask the user to re-authenticate (`gh auth login` / `glab auth login`).
+If the token is expired, ask the user to re-authenticate (`gh auth login` / `berg auth login` / `glab auth login` / `tea login add`).
 
 ## Step 1: Gather Context
 
@@ -50,26 +54,32 @@ git diff ${DEFAULT_BRANCH}...HEAD
 git diff ${DEFAULT_BRANCH}...HEAD --stat
 ```
 
-Check if an MR/PR already exists:
+Check if a PR/MR already exists:
 
 - GitLab: `glab mr list --source-branch "${BRANCH}"`
 - GitHub: `gh pr list --head "${BRANCH}"`
+- Codeberg: `berg pull list --output-mode json` (filter output by source branch)
+- Gitea: `tea pulls list --state open --output json` (filter output by head branch)
 
 If updating, also fetch the existing description:
 
 - GitHub: `gh pr view --json title,body`
 - GitLab: `glab mr view --output json`
+- Codeberg: `berg pull view <number> --output-mode json`
+- Gitea: `tea pulls <number> --output json`
 
 Try to detect a linked issue from the branch name (e.g. `AI-123/feature-name` or `42-feature-name`). If found, fetch it:
 
 - GitHub: `gh issue view <number> --json title,body`
 - GitLab: `glab issue view <number>`
+- Codeberg: `berg issue view <number> --output-mode json`
+- Gitea: `tea issues <number> --output json`
 
 ## Step 2: Determine Action
 
 | Condition | Action |
 |-----------|--------|
-| No existing MR/PR | **Create** |
+| No existing PR/MR | **Create** |
 | Exists, scope changed | **Update** title and/or description |
 | User says "close" | Close without merging |
 | User says "merge" | Merge (ask for squash preference) |
@@ -183,15 +193,39 @@ EOF
 )"
 ```
 
+**Codeberg:**
+```bash
+berg pull create \
+  --source-branch "${BRANCH}" \
+  --target-branch "${DEFAULT_BRANCH}" \
+  --title "<TITLE from agent>" \
+  --description "$(cat <<'EOF'
+<DESCRIPTION from agent>
+EOF
+)"
+```
+
+**Gitea:**
+```bash
+tea pulls create \
+  --head "${BRANCH}" \
+  --base "${DEFAULT_BRANCH}" \
+  --title "<TITLE from agent>" \
+  --description "$(cat <<'EOF'
+<DESCRIPTION from agent>
+EOF
+)"
+```
+
 Optional flags (ask user if relevant):
 
-| Intent | GitLab | GitHub |
-|--------|--------|--------|
-| Draft | `--draft` | `--draft` |
-| Assign to self | `--assignee @me` | `--assignee @me` |
-| Add labels | `--label X` | `--label X` |
-| Add reviewer | `--reviewer X` | `--reviewer X` |
-| Delete branch on merge | `--remove-source-branch` | `--delete-branch` |
+| Intent | GitLab | GitHub | Codeberg | Gitea |
+|--------|--------|--------|----------|-------|
+| Draft | `--draft` | `--draft` | (not supported) | (not supported) |
+| Assign to self | `--assignee @me` | `--assignee @me` | `--assignees <user>` | `--assignees <user>` |
+| Add labels | `--label X` | `--label X` | `--labels X` | `--labels X` |
+| Add reviewer | `--reviewer X` | `--reviewer X` | (not in CLI) | (not in CLI) |
+| Delete branch on merge | `--remove-source-branch` | `--delete-branch` | (not in CLI) | (not in CLI) |
 
 ### Update
 
@@ -215,9 +249,28 @@ EOF
 )"
 ```
 
+**Codeberg:** (`berg pull edit` is interactive-only — use the API via curl)
+```bash
+REPO=$(git remote get-url origin | sed 's|.*codeberg.org[:/]||;s|\.git$||')
+BERG_TOKEN=$(berg auth list --output-mode json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['token'])" 2>/dev/null)
+curl -s -X PATCH "https://codeberg.org/api/v1/repos/${REPO}/pulls/${PR_ID}" \
+  -H "Authorization: token ${BERG_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\": \"<TITLE>\", \"body\": \"<DESCRIPTION>\"}"
+```
+
+**Gitea:** (use `tea api`)
+```bash
+OWNER=$(git remote get-url origin | sed 's|.*[:/]\([^/]*\)/[^/]*\.git|\1|;s|.*[:/]\([^/]*\)/[^/]*$|\1|')
+REPO_NAME=$(basename "$(git remote get-url origin)" .git)
+tea api -X PATCH "repos/${OWNER}/${REPO_NAME}/pulls/${PR_ID}" \
+  -f title="<TITLE from agent>" \
+  -f body="<DESCRIPTION from agent>"
+```
+
 ### Merge
 
-Use the `AskUserQuestion` tool to ask: "Merge this MR/PR? Verify the pipeline is green and changes are tested." with options: "Yes, merge now", "Cancel"
+Use the `AskUserQuestion` tool to ask: "Merge this PR/MR? Verify the pipeline is green and changes are tested." with options: "Yes, merge now", "Cancel"
 
 **GitLab:**
 ```bash
@@ -229,10 +282,31 @@ glab mr merge ${MR_ID} --squash --remove-source-branch
 gh pr merge ${PR_ID} --squash --delete-branch
 ```
 
+**Codeberg:** (no CLI merge — use Forgejo API)
+```bash
+REPO=$(git remote get-url origin | sed 's|.*codeberg.org[:/]||;s|\.git$||')
+BERG_TOKEN=$(berg auth list --output-mode json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['token'])" 2>/dev/null)
+curl -s -X POST "https://codeberg.org/api/v1/repos/${REPO}/pulls/${PR_ID}/merge" \
+  -H "Authorization: token ${BERG_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"Do":"squash","delete_branch_after_merge":true}'
+```
+
+**Gitea:** (use `tea api`)
+```bash
+OWNER=$(git remote get-url origin | sed 's|.*[:/]\([^/]*\)/[^/]*\.git|\1|;s|.*[:/]\([^/]*\)/[^/]*$|\1|')
+REPO_NAME=$(basename "$(git remote get-url origin)" .git)
+tea api -X POST "repos/${OWNER}/${REPO_NAME}/pulls/${PR_ID}/merge" \
+  -f Do=squash \
+  -F delete_branch_after_merge=true
+```
+
 ### Close
 
-**GitLab:** `glab mr close ${MR_ID}`
-**GitHub:** `gh pr close ${PR_ID}`
+- **GitLab:** `glab mr close ${MR_ID}`
+- **GitHub:** `gh pr close ${PR_ID}`
+- **Codeberg:** `berg pull edit` (interactive) or API: `curl -X PATCH .../pulls/${PR_ID} -d '{"state":"closed"}'`
+- **Gitea:** `tea pulls close ${PR_ID}`
 
 ## Step 5: Confirm
 
@@ -240,10 +314,12 @@ Show the URL so the user can verify in the browser:
 
 - GitLab: `glab mr view ${MR_ID} --web`
 - GitHub: `gh pr view ${PR_ID} --web`
+- Codeberg: `berg pull view ${PR_ID}` (copy URL from output)
+- Gitea: `tea pulls ${PR_ID}` (copy URL from output) or `tea open`
 
 ## Tips
 
 - **Push first**: Ensure the branch is pushed before creating (`git push -u origin ${BRANCH}`)
 - **Rebase if behind**: If the branch is behind target, suggest rebasing first
-- **Draft for WIP**: Use `--draft` to avoid premature reviews
-- **Stacked MRs/PRs**: If depending on another branch, set target accordingly
+- **Draft for WIP**: Use `--draft` to avoid premature reviews (GitHub/GitLab only)
+- **Stacked PRs**: If depending on another branch, set target accordingly

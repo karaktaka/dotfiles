@@ -1,13 +1,13 @@
 ---
 name: start-issue
-description: Load a GitHub or GitLab issue, understand it fully, and ask clarifying questions before planning
+description: Load a GitHub, GitLab, Codeberg, or Gitea issue, understand it fully, and ask clarifying questions before planning
 user-invocable: true
 argument-hint: "<issue-number-or-url>"
 ---
 
 # Start Issue
 
-Load a GitHub issue or GitLab issue/ticket, understand it fully, and ask clarifying questions before any planning or implementation begins.
+Load a GitHub, GitLab, Codeberg, or Gitea issue/ticket, understand it fully, and ask clarifying questions before any planning or implementation begins.
 
 **Issue reference:** $ARGUMENTS
 
@@ -20,7 +20,9 @@ git remote get-url origin
 | Remote contains | Platform | CLI | Issue term |
 |----------------|----------|-----|------------|
 | `github.com` | GitHub | `gh` | Issue |
-| Anything else | GitLab (self-hosted or `.com`) | `glab` | Issue |
+| `codeberg.org` | Codeberg | `berg` | Issue |
+| `gitlab` (incl. self-hosted) | GitLab | `glab` | Issue |
+| Anything else | Gitea (self-hosted) | `tea` | Issue |
 
 If not in a git repo, fall back to the issue reference format to infer the platform (e.g. a GitHub URL).
 
@@ -28,7 +30,7 @@ If not in a git repo, fall back to the issue reference format to infer the platf
 
 `$ARGUMENTS` may be:
 - A plain number: `42`
-- A GitHub/GitLab URL: extract the numeric ID from the path
+- A GitHub/GitLab/Codeberg/Gitea URL: extract the numeric ID from the path
 
 ## Step 3: Fetch the issue
 
@@ -40,6 +42,16 @@ gh issue view <number> --json number,title,body,labels,assignees,milestone,comme
 **GitLab:**
 ```bash
 glab issue view <number>
+```
+
+**Codeberg:**
+```bash
+berg issue view <number> --output-mode json
+```
+
+**Gitea:**
+```bash
+tea issues <number> --output json
 ```
 
 Read the full output including description and any existing comments.
