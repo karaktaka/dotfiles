@@ -21,7 +21,6 @@ workspace/**
 .oh-my-zsh/custom/sso.zsh
 .zshrc.d/**
 .ssh/config.d/**
-.gitconfig.d/**
 .claude/bin/gitlab-post-review-note.sh
 .claude/observability.md
 .claude/kubernetes.md
