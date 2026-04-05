@@ -1,5 +1,5 @@
 # dotfiles
 
-> **This project has moved to [Codeberg](https://codeberg.org/karakTaka/dotfiles).**
+> **This project has moved to [GitLab](https://gitlab.com/karakTaka/dotfiles).**
 >
 > This repository is archived and no longer maintained.
